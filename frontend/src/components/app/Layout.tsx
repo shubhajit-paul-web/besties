@@ -1,49 +1,76 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import Logo from "../shared/Logo";
-import { Bookmark, House, Image, LogOut, MessageSquareMore, Phone, Users, Video } from "lucide-react"
+import { Bookmark, ChartNoAxesCombined, House, Image, LogOut, MessageSquareMore, PanelLeftOpen, PanelRightOpen, Phone, Users, Video } from "lucide-react"
 import Avatar from "../shared/Avatar";
+import { useState } from "react";
+import bestiesLogoImg from "../../assets/besties-logo.png"
 
 const Layout = () => {
+	const { pathname } = useLocation();
+	const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
+
 	const LEFT_SIDEBAR_WIDTH = 320;
-	const RIGHT_SIDEBAR_WIDTH = 460;
-	const postsSectionDimension = {
-		width: `calc(100% - ${LEFT_SIDEBAR_WIDTH + RIGHT_SIDEBAR_WIDTH}px)`,
-		marginLeft: `${LEFT_SIDEBAR_WIDTH}px`
+	const RIGHT_SIDEBAR_WIDTH = 450;
+	const LEFT_SIDEBAR_OPEN_WIDTH = 160;
+
+	const sectionDimension = {
+		width: isLeftSidebarOpen ?
+			`calc(100% - ${LEFT_SIDEBAR_WIDTH + RIGHT_SIDEBAR_WIDTH}px)` :
+			`calc(100% - ${LEFT_SIDEBAR_OPEN_WIDTH}px)`,
+		marginLeft: isLeftSidebarOpen ? `${LEFT_SIDEBAR_WIDTH}px` : `${LEFT_SIDEBAR_OPEN_WIDTH}px`
 	}
+
 	const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
-		return `${isActive && "font-medium"} flex items-center gap-3 cursor-pointer hover:bg-white px-4 py-3 rounded-lg transition-all`
+		return `${isActive && `font-bold ${isLeftSidebarOpen || "bg-slate-200/60"}`} flex items-center gap-3 cursor-pointer hover:bg-slate-200/60 px-4 py-3 rounded-lg transition-all`
 	}
 
 	const menus = [
 		{
-			href: "/app",
-			label: "dashboard",
+			href: "/app/home",
+			label: "home",
 			icon: House
 		},
 		{
-			href: "/posts",
+			href: "/app/my-posts",
 			label: "my posts",
 			icon: Image
 		},
 		{
-			href: "/friends",
+			href: "/app/friends",
 			label: "friends",
 			icon: Users
 		},
 		{
-			href: "/saved",
+			href: "/app/saved",
 			label: "saved",
 			icon: Bookmark
+		},
+		{
+			href: "/app/dashboard",
+			label: "dashboard",
+			icon: ChartNoAxesCombined
 		}
 	]
+
+	const getPathName = () => {
+		let path = pathname.replace("/app/", "")
+		path = path.replace("-", " ")
+
+		return path;
+	}
 
 	return (
 		<div>
 			{/* Left Sidebar */}
-			<aside className={`h-full p-8 fixed top-0 left-0`} style={{ width: LEFT_SIDEBAR_WIDTH + "px" }}>
+			<aside className={`h-full p-8 fixed top-0 left-0 transition-all overflow-x-hidden`} style={{
+				width: isLeftSidebarOpen ? LEFT_SIDEBAR_WIDTH + "px" : LEFT_SIDEBAR_OPEN_WIDTH + "px"
+			}}>
 				<div className="h-full bg-slate-50 border-r border-r-slate-200 rounded-xl p-5">
 					<div className="pl-2">
-						<Logo />
+						{isLeftSidebarOpen ?
+							<Logo /> :
+							<img className="w-10 h-10 p-1" src={bestiesLogoImg} />
+						}
 					</div>
 
 					<div className="pt-10 pb-10 flex flex-col justify-between h-full">
@@ -59,24 +86,48 @@ const Layout = () => {
 											to={item.href}
 											key={index}>
 											<Icon size={21} />
-											<span className="capitalize">{item.label}</span>
+											{isLeftSidebarOpen && <span className="capitalize">{item.label}</span>}
 										</NavLink>
 									)
 								})
 							}
 						</div>
 
-						<div className="flex items-center justify-between pt-4 border-t border-t-slate-200">
-							<Avatar image="./profile-img.jpeg" title="Shubhajit Paul" subtitle={<span className="opacity-70">Software Engineer</span>} />
-							<LogOut size={18} />
+						{/* Avatar */}
+						<div>
+							<div className={`flex items-center pt-4 border-t border-t-slate-200 ${isLeftSidebarOpen ? "justify-between" : "justify-center"}`}>
+								{
+									isLeftSidebarOpen ?
+										<>
+											<Avatar image="/profile-img.jpeg" title="Shubhajit Paul" subtitle={<span className="opacity-70">Software Engineer</span>} />
+											<LogOut size={18} />
+										</> :
+										<Avatar image="/profile-img.jpeg" />
+								}
+							</div>
 						</div>
 					</div>
 				</div>
 			</aside>
 
-			{/* Posts Section */}
-			<section className="min-h-screen p-8" style={postsSectionDimension}>
-				<div className="bg-slate-100 w-full min-h-screen rounded-xl"></div>
+			{/* section */}
+			<section className="min-h-screen p-8 transition-all" style={sectionDimension}>
+				<div className="w-full min-h-screen rounded-xl">
+					<div className="flex items-center gap-4 py-3 border-b border-b-slate-200/70 mb-3">
+						{/* Sidebar toggle button */}
+						<button className="cursor-pointer bg-slate-200/60 hover:bg-slate-200 transition-all p-2.5 rounded-full" onClick={() => setIsLeftSidebarOpen(!isLeftSidebarOpen)}>
+							{isLeftSidebarOpen ?
+								<PanelRightOpen size={18} />
+								: <PanelLeftOpen size={18} />
+							}
+						</button>
+						<div className="capitalize text-lg font-medium">
+							{getPathName()}
+						</div>
+					</div>
+
+					<Outlet />
+				</div>
 			</section>
 
 			{/* Right Sidebar */}
@@ -91,7 +142,7 @@ const Layout = () => {
 							Array(20).fill(0).map(() => (
 								<div className="flex justify-between items-center py-3 px-5 rounded-lg hover:bg-slate-200/50">
 									<Avatar
-										image="./profile-img.jpeg"
+										image="/profile-img.jpeg"
 										title="Avinash Kumar"
 										subtitle={
 											<div className="flex items-center gap-1 mt-0.5">
@@ -101,6 +152,7 @@ const Layout = () => {
 										}
 									/>
 
+									{/* Actions */}
 									<div className="flex items-center gap-2.5">
 										<button className="cursor-pointer hover:border-blue-500 transition-all text-blue-600 bg-blue-100/80 border border-blue-200 rounded-full p-1.5" title="Chat">
 											<MessageSquareMore size={15} />

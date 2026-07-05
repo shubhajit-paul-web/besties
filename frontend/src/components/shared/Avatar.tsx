@@ -1,11 +1,30 @@
-const Avatar = () => {
+import type { ReactNode } from "react"
+
+interface AvatarInterface {
+	image: string
+	title?: string
+	subtitle?: ReactNode
+	imageSize?: number
+	className?: string
+}
+
+const Avatar = ({ image, title, subtitle, imageSize = 9, className = "" }: AvatarInterface) => {
 	return (
-		<div className="flex items-center gap-2.5">
-			<img className="w-9 aspect-square rounded-full object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjPFJ5ubMR28SpGx4N6PlGwsfy8nPBa7nq0XRtnm42neZ6LKFHYVn2zpcA&s=10" alt="" />
-			<div>
-				<p className="font-medium leading-none">Shubhajit Paul</p>
-				<label className="leading-none text-xs opacity-70">Software Engineer</label>
-			</div>
+		<div className={`flex items-center gap-2.5 ${className}`}>
+			<img className={`w-${imageSize} w-9 aspect-square rounded-full object-cover`} src={image} alt="avatar image" />
+
+			{
+				(title || subtitle) &&
+				<div>
+					{
+						title && <div className="font-medium leading-tight">{title}</div>
+					}
+					{
+						subtitle &&
+						<div className="leading-tight text-xs">{subtitle}</div>
+					}
+				</div>
+			}
 		</div>
 	)
 }

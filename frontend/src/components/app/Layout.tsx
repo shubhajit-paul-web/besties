@@ -1,33 +1,83 @@
+import { NavLink } from "react-router-dom";
+import Logo from "../shared/Logo";
+import { Bookmark, House, Image, LogOut, Users } from "lucide-react"
+import Avatar from "../shared/Avatar";
+
 const Layout = () => {
 	const LEFT_SIDEBAR_WIDTH = 350;
 	const RIGHT_SIDEBAR_WIDTH = 400;
-	const POSTS_SECTION_DIMENSION = {
+	const postsSectionDimension = {
 		width: `calc(100% - ${LEFT_SIDEBAR_WIDTH + RIGHT_SIDEBAR_WIDTH}px)`,
 		marginLeft: `${LEFT_SIDEBAR_WIDTH}px`
 	}
+	const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
+		return `${isActive && "font-medium"} flex items-center gap-3 cursor-pointer hover:bg-white px-4 py-3 rounded-lg transition-all`
+	}
+
+	const menus = [
+		{
+			href: "/app",
+			label: "dashboard",
+			icon: House
+		},
+		{
+			href: "/posts",
+			label: "my posts",
+			icon: Image
+		},
+		{
+			href: "/friends",
+			label: "friends",
+			icon: Users
+		},
+		{
+			href: "/saved",
+			label: "saved",
+			icon: Bookmark
+		}
+	]
 
 	return (
 		<div>
-			{/* Left sidebar */}
-			<aside className={`w-[${LEFT_SIDEBAR_WIDTH}px] h-screen p-8 fixed top-0 left-0`}>
-				<div className="h-full bg-slate-100 border-r border-slate-200 rounded-xl p-8">
-					<div className="flex items-center gap-2.5">
-						<div className="w-14 h-14 border-3 border-purple-500 rounded-full overflow-hidden">
-							<img className="w-full h-full object-cover" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTjPFJ5ubMR28SpGx4N6PlGwsfy8nPBa7nq0XRtnm42neZ6LKFHYVn2zpcA&s=10" alt="" />
+			{/* Left Sidebar */}
+			<aside className={`h-full p-8 fixed top-0 left-0`} style={{ width: LEFT_SIDEBAR_WIDTH + "px" }}>
+				<div className="h-full bg-slate-100 border-r border-slate-200 rounded-xl p-5">
+					<div className="pl-2">
+						<Logo />
+					</div>
+
+					<div className="pt-10 pb-10 flex flex-col justify-between h-full">
+						<div className="space-y-1.5">
+							{
+								menus.map((item, index) => {
+									const Icon = item.icon
+
+									return (
+										<NavLink
+											className={getNavLinkClass}
+											to={item.href} key={index}>
+											<Icon size={21} />
+											<span className="capitalize">{item.label}</span>
+										</NavLink>
+									)
+								})
+							}
 						</div>
-						<div>
-							<p className="font-medium text-lg leading-tight">Shubhajit Paul</p>
-							<label className="leading-tight opacity-70">Software Engineer</label>
+
+						<div className="flex items-center justify-between pt-4 border-t border-t-slate-200">
+							<Avatar />
+							<LogOut size={18} />
 						</div>
 					</div>
 				</div>
 			</aside>
 
-			<section className="min-h-screen p-8" style={POSTS_SECTION_DIMENSION}>
+			{/* Posts Section */}
+			<section className="min-h-screen p-8" style={postsSectionDimension}>
 				<div className="bg-slate-100 w-full min-h-screen rounded-xl"></div>
 			</section>
 
-			{/* Right sidebar */}
+			{/* Right Sidebar */}
 			<aside className={`w-[${RIGHT_SIDEBAR_WIDTH}px] h-screen p-8 fixed top-0 right-0`} style={{ width: RIGHT_SIDEBAR_WIDTH + "px" }}>
 				<div className="h-full bg-slate-100 border-l border-slate-200 rounded-xl"></div>
 			</aside>

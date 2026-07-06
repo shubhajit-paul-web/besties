@@ -30,10 +30,12 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 									<button className="cursor-pointer hover:border-blue-500 transition-all text-blue-600 bg-blue-100/80 border border-blue-200 rounded-full p-1.5" title="Chat">
 										<MessageSquareMore size={15} />
 									</button>
-									<button className="cursor-pointer hover:border-green-500 transition-all text-green-600 bg-green-100/80 border border-green-300/50 rounded-full p-1.5" title="Audio Call">
-										<Phone size={15} />
-									</button>
-									<Link to="/app/video-chat" className="cursor-pointer hover:border-amber-500 transition-all text-amber-600 bg-amber-100/80 border border-amber-300/90 rounded-full p-1.5" title="Video Call">
+									<Link to="/app/audio-call">
+										<button className="cursor-pointer hover:border-green-500 transition-all text-green-600 bg-green-100/80 border border-green-300/50 rounded-full p-1.5" title="Audio Call">
+											<Phone size={15} />
+										</button>
+									</Link>
+									<Link to="/app/video-call" className="cursor-pointer hover:border-amber-500 transition-all text-amber-600 bg-amber-100/80 border border-amber-300/90 rounded-full p-1.5" title="Video Call">
 										<Video size={15} />
 									</Link>
 								</div>

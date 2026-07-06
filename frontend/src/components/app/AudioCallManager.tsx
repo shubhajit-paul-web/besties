@@ -1,17 +1,29 @@
 import { CircleX, Mic } from "lucide-react"
+import MeetingInfo from "../shared/VideoCallManager/MeetingInfo"
 
 const AudioCallManager = () => {
 	return (
 		<div>
+			<div className="mb-3">
+				<MeetingInfo meetingId="WAHB4546790DS" sessionLength="00:12:45" />
+			</div>
 
-			<div className="grid grid-cols-2 gap-20">
-				<div className="bg-slate-100 px-5 py-8 rounded-xl flex flex-col items-center gap-8">
-					<div className="text-lg font-semibold text-slate-600">Shubhajit Paul (Me)</div>
-					<img className="w-30 h-30 object-cover rounded-full" src="/public/profile-img.jpeg" />
+			<div className="grid grid-cols-2 gap-15">
+				<div className="bg-slate-100/80 px-5 py-10 rounded-3xl flex flex-col items-center gap-8">
+					<img className="w-35 aspect-square object-cover rounded-full border-4 border-green-500/90 shadow-[0_0_0_8px] shadow-green-500/15" src="/public/profile-img.jpeg" />
+					<div>
+						<div className="text-lg font-semibold text-slate-800 flex items-center gap-2">
+							<span>Shubhajit Paul</span>
+							<span className="text-xs bg-slate-200 text-slate-600 py-0.5 px-2 rounded-md border border-slate-300">ME</span>
+						</div>
+						<div className="text-center mt-2">
+							<div className="text-green-600 font-medium">Speaking...</div>
+						</div>
+					</div>
 				</div>
-				<div className="bg-slate-100 px-5 py-8 rounded-xl flex flex-col items-center gap-8">
-					<div className="text-lg font-semibold text-slate-600">Avinash Kumar</div>
-					<img className="w-30 h-30 object-cover rounded-full" src="/public/profile-img.jpeg" />
+				<div className="bg-slate-100/80 px-5 py-10 rounded-3xl flex flex-col items-center gap-5">
+					<img className="w-35 aspect-square object-cover rounded-full" src="/public/profile-img.jpeg" />
+					<div className="text-lg font-semibold text-slate-800">Shubhajit Paul</div>
 				</div>
 			</div>
 

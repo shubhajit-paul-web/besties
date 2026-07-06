@@ -5,7 +5,7 @@ const VideoCallManager = () => {
 	return (
 		<div>
 			{/* Meeting info */}
-			<MeetingInfo />
+			<MeetingInfo meetingId="WAHB4546790DS" sessionLength="00:12:45" />
 
 			{/* Video */}
 			<div className="bg-black w-full h-0 pb-[56.25%] relative rounded-2xl overflow-hidden mt-3 mb-5">

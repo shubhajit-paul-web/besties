@@ -9,6 +9,7 @@ import Saved from "./components/app/Saved"
 import Dashboard from "./components/app/Dashboard"
 import VideoCallManager from "./components/app/VideoCallManager"
 import AudioCallManager from "./components/app/AudioCallManager"
+import ChatManager from "./components/app/ChatManager"
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="video-call" element={<VideoCallManager />} />
           <Route path="audio-call" element={<AudioCallManager />} />
+          <Route path="chat" element={<ChatManager />} />
         </Route>
       </Routes>
     </BrowserRouter>

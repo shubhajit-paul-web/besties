@@ -1,4 +1,4 @@
-import { CircleX, Maximize2, Mic, MonitorUp, Video } from "lucide-react"
+import { Maximize2, Mic, MonitorUp, PhoneOff, Video, Volume2 } from "lucide-react"
 import MeetingInfo from "../shared/VideoCallManager/MeetingInfo"
 
 const VideoCallManager = () => {
@@ -30,37 +30,23 @@ const VideoCallManager = () => {
 				</button>
 			</div>
 
-			{/* Action buttons - container */}
-			<div className="flex justify-between">
-				<div className="flex items-center gap-6">
-					<div className="flex justify-center items-center gap-3 bg-slate-100 rounded-full p-2">
-						<button className="bg-green-500 text-white p-4 rounded-full cursor-pointer">
-							<Video size={20} />
-						</button>
-						{/* <div className="text-sm my-1">Camera</div> */}
-						<div className="text-xs font-medium bg-green-200 text-green-600 w-fit py-0.5 px-2 rounded-md leading-tight border border-green-300/60 cursor-default">ON</div>
-					</div>
-					<div className="flex justify-center items-center gap-3 bg-slate-100 rounded-full p-2">
-						<button className="bg-amber-500 text-white p-4 rounded-full cursor-pointer">
-							<Mic size={20} />
-						</button>
-						{/* <div className="text-sm my-1">Mic</div> */}
-						<div className="text-xs font-medium bg-green-200 text-green-600 w-fit py-0.5 px-2 rounded-md leading-tight border border-green-300/60 cursor-default">ON</div>
-					</div>
-					<div className="flex justify-center items-center gap-3 bg-slate-100 rounded-full p-2">
-						<button className="bg-blue-500 text-white p-4 rounded-full cursor-pointer">
-							<MonitorUp size={20} />
-						</button>
-						{/* <div className="text-sm my-1">Share</div> */}
-						<div className="text-xs font-medium bg-red-200 text-red-500 w-fit py-0.5 px-2 rounded-md leading-tight border border-red-300/60 cursor-default">OFF</div>
-					</div>
-				</div>
-				<div>
-					<button className="bg-red-500 hover:bg-red-700/85 transition-all text-white py-4 px-6 rounded-xl cursor-pointer flex items-center gap-2.5 leading-0">
-						<CircleX size={20} />
-						End
-					</button>
-				</div>
+			{/* Call Action Buttons */}
+			<div className="flex justify-center items-center gap-5 bg-slate-100/70 rounded-3xl p-5 border border-slate-200 w-fit m-auto">
+				<button className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-200/80 transition-colors p-4 rounded-full cursor-pointer">
+					<Mic size={20} />
+				</button>
+				<button className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-200/80 transition-colors p-4 rounded-full cursor-pointer">
+					<Video size={20} />
+				</button>
+				<button className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-200/80 transition-colors p-4 rounded-full cursor-pointer">
+					<MonitorUp size={20} />
+				</button>
+				<button className="bg-white text-slate-700 border border-slate-300 hover:bg-slate-200/80 transition-colors p-4 rounded-full cursor-pointer">
+					<Volume2 size={20} />
+				</button>
+				<button className="bg-red-500 text-white hover:bg-red-700 active:bg-red-800 p-4 rounded-full cursor-pointer">
+					<PhoneOff size={20} />
+				</button>
 			</div>
 		</div>
 	)

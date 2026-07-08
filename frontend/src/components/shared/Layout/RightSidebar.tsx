@@ -15,7 +15,7 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 					}}>
 						{
 							Array(10).fill(0).map(() => (
-								<div className="py-3 px-5 rounded-lg hover:bg-slate-50">
+								<div className="py-3 px-5 hover:bg-slate-50">
 									<Avatar
 										image="/profile-img.jpeg"
 										imageShape="square"

@@ -24,7 +24,7 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 										subtitle={
 											<div className="flex items-center gap-1 mt-3">
 												<Button
-													variant="success"
+													variant="primary"
 													icon={UserRoundPlus}
 													iconSize={13}
 													style={{ padding: "5px 10px", borderRadius: "6px" }}>

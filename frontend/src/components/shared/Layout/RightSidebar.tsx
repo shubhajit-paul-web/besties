@@ -1,50 +1,98 @@
-import { MessageSquareMore, Phone, Video } from "lucide-react"
+import { ArrowRightIcon, MessageSquareMore, Phone, UserRoundPlus, Video } from "lucide-react"
 import Avatar from "../Avatar"
 import { Link } from "react-router-dom"
+import Button from "../Button"
 
 const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 	return (
 		<aside className={`w-[${rightSidebarWidth}px] h-screen p-8 fixed top-0 right-0`} style={{ width: rightSidebarWidth + "px" }}>
-			<div className="h-full bg-slate-50 border-l border-slate-200 rounded-xl py-5">
-				<div className="font-medium text-lg pb-4 px-5">My Friends</div>
-				<div className="w-[90%] border-b border-b-slate-200 m-auto"></div>
-				<div className=" mt-5 space-y-1 overflow-y-auto" style={{
-					height: `calc(100% - 60px)`
-				}}>
+			<div className="h-full bg-slate-50 border-l border-slate-100 rounded-xl py-5 px-5">
+				{/* Suggested friends */}
+				<div className="h-[43%] pb-5 bg-white rounded-xl overflow-y-auto border border-slate-200/75">
+					<div className="flex justify-between items-center py-3 px-5">
+						<div className="font-medium text-lg">Suggested</div>
+						<button className="font-medium text-xs py-0.5 px-3 flex items-center gap-1 text-slate-600 bg-slate-200 rounded-full">
+							See all
+							<ArrowRightIcon size={13} />
+						</button>
+					</div>
+					<div className="w-[90%] border-b border-b-slate-100 m-auto"></div>
+
 					{
-						Array(20).fill(0).map(() => (
-							<div className="flex justify-between items-center py-3 px-5 rounded-lg hover:bg-slate-200/50">
+						Array(10).fill(0).map(() => (
+							<div className="py-2 px-5 rounded-lg hover:bg-slate-200/50">
 								<Avatar
 									image="/profile-img.jpeg"
+									imageShape="square"
+									imageSize={56}
 									title="Avinash Kumar"
 									subtitle={
-										<div className="flex items-center gap-1 mt-0.5">
-											<div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-											<span className="opacity-70">Online</span>
+										<div className="flex items-center gap-1 mt-3">
+											<Button
+												variant="success"
+												icon={UserRoundPlus}
+												iconSize={13}
+												style={{ padding: "5px 10px", borderRadius: "6px" }}>
+												Add Friend
+											</Button>
 										</div>
 									}
 								/>
-
-								{/* Actions */}
-								<div className="flex items-center gap-2.5">
-									<Link to="/app/chat">
-										<button className="cursor-pointer hover:border-blue-500 transition-all text-blue-600 bg-blue-100/80 border border-blue-200 rounded-full p-1.5" title="Chat">
-											<MessageSquareMore size={15} />
-										</button>
-									</Link>
-									<Link to="/app/audio-call">
-										<button className="cursor-pointer hover:border-green-500 transition-all text-green-600 bg-green-100/80 border border-green-300/50 rounded-full p-1.5" title="Audio Call">
-											<Phone size={15} />
-										</button>
-									</Link>
-									<Link to="/app/video-call" className="cursor-pointer hover:border-amber-500 transition-all text-amber-600 bg-amber-100/80 border border-amber-300/90 rounded-full p-1.5" title="Video Call">
-										<Video size={15} />
-									</Link>
-								</div>
 							</div>
 						))
 					}
 				</div>
+
+
+				{/* My friends */}
+				<div className="h-[55%] bg-white rounded-xl mt-5 border border-slate-200/75">
+					<div className="flex justify-between items-center py-3 px-5">
+						<div className="font-medium text-lg ">My Friends</div>
+						<button className="font-medium text-xs py-0.5 px-3 flex items-center gap-1 text-slate-600 bg-slate-200 rounded-full">
+							See all
+							<ArrowRightIcon size={13} />
+						</button>
+					</div>
+					<div className="w-[90%] border-b border-b-slate-100 m-auto"></div>
+					<div className="mt-3 space-y-1 overflow-y-auto" style={{
+						height: `calc(100% - 60px)`
+					}}>
+						{
+							Array(20).fill(0).map(() => (
+								<div className="flex justify-between items-center py-2 px-5 rounded-lg hover:bg-slate-200/50">
+									<Avatar
+										image="/profile-img.jpeg"
+										title="Avinash Kumar"
+										subtitle={
+											<div className="flex items-center gap-1 mt-0.5">
+												<div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+												<span className="opacity-70">Online</span>
+											</div>
+										}
+									/>
+
+									{/* Actions */}
+									<div className="flex items-center gap-2">
+										<Link to="/app/chat">
+											<button className="cursor-pointer hover:border-blue-500 transition-all text-blue-600 bg-blue-100/80 border border-blue-200 rounded-full p-1.5" title="Chat">
+												<MessageSquareMore size={14} />
+											</button>
+										</Link>
+										<Link to="/app/audio-call">
+											<button className="cursor-pointer hover:border-green-500 transition-all text-green-600 bg-green-100/80 border border-green-300/50 rounded-full p-1.5" title="Audio Call">
+												<Phone size={14} />
+											</button>
+										</Link>
+										<Link to="/app/video-call" className="cursor-pointer hover:border-amber-500 transition-all text-amber-600 bg-amber-100/80 border border-amber-300/90 rounded-full p-1.5" title="Video Call">
+											<Video size={14} />
+										</Link>
+									</div>
+								</div>
+							))
+						}
+					</div>
+				</div>
+
 			</div>
 		</aside>
 	)

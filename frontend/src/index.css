@@ -26,3 +26,7 @@
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8fafc;
 }
+
+button {
+    cursor: pointer;
+}

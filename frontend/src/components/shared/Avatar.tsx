@@ -2,16 +2,22 @@ import type { ReactNode } from "react"
 
 interface AvatarInterface {
 	image: string
+	imageShape?: "circle" | "square"
 	title?: string
 	subtitle?: ReactNode
 	imageSize?: number
 	className?: string
 }
 
-const Avatar = ({ image, title, subtitle, imageSize = 9, className = "" }: AvatarInterface) => {
+const Avatar = ({ image, imageShape = "circle", title, subtitle, imageSize = 36, className = "" }: AvatarInterface) => {
 	return (
 		<div className={`flex items-center gap-2.5 ${className}`}>
-			<img className={`w-${imageSize} w-9 aspect-square rounded-full object-cover`} src={image} alt="avatar image" />
+			<img
+				className={`${imageShape === "circle" ? "rounded-full" : "rounded-md"} w-9 aspect-square object-cover object-center`}
+				style={{ width: imageSize + "px" }}
+				src={image}
+				alt="avatar image"
+			/>
 
 			{
 				(title || subtitle) &&

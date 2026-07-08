@@ -33,7 +33,7 @@ const MainContent = ({
 	}
 
 	return (
-		<section className=" p-8 transition-all" style={sectionDimension}>
+		<section className="p-8 px-5 transition-all" style={sectionDimension}>
 			<div className="w-full rounded-xl">
 				<div className="flex items-center gap-4 pb-3 pt-1.5 border-b border-b-slate-200/70 mb-3">
 					{/* Sidebar toggle button */}

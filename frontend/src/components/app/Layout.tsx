@@ -7,7 +7,7 @@ const Layout = () => {
 	const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
 
 	const LEFT_SIDEBAR_WIDTH = 320;
-	const RIGHT_SIDEBAR_WIDTH = 450;
+	const RIGHT_SIDEBAR_WIDTH = 480;
 	const LEFT_SIDEBAR_OPEN_WIDTH = 160;
 
 	return (

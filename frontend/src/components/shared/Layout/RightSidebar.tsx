@@ -18,7 +18,7 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 								<div className="py-3 px-5 hover:bg-slate-50">
 									<Avatar
 										image="/profile-img.jpeg"
-										imageShape="square"
+										imageShape="md"
 										imageSize={56}
 										title="Avinash Kumar"
 										subtitle={

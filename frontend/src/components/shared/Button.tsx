@@ -1,5 +1,5 @@
-import type { LucideIcon } from "lucide-react"
-import type { ButtonHTMLAttributes, ReactNode } from "react"
+import type { LucideIcon } from "lucide-react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const buttonBackgroundVariants = {
 	// Solid
@@ -21,6 +21,7 @@ const buttonBackgroundVariants = {
 	dark: "bg-slate-900 hover:bg-slate-800 active:bg-black text-white",
 	light: "bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700",
 	lightPlus: "bg-slate-200/70 hover:bg-slate-200 active:bg-slate-300 text-slate-700",
+	transparent: "bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-600",
 
 	// Soft Tinted (Social App Style)
 	blueSoft: "bg-blue-50 hover:bg-blue-100 active:bg-blue-200 text-blue-700",
@@ -41,24 +42,27 @@ const buttonBackgroundVariants = {
 };
 
 interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
-	children?: ReactNode
-	icon?: LucideIcon
-	iconSize?: number
-	variant?: keyof typeof buttonBackgroundVariants
-	type?: "button" | "submit" | "reset"
-	size?: "normal" | "small"
-	className?: string
-	direction?: "normal" | "reverse"
-	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none"
+	children?: ReactNode;
+	icon?: LucideIcon;
+	iconSize?: number;
+	variant?: keyof typeof buttonBackgroundVariants;
+	type?: "button" | "submit" | "reset";
+	size?: "normal" | "small";
+	className?: string;
+	direction?: "normal" | "reverse";
+	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
 }
 
 const Button = ({ children, icon: Icon, iconSize = 20, variant = "primary", type = "button", size = "normal", className, direction = "normal", borderRadius = "lg", ...props }: ButtonInterface) => {
 	return (
-		<button className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`} type={type} {...props}>
+		<button
+			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
+			type={type}
+			{...props}>
 			{Icon && <Icon size={iconSize} />}
 			{children}
 		</button>
-	)
-}
+	);
+};
 
-export default Button
+export default Button;

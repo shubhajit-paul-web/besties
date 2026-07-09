@@ -45,6 +45,8 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	children?: ReactNode;
 	icon?: LucideIcon;
 	iconSize?: number;
+	iconFill?: string | false;
+	iconColor?: string | false;
 	variant?: keyof typeof buttonBackgroundVariants;
 	type?: "button" | "submit" | "reset";
 	size?: "normal" | "small";
@@ -53,13 +55,26 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
 }
 
-const Button = ({ children, icon: Icon, iconSize = 20, variant = "primary", type = "button", size = "normal", className, direction = "normal", borderRadius = "lg", ...props }: ButtonInterface) => {
+const Button = ({
+	children,
+	icon: Icon,
+	iconSize = 20,
+	iconFill,
+	iconColor,
+	variant = "primary",
+	type = "button",
+	size = "normal",
+	className,
+	direction = "normal",
+	borderRadius = "lg",
+	...props
+}: ButtonInterface) => {
 	return (
 		<button
 			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
 			type={type}
 			{...props}>
-			{Icon && <Icon size={iconSize} />}
+			{Icon && <Icon size={iconSize} {...(iconFill && { fill: iconFill })} {...(iconColor && { color: iconColor })} />}
 			{children}
 		</button>
 	);

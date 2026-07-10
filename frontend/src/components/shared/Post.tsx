@@ -135,12 +135,26 @@ const Post = ({ post }: PostComponentProps) => {
 			</div>
 
 			{post.mediaUrl && (
-				<div className="w-full max-h-160 overflow-hidden">
+				<div className="h-160 overflow-hidden bg-slate-900 relative flex justify-center items-center">
 					<img
-						className="w-full select-none"
+						className="absolute inset-0 h-full w-full object-cover blur-3xl scale-110 opacity-60"
 						src={post.mediaUrl}
 						draggable="false"
 						alt="Post media"
+						loading="lazy"
+						// onError is here for temporary purpose
+						onError={(e) => {
+							e.currentTarget.onerror = null; // Prevents infinite loops if defaultImg also fails
+							e.currentTarget.src = "https://cdnb.artstation.com/p/assets/images/images/079/205/017/large/sourav-ghosh-back-to-school-x-media-post-template-design-07.jpg?1724262273";
+						}}
+					/>
+					<img
+						className="relative z-10 mx-auto max-h-full object-contain"
+						src={post.mediaUrl}
+						draggable="false"
+						alt="Post media"
+						loading="lazy"
+						// onError is here for temporary purpose
 						onError={(e) => {
 							e.currentTarget.onerror = null; // Prevents infinite loops if defaultImg also fails
 							e.currentTarget.src = "https://cdnb.artstation.com/p/assets/images/images/079/205/017/large/sourav-ghosh-back-to-school-x-media-post-template-design-07.jpg?1724262273";

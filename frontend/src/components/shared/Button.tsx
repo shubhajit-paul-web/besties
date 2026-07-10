@@ -55,6 +55,7 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	className?: string;
 	direction?: "normal" | "reverse";
 	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
+	centerContent?: boolean;
 }
 
 const Button = ({
@@ -70,11 +71,12 @@ const Button = ({
 	className,
 	direction = "normal",
 	borderRadius = "lg",
+	centerContent = false,
 	...props
 }: ButtonInterface) => {
 	return (
 		<button
-			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
+			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
 			style={{ width: width }}
 			type={type}
 			{...props}>

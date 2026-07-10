@@ -36,6 +36,7 @@ const buttonBackgroundVariants = {
 
 	// Neutral Soft
 	graySoft: "bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700",
+	// graySoftTransparent: "bg-white hover:bg-white/90 active:bg-white border border-slate-200 text-slate-700 backdrop-blur-md",
 
 	// Premium
 	glass: "bg-white/70 hover:bg-white/90 active:bg-white border border-slate-200 text-slate-700 backdrop-blur-md",
@@ -50,6 +51,7 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	variant?: keyof typeof buttonBackgroundVariants;
 	type?: "button" | "submit" | "reset";
 	size?: "normal" | "small";
+	width?: string;
 	className?: string;
 	direction?: "normal" | "reverse";
 	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
@@ -64,6 +66,7 @@ const Button = ({
 	variant = "primary",
 	type = "button",
 	size = "normal",
+	width = "fit-content",
 	className,
 	direction = "normal",
 	borderRadius = "lg",
@@ -72,6 +75,7 @@ const Button = ({
 	return (
 		<button
 			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
+			style={{ width: width }}
 			type={type}
 			{...props}>
 			{Icon && <Icon size={iconSize} {...(iconFill && { fill: iconFill })} {...(iconColor && { color: iconColor })} />}

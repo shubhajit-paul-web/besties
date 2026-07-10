@@ -1,35 +1,39 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom"
-import Home from "./components/app/Home"
-import Login from "./components/Login"
-import Signup from "./components/Signup"
-import Layout from "./components/app/Layout"
-import MyPosts from "./components/app/MyPosts"
-import Friends from "./components/app/Friends"
-import Saved from "./components/app/Saved"
-import Dashboard from "./components/app/Dashboard"
-import VideoCallManager from "./components/app/VideoCallManager"
-import AudioCallManager from "./components/app/AudioCallManager"
-import ChatManager from "./components/app/ChatManager"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./components/app/Home";
+import Login from "./components/Login";
+import Signup from "./components/Signup";
+import Layout from "./components/app/Layout";
+import MyPosts from "./components/app/MyPosts";
+import Friends from "./components/app/Friends";
+import Saved from "./components/app/Saved";
+import Dashboard from "./components/app/Dashboard";
+import VideoCallManager from "./components/app/VideoCallManager";
+import AudioCallManager from "./components/app/AudioCallManager";
+import ChatManager from "./components/app/ChatManager";
+import Profile from "./components/app/Profile";
+import NotFound from "./components/NotFound";
 
 const App = () => {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/app" element={<Layout />}>
-          <Route path="home" element={<Home />} />
-          <Route path="my-posts" element={<MyPosts />} />
-          <Route path="friends" element={<Friends />} />
-          <Route path="saved" element={<Saved />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="video-call" element={<VideoCallManager />} />
-          <Route path="audio-call" element={<AudioCallManager />} />
-          <Route path="chat" element={<ChatManager />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
-  )
-}
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/login" element={<Login />} />
+				<Route path="/signup" element={<Signup />} />
+				<Route path="/app" element={<Layout />}>
+					<Route path="home" element={<Home />} />
+					<Route path="my-posts" element={<MyPosts />} />
+					<Route path="friends" element={<Friends />} />
+					<Route path="saved" element={<Saved />} />
+					<Route path="dashboard" element={<Dashboard />} />
+					<Route path="video-call" element={<VideoCallManager />} />
+					<Route path="audio-call" element={<AudioCallManager />} />
+					<Route path="chat" element={<ChatManager />} />
+					<Route path="profile" element={<Profile />} />
+				</Route>
+				<Route path="*" element={<NotFound />} />
+			</Routes>
+		</BrowserRouter>
+	);
+};
 
-export default App
+export default App;

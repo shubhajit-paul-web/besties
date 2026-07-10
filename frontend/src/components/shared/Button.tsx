@@ -13,7 +13,7 @@ const buttonBackgroundVariants = {
 	// Brand Colors
 	indigo: "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white",
 	purple: "bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white",
-	pink: "bg-fuchsia-600 hover:bg-fuchsia-700 active:bg-fuchsia-800 text-white",
+	pink: "bg-[#FF3D94] hover:bg-[#D8337D] active:bg-[#B22A66] text-white",
 	teal: "bg-teal-600 hover:bg-teal-700 active:bg-teal-800 text-white",
 	orange: "bg-orange-600 hover:bg-orange-700 active:bg-orange-800 text-white",
 
@@ -21,6 +21,7 @@ const buttonBackgroundVariants = {
 	dark: "bg-slate-900 hover:bg-slate-800 active:bg-black text-white",
 	light: "bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700",
 	lightPlus: "bg-slate-200/70 hover:bg-slate-200 active:bg-slate-300 text-slate-700",
+	lightUltra: "bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700",
 	transparent: "bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-600",
 
 	// Soft Tinted (Social App Style)
@@ -56,6 +57,7 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	direction?: "normal" | "reverse";
 	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
 	centerContent?: boolean;
+	borderColor?: string;
 }
 
 const Button = ({
@@ -72,11 +74,12 @@ const Button = ({
 	direction = "normal",
 	borderRadius = "lg",
 	centerContent = false,
+	borderColor = "",
 	...props
 }: ButtonInterface) => {
 	return (
 		<button
-			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
+			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${borderColor && "border"} border-[${borderColor}] ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
 			style={{ width: width }}
 			type={type}
 			{...props}>

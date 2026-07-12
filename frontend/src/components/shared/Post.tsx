@@ -137,7 +137,7 @@ const Post = ({ post }: PostComponentProps) => {
 			{post.mediaUrl && (
 				<div className="h-160 overflow-hidden bg-slate-900 relative flex justify-center items-center">
 					<img
-						className="absolute inset-0 h-full w-full object-cover blur-3xl scale-110 opacity-60"
+						className="absolute inset-0 h-full w-full object-cover blur-3xl scale-110 opacity-60 select-none pointer-none"
 						src={post.mediaUrl}
 						draggable="false"
 						alt="Post media"

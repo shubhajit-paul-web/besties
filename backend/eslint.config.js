@@ -19,7 +19,8 @@ export default [
             globals: globals.node,
 
             parserOptions: {
-                projectService: true,
+                // projectService: true,
+                project: "./tsconfig.json",
                 tsconfigRootDir: import.meta.dirname,
             },
         },

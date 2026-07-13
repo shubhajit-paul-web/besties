@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import config from "../config/environment.js";
 
 import winston from "winston";
 
@@ -36,16 +37,13 @@ const consoleFormat = combine(
         const context = Object.keys(metadata).length > 0 ? ` ${JSON.stringify(metadata)}` : "";
 
         return logStack
-            ? `${time} ${logLevel}: ${logMessage} ${logStack}${context}`
-            : `${time} ${logLevel}: ${logMessage}${context}`;
+            ? `[${time}] ${logLevel}: ${logMessage} ${logStack}${context}`
+            : `[${time}] ${logLevel}: ${logMessage}${context}`;
     }),
 );
 
 const logger = winston.createLogger({
-    level: process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "production" ? "info" : "debug"),
-    // defaultMeta: {
-    //     service: "besties-backend",
-    // },
+    level: config.NODE_ENV === "production" ? "info" : "debug",
     format: combine(errors({ stack: true }), timestamp(), splat()),
     transports: [
         new winston.transports.File({
@@ -95,7 +93,7 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
-if (process.env.NODE_ENV !== "production") {
+if (config.NODE_ENV !== "production") {
     logger.add(
         new winston.transports.Console({
             format: consoleFormat,

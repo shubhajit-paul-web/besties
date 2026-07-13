@@ -3,11 +3,12 @@
         "target": "es2020",
         "module": "nodenext",
         "moduleResolution": "nodenext",
-        "types": ["node"],
+        // "types": ["node", "cors", "express"],
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
+        "allowSyntheticDefaultImports": true,
         "rootDir": "./src",
         "outDir": "./dist"
     },

@@ -43,7 +43,7 @@ const consoleFormat = combine(
 );
 
 const logger = winston.createLogger({
-    level: config.NODE_ENV === "production" ? "info" : "debug",
+    level: config.NODE_ENV === "prod" ? "info" : "debug",
     format: combine(errors({ stack: true }), timestamp(), splat()),
     transports: [
         new winston.transports.File({
@@ -93,7 +93,7 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
-if (config.NODE_ENV !== "production") {
+if (config.NODE_ENV !== "prod") {
     logger.add(
         new winston.transports.Console({
             format: consoleFormat,
@@ -101,6 +101,7 @@ if (config.NODE_ENV !== "production") {
     );
 }
 
+// HTTP log stream for morgan
 export const httpLogStream = {
     write(message: string) {
         logger.http(message.trim());

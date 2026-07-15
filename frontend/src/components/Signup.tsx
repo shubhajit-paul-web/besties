@@ -14,7 +14,8 @@ interface SignupFormData {
 	dobMonth: string;
 	dobYear: string;
 	gender: "female" | "male" | "custom" | "";
-	identifier: string;
+	email: string;
+	mobileNumber: string;
 	password: string;
 	profilePicture?: FileList;
 }
@@ -179,87 +180,104 @@ const Signup = () => {
 							</div>
 
 							{/* Row 2 */}
-							<InputField
-								type="text"
-								placeholder="Mobile number or email address"
-								{...register("identifier", {
-									required: "Contact info is required",
-									validate: (value) => {
-										const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-										const mobileRegex = /^\d{10}$/;
-										return emailRegex.test(value) || mobileRegex.test(value) || "Enter a valid email or 10-digit mobile number";
-									},
-								})}
-								error={errors.identifier}
-							/>
-							<div className="relative">
+							<div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
 								<InputField
-									type={showPassword ? "text" : "password"}
-									placeholder="New password"
-									{...register("password", {
-										required: "Password is required",
-										minLength: {
-											value: 6,
-											message: "Must be at least 6 characters",
+									type="email"
+									placeholder="Email address"
+									autoComplete="email"
+									{...register("email", {
+										required: "Email address is required",
+										validate: (value) => {
+											const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+											return emailRegex.test(value) || "Enter a valid email address";
 										},
 									})}
-									error={errors.password}
+									error={errors.email}
 								/>
-								<button
-									type="button"
-									onClick={() => setShowPassword(!showPassword)}
-									className="absolute right-4 top-[17px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-									{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-								</button>
-							</div>
-							<div>
-								<div className="grid grid-cols-3 gap-2">
-									<div className="relative">
-										<select {...register("dobDay", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobDay ? selectErrorStyles : selectNormalStyles}`}>
-											<option value="" hidden>
-												Day
-											</option>
-											{days.map((day) => (
-												<option key={day} value={day}>
-													{day}
-												</option>
-											))}
-										</select>
-										<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-									</div>
-									<div className="relative">
-										<select {...register("dobMonth", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobMonth ? selectErrorStyles : selectNormalStyles}`}>
-											<option value="" hidden>
-												Month
-											</option>
-											{months.map((month) => (
-												<option key={month} value={month}>
-													{month.substring(0, 3)}
-												</option>
-											))}
-										</select>
-										<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-									</div>
-									<div className="relative">
-										<select {...register("dobYear", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobYear ? selectErrorStyles : selectNormalStyles}`}>
-											<option value="" hidden>
-												Year
-											</option>
-											{years.map((year) => (
-												<option key={year} value={year}>
-													{year}
-												</option>
-											))}
-										</select>
-										<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-									</div>
+								<InputField
+									type="tel"
+									placeholder="Mobile number"
+									inputMode="numeric"
+									autoComplete="tel"
+									maxLength={10}
+									{...register("mobileNumber", {
+										required: "Mobile number is required",
+										validate: (value) => {
+											const mobileRegex = /^\d{10}$/;
+											return mobileRegex.test(value) || "Enter a valid 10-digit mobile number";
+										},
+									})}
+									error={errors.mobileNumber}
+								/>
+								<div className="relative">
+									<InputField
+										type={showPassword ? "text" : "password"}
+										placeholder="New password"
+										{...register("password", {
+											required: "Password is required",
+											minLength: {
+												value: 6,
+												message: "Must be at least 6 characters",
+											},
+										})}
+										error={errors.password}
+									/>
+									<button
+										type="button"
+										onClick={() => setShowPassword(!showPassword)}
+										className="absolute right-4 top-[17px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+										{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+									</button>
 								</div>
-								{dobError && (
-									<p className="text-sm text-red-500 mt-0.5 flex items-center gap-1">
-										<Info size={15} />
-										{dobError}
-									</p>
-								)}
+								<div>
+									<div className="grid grid-cols-3 gap-2">
+										<div className="relative">
+											<select {...register("dobDay", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobDay ? selectErrorStyles : selectNormalStyles}`}>
+												<option value="" hidden>
+													Day
+												</option>
+												{days.map((day) => (
+													<option key={day} value={day}>
+														{day}
+													</option>
+												))}
+											</select>
+											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
+										</div>
+										<div className="relative">
+											<select {...register("dobMonth", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobMonth ? selectErrorStyles : selectNormalStyles}`}>
+												<option value="" hidden>
+													Month
+												</option>
+												{months.map((month) => (
+													<option key={month} value={month}>
+														{month.substring(0, 3)}
+													</option>
+												))}
+											</select>
+											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
+										</div>
+										<div className="relative">
+											<select {...register("dobYear", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobYear ? selectErrorStyles : selectNormalStyles}`}>
+												<option value="" hidden>
+													Year
+												</option>
+												{years.map((year) => (
+													<option key={year} value={year}>
+														{year}
+													</option>
+												))}
+											</select>
+											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
+										</div>
+									</div>
+									{dobError && (
+										<p className="text-sm text-red-500 mt-0.5 flex items-center gap-1">
+											<Info size={15} />
+											{dobError}
+										</p>
+									)}
+								</div>
 							</div>
 						</div>
 

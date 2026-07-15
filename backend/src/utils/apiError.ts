@@ -18,8 +18,8 @@ class ApiError extends Error {
     public readonly success = false;
 
     constructor(
-        public statusCode: number = 500,
-        public message: string = "Something went wrong",
+        public statusCode: number,
+        public message: string,
         public isOperational: boolean = true,
         public details?: object | string,
         public stack?: string,

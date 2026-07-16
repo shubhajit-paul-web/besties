@@ -22,6 +22,12 @@ app.use(
 );
 app.use(compression());
 
+// Routes imports
+import authRoutes from "./routes/auth.routes.js";
+
+// Routes implementation
+app.use("/auth", authRoutes);
+
 // 404 Middleware
 app.use((req, res, next) =>
     next(new ApiError(StatusCodes.NOT_FOUND, `${req.originalUrl} not found`)),

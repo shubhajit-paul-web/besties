@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Signup schema
-export const signupSchema = z.object({
+export const registerUserSchema = z.object({
     username: z
         .string("Username is required")
         .trim()

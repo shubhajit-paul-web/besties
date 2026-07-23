@@ -1,7 +1,9 @@
-import { Schema, model } from "mongoose";
+import { InferSchemaType, Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import logger from "../utils/logger.js";
 import getErrorMessage from "../utils/getErrorMessage.js";
+import ApiError from "../utils/apiError.js";
+import { StatusCodes } from "http-status-codes";
 
 const userSchema = new Schema(
     {
@@ -27,19 +29,17 @@ const userSchema = new Schema(
                 type: String,
                 trim: true,
                 lowercase: true,
-                required: true,
+                // required: true,
             },
         },
-        profile: {
-            avatar: {
-                url: String,
-                fileId: String,
-            },
-            bio: {
-                type: String,
-                trim: true,
-                maxLength: 100,
-            },
+        avatar: {
+            url: String,
+            fileId: String,
+        },
+        bio: {
+            type: String,
+            trim: true,
+            maxLength: 100,
         },
         gender: {
             type: String,
@@ -61,7 +61,6 @@ const userSchema = new Schema(
         mobileNumber: {
             type: String,
             trim: true,
-            unique: true,
         },
         password: {
             type: String,
@@ -70,11 +69,20 @@ const userSchema = new Schema(
         },
         usernameUpdatedAt: {
             type: Date,
-            default: Date.now,
         },
         refreshToken: String,
     },
     { timestamps: true },
+);
+
+userSchema.index(
+    {
+        mobileNumber: 1,
+    },
+    {
+        unique: true,
+        partialFilterExpression: { $type: "string" },
+    },
 );
 
 // Hash the password if it is being modified or created
@@ -88,6 +96,13 @@ userSchema.pre("save", async function () {
         logger.error("Failed to hash user password", {
             message: getErrorMessage(err),
         });
+
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            "Failed to hash user password",
+            false,
+            getErrorMessage(err),
+        );
     }
 });
 
@@ -98,5 +113,8 @@ userSchema.pre("save", function () {
     }
 });
 
-const User = model("User", userSchema);
-export default User;
+// Type
+export type User = InferSchemaType<typeof userSchema>;
+
+const UserModel = model("User", userSchema);
+export default UserModel;

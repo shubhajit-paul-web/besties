@@ -1,19 +1,18 @@
-import User from "../models/user.model.js";
-import z from "zod";
-import { registerUserSchema } from "../validators/auth.validator.js";
+import { RegisterUserDto } from "../dto/user.dto.js";
+import UserModel from "../models/user.model.js";
 
 const existsByUsername = async (username: string) => {
-    return await User.exists({ username });
+    return await UserModel.exists({ username });
 };
 
-const existsByEmailOrMobile = async (email: string, mobileNumber: string) => {
-    return User.exists({
-        $or: [{ email }, { mobileNumber }],
+const existsByEmailOrMobile = async (email: string, mobileNumber: string | undefined) => {
+    return await UserModel.exists({
+        $or: [{ email, mobileNumber }],
     });
 };
 
-const create = async (userData: z.infer<typeof registerUserSchema>) => {
-    return User.create(userData);
+const create = async (userData: RegisterUserDto) => {
+    return await UserModel.create(userData);
 };
 
 export default {

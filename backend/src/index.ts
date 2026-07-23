@@ -73,11 +73,9 @@ void (async () => {
 
         const server = app.listen(config.PORT, () => {
             logger.info("Server is running", {
-                meta: {
-                    PORT: config.PORT,
-                    SERVER_URL: config.SERVER_URL,
-                    ENVIRONMENT: config.NODE_ENV,
-                },
+                PORT: config.PORT,
+                SERVER_URL: config.SERVER_URL,
+                ENVIRONMENT: config.NODE_ENV,
             });
         });
 

@@ -22,7 +22,7 @@ class ApiError extends Error {
         public message: string,
         public isOperational: boolean = true,
         public details?: object | string,
-        public stack?: string,
+        public stack?: string | undefined,
     ) {
         super(message);
         this.statusCode = statusCode;

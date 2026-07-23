@@ -12,7 +12,11 @@ const validate = (schema: ZodObject) => (req: Request, res: Response, next: Next
                 success: false,
                 statusCode: StatusCodes.BAD_REQUEST,
                 message: "Validation failed",
-                errors: err.issues,
+                errors: err.issues.map((value) => ({
+                    // code: value.code,
+                    field: value.path[0],
+                    message: value.message,
+                })),
             });
         }
 

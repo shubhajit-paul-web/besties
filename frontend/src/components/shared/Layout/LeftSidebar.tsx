@@ -13,7 +13,7 @@ interface SidebarInterface {
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: SidebarInterface) => {
 	const menus = [
 		{
-			href: "/app/home",
+			href: "/app",
 			label: "home",
 			icon: House,
 		},

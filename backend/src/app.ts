@@ -18,14 +18,15 @@ app.use(cookieParser());
 app.use(
     cors({
         origin: config.ALLOWED_ORIGIN,
+        credentials: true,
     }),
 );
 app.use(compression());
 
-// Routes imports
+// Route imports
 import authRoutes from "./routes/auth.routes.js";
 
-// Routes implementation
+// Route implementations
 app.use("/auth", authRoutes);
 
 // 404 Middleware

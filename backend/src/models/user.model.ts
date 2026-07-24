@@ -1,11 +1,43 @@
-import { InferSchemaType, Schema, model } from "mongoose";
+import { Model, Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import logger from "../utils/logger.js";
 import getErrorMessage from "../utils/getErrorMessage.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
+import jwt from "jsonwebtoken";
+import config from "../config/environment.js";
 
-const userSchema = new Schema(
+interface User {
+    username: string;
+    name: {
+        first: string;
+        last?: string;
+    };
+    avatar: {
+        url?: string;
+        fileId?: string;
+    };
+    bio?: string;
+    gender: "male" | "female" | "custom";
+    dob: Date;
+    email: string;
+    mobileNumber?: string;
+    password: string;
+    usernameUpdatedAt?: Date;
+    refreshToken?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+interface UserMethods {
+    comparePassword(plainTextPassword: string): Promise<boolean>;
+    generateAccessAndRefreshTokens(): Promise<{ accessToken: string; refreshToken: string }>;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+type UserModelType = Model<User, {}, UserMethods>;
+
+const userSchema = new Schema<User, UserModelType, UserMethods>(
     {
         username: {
             type: String,
@@ -70,7 +102,10 @@ const userSchema = new Schema(
         usernameUpdatedAt: {
             type: Date,
         },
-        refreshToken: String,
+        refreshToken: {
+            type: String,
+            select: false,
+        },
     },
     { timestamps: true },
 );
@@ -84,6 +119,13 @@ userSchema.index(
         partialFilterExpression: { $type: "string" },
     },
 );
+
+userSchema.set("toJSON", {
+    transform: (_doc, ret) => {
+        const { __v: _, ...user } = ret;
+        return user;
+    },
+});
 
 // Hash the password if it is being modified or created
 userSchema.pre("save", async function () {
@@ -113,8 +155,49 @@ userSchema.pre("save", function () {
     }
 });
 
-// Type
-export type User = InferSchemaType<typeof userSchema>;
+userSchema.methods.comparePassword = async function (plainTextPassword: string) {
+    try {
+        return await bcrypt.compare(plainTextPassword, this.password);
+    } catch (err) {
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            "Internal server error",
+            false,
+            `BcryptError: Password verification faild for the user: ${this.email}`,
+            String(err),
+        );
+    }
+};
 
-const UserModel = model("User", userSchema);
+userSchema.methods.generateAccessAndRefreshTokens = async function () {
+    const payload = {
+        _id: this._id,
+        username: this.username,
+        email: this.email,
+    };
+
+    try {
+        const accessToken = jwt.sign(payload, config.JWT.ACCESS_TOKEN_SECRET!, {
+            expiresIn: config.JWT.ACCESS_TOKEN_EXPIRY,
+        });
+        const refreshToken = jwt.sign(payload, config.JWT.REFRESH_TOKEN_SECRET!, {
+            expiresIn: config.JWT.REFRESH_TOKEN_EXPIRY,
+        });
+
+        this.refreshToken = refreshToken;
+        await this.save();
+
+        return { accessToken, refreshToken };
+    } catch (error) {
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            "Internal server error",
+            false,
+            `JWTError: Failed to generate JWT access and refresh tokens for user: ${payload.email}`,
+            String(error),
+        );
+    }
+};
+
+const UserModel = model<User, UserModelType>("User", userSchema);
 export default UserModel;

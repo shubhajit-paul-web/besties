@@ -1,11 +1,12 @@
 import asyncHandler from "../utils/asyncHandler.js";
-import { StatusCodes } from "http-status-codes";
-import ApiResponse from "../utils/apiResponse.js";
-import authService from "../services/auth.service.js";
 import z from "zod";
+import { StatusCodes } from "http-status-codes";
+import authService from "../services/auth.service.js";
+import { Request } from "express";
 import { registerUserSchema } from "../validators/auth.validator.js";
-import { CookieOptions, Request } from "express";
-import config from "../config/environment.js";
+import getCookieOptions from "../utils/getCookieOptions.js";
+import { ACCESS_TOKEN_COOKIE_EXPIRY, REFRESH_TOKEN_COOKIE_EXPIRY } from "../constants/constants.js";
+import ApiResponse from "../utils/apiResponse.js";
 
 // Strongly typed Express request body, params, and query
 interface TypedRequest<Body = unknown, Params = unknown, Query = unknown> extends Request {
@@ -14,36 +15,38 @@ interface TypedRequest<Body = unknown, Params = unknown, Query = unknown> extend
     query: Query & Request["query"];
 }
 
-const registerUser = asyncHandler(
-    async (req: TypedRequest<z.infer<typeof registerUserSchema>>, res) => {
-        const user = await authService.registerUser(req.body);
+type RegisterUser = TypedRequest<z.infer<typeof registerUserSchema>>;
 
-        const { accessToken, refreshToken } = await authService.generateAccessAndRefreshToken({
-            _id: String(user._id),
-            username: user.username,
-            email: user.email,
-        });
+interface LoginUser extends Request {
+    body: {
+        identifier: string;
+        password: string;
+    };
+}
 
-        const cookieOptions: CookieOptions = {
-            httpOnly: true,
-            secure: config.NODE_ENV === "prod",
-            sameSite: "strict",
-        };
+// Register User
+const registerUser = asyncHandler(async (req: RegisterUser, res) => {
+    const { safeUserData, tokens } = await authService.registerUser(req.body);
 
-        res.cookie("accessToken", accessToken, {
-            ...cookieOptions,
-            maxAge: 10 * 60 * 1000, // 10 minutes
-        });
+    res.cookie("accessToken", tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
+    res.cookie("refreshToken", tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
 
-        res.cookie("refreshToken", refreshToken, {
-            ...cookieOptions,
-            maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
-        });
+    return res
+        .status(StatusCodes.CREATED)
+        .json(ApiResponse.success("Signup successful", { user: safeUserData }));
+});
 
-        res.status(StatusCodes.CREATED).json(ApiResponse.success("Signup successful", { user }));
-    },
-);
+// Login user
+const loginUser = asyncHandler(async (req: LoginUser, res) => {
+    const { user, tokens } = await authService.loginUser(req.body);
+
+    res.cookie("accessToken", tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
+    res.cookie("refreshToken", tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Logged in successful", { user }));
+});
 
 export default {
     registerUser,
+    loginUser,
 };

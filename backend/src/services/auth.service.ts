@@ -3,40 +3,12 @@ import { registerUserSchema } from "../validators/auth.validator.js";
 import userRepository from "../repositories/user.repository.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
-import jwt from "jsonwebtoken";
-import config from "../config/environment.js";
-import UserModel from "../models/user.model.js";
 
-interface JWTPayloadInterface {
-    _id: string;
-    username: string;
-    email: string;
+// Types
+interface LoginUser {
+    identifier: string;
+    password: string;
 }
-
-const generateAccessAndRefreshToken = async (payload: JWTPayloadInterface) => {
-    try {
-        const accessToken = jwt.sign(payload, config.JWT.ACCESS_TOKEN_SECRET!, {
-            expiresIn: "10m",
-        });
-        const refreshToken = jwt.sign(payload, config.JWT.REFRESH_TOKEN_SECRET!, {
-            expiresIn: "1y",
-        });
-
-        await UserModel.findByIdAndUpdate(payload._id, {
-            refreshToken,
-        });
-
-        return { accessToken, refreshToken };
-    } catch (error) {
-        throw new ApiError(
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            "Internal server error",
-            false,
-            "Error while generating jwt access and refresh token",
-            String(error),
-        );
-    }
-};
 
 const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
     const { username, email, mobileNumber } = userData;
@@ -75,12 +47,34 @@ const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
 
     const createdUser = await userRepository.create(userPayload);
 
-    const { password: _, ...safeUserData } = createdUser.toObject();
+    const tokens = await createdUser.generateAccessAndRefreshTokens();
 
-    return safeUserData;
+    const { password: _p, refreshToken: _r, ...safeUserData } = createdUser.toObject();
+
+    return { safeUserData, tokens };
+};
+
+const loginUser = async (credentials: LoginUser) => {
+    const { identifier, password } = credentials;
+
+    const user = await userRepository.findUserByIdentifier(identifier, "username email +password");
+
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "User doesn't exists, please try to login first");
+    }
+
+    const isCorrectPassword = await user.comparePassword(password);
+
+    if (!isCorrectPassword) {
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+    }
+
+    const tokens = await user.generateAccessAndRefreshTokens();
+
+    return { user, tokens };
 };
 
 export default {
     registerUser,
-    generateAccessAndRefreshToken,
+    loginUser,
 };

@@ -70,3 +70,13 @@ export const registerUserSchema = z.object({
         .regex(/[0-9]/, "Must contain a number")
         .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
 });
+
+// Login schema
+export const loginUserSchema = z.object({
+    identifier: z
+        .string("Username or email is required")
+        .trim()
+        .min(1, "Username or email is required")
+        .toLowerCase(),
+    password: z.string("Password is required").trim().min(1, "Password is required"),
+});

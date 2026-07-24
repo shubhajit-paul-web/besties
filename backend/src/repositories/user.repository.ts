@@ -15,8 +15,25 @@ const create = async (userData: RegisterUserDto) => {
     return await UserModel.create(userData);
 };
 
+// const updateRefreshTokenById = async (userId: string, refreshToken: string) => {
+//     return await UserModel.findByIdAndUpdate(
+//         userId,
+//         {
+//             refreshToken,
+//         },
+//         { new: true },
+//     );
+// };
+
+const findUserByIdentifier = async (identifier: string, fields: string) => {
+    return await UserModel.findOne({
+        $or: [{ username: identifier }, { email: identifier }],
+    }).select(fields);
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
     create,
+    findUserByIdentifier,
 };

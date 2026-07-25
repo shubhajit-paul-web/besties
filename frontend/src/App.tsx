@@ -12,6 +12,7 @@ import AudioCallManager from "./components/app/AudioCallManager";
 import ChatManager from "./components/app/ChatManager";
 import Profile from "./components/app/Profile";
 import NotFound from "./components/NotFound";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
 	return (
@@ -32,6 +33,7 @@ const App = () => {
 				</Route>
 				<Route path="*" element={<NotFound />} />
 			</Routes>
+			<ToastContainer />
 		</BrowserRouter>
 	);
 };

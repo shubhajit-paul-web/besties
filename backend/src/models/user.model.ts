@@ -121,9 +121,9 @@ userSchema.index(
 );
 
 userSchema.set("toJSON", {
-    transform: (_doc, ret) => {
-        const { __v: _, ...user } = ret;
-        return user;
+    transform: (_userDocument, userObject) => {
+        const { __v, refreshToken: _refreshToken, password: _password, ...publicUser } = userObject;
+        return publicUser;
     },
 });
 

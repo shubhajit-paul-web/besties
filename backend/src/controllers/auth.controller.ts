@@ -26,24 +26,24 @@ interface LoginUser extends Request {
 
 // Register User
 const registerUser = asyncHandler(async (req: RegisterUser, res) => {
-    const { safeUserData, tokens } = await authService.registerUser(req.body);
+    const { createdUser, tokens } = await authService.registerUser(req.body);
 
     res.cookie("accessToken", tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
     res.cookie("refreshToken", tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
 
     return res
         .status(StatusCodes.CREATED)
-        .json(ApiResponse.success("Signup successful", { user: safeUserData }));
+        .json(ApiResponse.success("Account created successfully", { user: createdUser }));
 });
 
 // Login user
 const loginUser = asyncHandler(async (req: LoginUser, res) => {
-    const { user, tokens } = await authService.loginUser(req.body);
+    const { user, tokens } = await authService.loginUser(req.body, req.ip);
 
     res.cookie("accessToken", tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
     res.cookie("refreshToken", tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
 
-    return res.status(StatusCodes.OK).json(ApiResponse.success("Logged in successful", { user }));
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Login successful", { user }));
 });
 
 export default {

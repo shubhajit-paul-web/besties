@@ -1,23 +1,62 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import loginPageIllustration from "../assets/login-page-illustration.svg";
 import Button from "./shared/Button";
 import { useForm } from "react-hook-form";
 import InputField from "./shared/InputField";
+import HttpInterceptor from "../lib/httpInterceptor";
+import { AxiosError } from "axios";
+import { toast } from "react-toastify";
+import { useState } from "react";
+
+interface FormData {
+	identifier: string;
+	password: string;
+}
 
 const Login = () => {
-	interface FormData {
-		identifier: string;
-		password: string;
-	}
-
+	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
 	} = useForm<FormData>();
 
-	const onSubmit = (data: FormData) => {
-		console.log(data);
+	const onSubmit = async (data: FormData) => {
+		setIsSubmitting(true);
+		const { identifier, password } = data;
+
+		try {
+			const res = await HttpInterceptor.post("/auth/login", {
+				identifier,
+				password,
+			});
+
+			if (res.status === 200) {
+				toast.success(res.data?.message ?? "Login successful", {
+					position: "top-center",
+				});
+
+				setTimeout(() => {
+					navigate("/app");
+				}, 2000);
+			}
+
+			toast.success(res.data?.message, {
+				position: "top-center",
+			});
+		} catch (err) {
+			if (err instanceof AxiosError) {
+				console.error(err);
+
+				toast.error(err.response?.data?.message ?? "Internal server error", {
+					position: "top-center",
+					style: { width: "365px" },
+				});
+			}
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -33,23 +72,17 @@ const Login = () => {
 					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 						<InputField
 							type="text"
-							placeholder="Email address or mobile number"
+							placeholder="Username or email"
 							{...register("identifier", {
-								required: "Email or mobile is required",
-								validate: (value) => {
-									const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-									const mobile = /^\d{10}$/;
-
-									return email.test(value) || mobile.test(value) || "Enter a valid email or 10-digit mobile number";
-								},
+								required: "Username or email is required",
 							})}
 							error={errors.identifier}
 						/>
 
 						<InputField type="password" placeholder="Password" {...register("password", { required: "Password is required" })} error={errors.password} />
 
-						<Button variant="pink" type="submit" width="100%" borderRadius="full" centerContent className="py-3 mt-2">
-							Login
+						<Button variant="pink" type="submit" width="100%" borderRadius="full" centerContent className="py-3 mt-2" disabled={isSubmitting}>
+							{isSubmitting ? "Login..." : "Login"}
 						</Button>
 					</form>
 					<Link to="/forgot-password" className="block w-full text-center bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 transition-all py-2.5 rounded-full font-medium mt-3">

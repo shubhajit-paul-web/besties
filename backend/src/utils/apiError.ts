@@ -37,11 +37,9 @@ class ApiError extends Error {
 
         // Log error when it's created
         if (statusCode >= 500) {
-            logger.error(`INTERNAL_ERROR: ${message}`, {
-                meta: {
-                    ...logPayload,
-                    stack: this.stack,
-                },
+            logger.error(`INTERNAL_SERVER_ERROR: ${message}`, {
+                ...logPayload,
+                stack: this.stack,
             });
         }
         // else {

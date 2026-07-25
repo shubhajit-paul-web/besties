@@ -3,6 +3,7 @@ import { registerUserSchema } from "../validators/auth.validator.js";
 import userRepository from "../repositories/user.repository.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
+import logger from "../utils/logger.js";
 
 // Types
 interface LoginUser {
@@ -49,24 +50,28 @@ const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
 
     const tokens = await createdUser.generateAccessAndRefreshTokens();
 
-    const { password: _p, refreshToken: _r, ...safeUserData } = createdUser.toObject();
+    // const { password: _p, refreshToken: _r, ...safeUserData } = createdUser.toObject();
 
-    return { safeUserData, tokens };
+    return { createdUser, tokens };
 };
 
-const loginUser = async (credentials: LoginUser) => {
+const loginUser = async (credentials: LoginUser, ip: unknown) => {
     const { identifier, password } = credentials;
 
-    const user = await userRepository.findUserByIdentifier(identifier, "username email +password");
+    const user = await userRepository.findUserByIdentifier(identifier, "+password");
 
     if (!user) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "User doesn't exists, please try to login first");
+        logger.warn(`Login faild: Account not found`, { identifier, ip });
+
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "Incorrect email, username, or password");
     }
 
     const isCorrectPassword = await user.comparePassword(password);
 
     if (!isCorrectPassword) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid credentials");
+        logger.warn(`Login faild: Incorrect password`, { identifier, userId: user._id, ip });
+
+        throw new ApiError(StatusCodes.UNAUTHORIZED, "Incorrect email, username, or password");
     }
 
     const tokens = await user.generateAccessAndRefreshTokens();

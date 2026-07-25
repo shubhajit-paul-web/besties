@@ -15,6 +15,6 @@ router.post(
 );
 
 // POST /auth/login
-router.post("/login", validate(loginUserSchema), authController.registerUser);
+router.post("/login", validate(loginUserSchema), authController.loginUser);
 
 export default router;

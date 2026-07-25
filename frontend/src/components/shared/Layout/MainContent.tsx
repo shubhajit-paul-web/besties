@@ -11,7 +11,6 @@ interface MainContentInterface {
 
 const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth, rightSidebarWidth, leftSidebarOpenWidth }: MainContentInterface) => {
 	const { pathname } = useLocation();
-	console.log(leftSidebarOpenWidth);
 
 	const sectionDimension = {
 		width: isLeftSidebarOpen ? `calc(100% - ${leftSidebarWidth + rightSidebarWidth}px)` : `calc(100% - ${leftSidebarOpenWidth + +rightSidebarWidth}px)`,

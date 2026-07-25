@@ -1,8 +1,8 @@
-import { MessageSquareMore, Phone, UserRoundPlus, Video } from "lucide-react"
-import Avatar from "../Avatar"
-import { Link } from "react-router-dom"
-import Button from "../Button"
-import Card from "./Card"
+import { MessageSquareMore, Phone, UserRoundPlus, Video } from "lucide-react";
+import Avatar from "../Avatar";
+import { Link } from "react-router-dom";
+import Button from "../Button";
+import Card from "./Card";
 
 const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 	return (
@@ -10,12 +10,15 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 			<div className="h-full bg-slate-50 border-l border-slate-100 rounded-xl py-5 px-5 flex flex-col gap-4">
 				{/* Suggested friends */}
 				<Card title="Suggested" height="43%">
-					<div className="mt-3 space-y-1 overflow-y-auto" style={{
-						height: `calc(100% - 52px)`
-					}}>
-						{
-							Array(10).fill(0).map(() => (
-								<div className="py-3 px-5 hover:bg-slate-50">
+					<div
+						className="mt-3 space-y-1 overflow-y-auto"
+						style={{
+							height: `calc(100% - 52px)`,
+						}}>
+						{Array(10)
+							.fill(0)
+							.map((_, index) => (
+								<div key={index} className="py-3 px-5 hover:bg-slate-50">
 									<Avatar
 										image="/profile-img.jpeg"
 										imageShape="md"
@@ -23,30 +26,28 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 										title="Avinash Kumar"
 										subtitle={
 											<div className="flex items-center gap-1 mt-3">
-												<Button
-													variant="primary"
-													icon={UserRoundPlus}
-													iconSize={13}
-													style={{ padding: "5px 10px", borderRadius: "6px" }}>
+												<Button variant="primary" icon={UserRoundPlus} iconSize={13} style={{ padding: "5px 10px", borderRadius: "6px" }}>
 													Add Friend
 												</Button>
 											</div>
 										}
 									/>
 								</div>
-							))
-						}
+							))}
 					</div>
 				</Card>
 
 				{/* My friends */}
 				<Card title="My Friends" height="55%">
-					<div className="mt-3 space-y-1 overflow-y-auto" style={{
-						height: `calc(100% - 50px)`
-					}}>
-						{
-							Array(20).fill(0).map(() => (
-								<div className="flex justify-between items-center py-2.5 px-5 transition-all hover:bg-slate-50 hover:-translate-y-px">
+					<div
+						className="mt-3 space-y-1 overflow-y-auto"
+						style={{
+							height: `calc(100% - 50px)`,
+						}}>
+						{Array(20)
+							.fill(0)
+							.map((_, index) => (
+								<div key={index} className="flex justify-between items-center py-2.5 px-5 transition-all hover:bg-slate-50 hover:-translate-y-px">
 									<Avatar
 										image="/profile-img.jpeg"
 										title="Avinash Kumar"
@@ -70,22 +71,26 @@ const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 											</button> */}
 										</Link>
 										<Link to="/app/audio-call">
-											<button className="cursor-pointer hover:border-green-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5" title="Audio Call">
+											<button
+												className="cursor-pointer hover:border-green-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5"
+												title="Audio Call">
 												<Phone size={14} />
 											</button>
 										</Link>
-										<Link to="/app/video-call" className="cursor-pointer hover:border-amber-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5" title="Video Call">
+										<Link
+											to="/app/video-call"
+											className="cursor-pointer hover:border-amber-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5"
+											title="Video Call">
 											<Video size={14} />
 										</Link>
 									</div>
 								</div>
-							))
-						}
+							))}
 					</div>
 				</Card>
 			</div>
 		</aside>
-	)
-}
+	);
+};
 
-export default RightSidebar
+export default RightSidebar;

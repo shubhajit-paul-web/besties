@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Info, Eye, EyeOff, Camera, Trash2, ChevronDown, CheckCircle2 } from "lucide-react";
@@ -6,16 +6,16 @@ import InputField from "./shared/InputField";
 import Button from "./shared/Button";
 import defaultAvatar from "../assets/default-user-avatar.png";
 import bestiesLogo from "../assets/besties-logo.png";
+import HttpInterceptor from "../lib/httpInterceptor";
 
 interface SignupFormData {
+	username: string;
 	firstName: string;
 	lastName: string;
-	dobDay: string;
-	dobMonth: string;
-	dobYear: string;
+	dob: string;
 	gender: "female" | "male" | "custom" | "";
 	email: string;
-	mobileNumber: string;
+	mobileNumber?: string;
 	password: string;
 	profilePicture?: FileList;
 }
@@ -39,9 +39,7 @@ const Signup = () => {
 	} = useForm<SignupFormData>({});
 
 	const watchedProfilePicture = watch("profilePicture");
-	const watchedDobDay = watch("dobDay");
-	const watchedDobMonth = watch("dobMonth");
-	const watchedDobYear = watch("dobYear");
+	const currentDate = new Date().toISOString().split("T")[0];
 
 	// Preview URL for selected profile picture
 	useEffect(() => {
@@ -55,50 +53,30 @@ const Signup = () => {
 		}
 	}, [watchedProfilePicture]);
 
-	// DOB options
-	const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
-	const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-	const currentYear = new Date().getFullYear();
-	const years = Array.from({ length: 110 }, (_, i) => String(currentYear - i));
-
-	// DOB Validation
-	const dobError = useMemo(() => {
-		if (watchedDobDay && watchedDobMonth && watchedDobYear) {
-			const dayNum = parseInt(watchedDobDay, 10);
-			const yearNum = parseInt(watchedDobYear, 10);
-			const monthIndex = months.indexOf(watchedDobMonth);
-
-			const date = new Date(yearNum, monthIndex, dayNum);
-			if (date.getFullYear() !== yearNum || date.getMonth() !== monthIndex || date.getDate() !== dayNum) {
-				return "Please select a valid calendar date";
-			}
-			if (date > new Date()) {
-				return "Date of birth cannot be in the future";
-			}
-			const minAgeDate = new Date();
-			minAgeDate.setFullYear(minAgeDate.getFullYear() - 13);
-			if (date > minAgeDate) {
-				return "You must be at least 13 years old to sign up";
-			}
-		} else if (errors.dobDay || errors.dobMonth || errors.dobYear) {
-			return "Please select your full date of birth";
-		}
-		return null;
-	}, [watchedDobDay, watchedDobMonth, watchedDobYear, errors.dobDay, errors.dobMonth, errors.dobYear]);
-
-	const onSubmit = (data: SignupFormData) => {
-		if (dobError) return;
-
+	const registerUser = async (data: SignupFormData) => {
 		setIsLoading(true);
 		console.log("Submitting Signup Data:", data);
 
-		setTimeout(() => {
+		const formData = new FormData(document.forms[0]);
+
+		console.log(formData);
+
+		try {
+			const res = await HttpInterceptor.post("/auth/register", formData);
+
+			if (res.status === 201) {
+				setIsSuccess(true);
+				setTimeout(() => {
+					navigate("/app");
+				}, 2000);
+
+				console.log(res.data);
+			}
+		} catch (err) {
+			console.error(err);
+		} finally {
 			setIsLoading(false);
-			setIsSuccess(true);
-			setTimeout(() => {
-				navigate("/login");
-			}, 2000);
-		}, 1200);
+		}
 	};
 
 	const triggerFileSelect = () => {
@@ -135,16 +113,16 @@ const Signup = () => {
 	const selectErrorStyles = "border-red-500 focus:outline-red-500 text-red-500";
 
 	return (
-		<div className="min-h-screen bg-slate-100 flex justify-center items-center p-4 font-sans overflow-y-auto select-none">
+		<div className="min-h-screen flex justify-center items-center font-sans overflow-y-auto select-none">
 			{isSuccess ? (
-				<div className="bg-white w-full max-w-md p-10 rounded-4xl flex flex-col items-center text-center">
+				<div className="w-full max-w-md p-10 rounded-4xl flex flex-col items-center text-center">
 					<CheckCircle2 size={64} className="text-[#FF3D94] mb-5" />
 					<h2 className="font-bold text-2xl text-slate-800 mb-2">Account Created!</h2>
 					<p className="text-slate-500 text-base mb-8">Welcome to Besties. Redirecting you to login...</p>
 					<div className="w-10 h-10 border-4 border-slate-100 border-t-[#FF3D94] rounded-full animate-spin"></div>
 				</div>
 			) : (
-				<div className="bg-white w-full max-w-6xl p-20 md:p-15 rounded-4xl flex flex-col">
+				<div className="bg-white w-full max-w-4xl p-20 md:p-15 flex flex-col">
 					{/* Header */}
 					<div className="flex flex-col items-center text-center mb-15">
 						<div className="flex items-center gap-2 mb-3">
@@ -156,14 +134,48 @@ const Signup = () => {
 					</div>
 
 					{/* Form */}
-					<form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-							{/* Row 1 */}
+					<form onSubmit={handleSubmit(registerUser)} className="flex flex-col gap-5">
+						{/* Row 1 */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+							<InputField
+								type="text"
+								placeholder="Username"
+								{...register("username", {
+									required: "Username is required",
+									validate: (value) => {
+										const usernameRegex = /^[a-zA-Z0-9_]+$/;
+
+										return usernameRegex.test(value) || "Username can only contain letters, numbers, and underscores";
+									},
+								})}
+								error={errors.username}
+							/>
+							<InputField
+								type="email"
+								placeholder="Email address"
+								autoComplete="email"
+								{...register("email", {
+									required: "Email address is required",
+									validate: (value) => {
+										const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+										return emailRegex.test(value) || "Enter a valid email address";
+									},
+								})}
+								error={errors.email}
+							/>
+						</div>
+
+						{/* Row 2 */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 							<InputField type="text" placeholder="First name" {...register("firstName", { required: "First name is required" })} error={errors.firstName} />
-							<InputField type="text" placeholder="Last name" {...register("lastName", { required: "Last name is required" })} error={errors.lastName} />
+							<InputField type="text" placeholder="Last name (Optional)" />
+						</div>
+
+						{/* Row 3 */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 							<div className="relative">
 								<select {...register("gender", { required: "Please select your gender" })} className={`${selectBaseStyles} ${errors.gender ? selectErrorStyles : selectNormalStyles}`}>
-									<option value="" disabled hidden>
+									<option value="" disabled selected>
 										Gender
 									</option>
 									<option value="female">Female</option>
@@ -178,116 +190,64 @@ const Signup = () => {
 									</p>
 								)}
 							</div>
-
-							{/* Row 2 */}
-							<div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+							<div className="relative">
 								<InputField
-									type="email"
-									placeholder="Email address"
-									autoComplete="email"
-									{...register("email", {
-										required: "Email address is required",
+									type={showPassword ? "text" : "password"}
+									placeholder="New password"
+									{...register("password", {
+										required: "Password is required",
+										minLength: {
+											value: 8,
+											message: "Must be at least 8 characters",
+										},
 										validate: (value) => {
-											const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-											return emailRegex.test(value) || "Enter a valid email address";
+											if (!/[A-Z]/.test(value)) {
+												return "Must contain an uppercase letter";
+											}
+											if (!/[0-9]/.test(value)) {
+												return "Must contain a number";
+											}
+											if (!/[^A-Za-z0-9]/.test(value)) {
+												return "Must contain a special character";
+											}
 										},
 									})}
-									error={errors.email}
+									error={errors.password}
 								/>
-								<InputField
-									type="tel"
-									placeholder="Mobile number"
-									inputMode="numeric"
-									autoComplete="tel"
-									maxLength={10}
-									{...register("mobileNumber", {
-										required: "Mobile number is required",
-										validate: (value) => {
-											const mobileRegex = /^\d{10}$/;
-											return mobileRegex.test(value) || "Enter a valid 10-digit mobile number";
-										},
-									})}
-									error={errors.mobileNumber}
-								/>
-								<div className="relative">
-									<InputField
-										type={showPassword ? "text" : "password"}
-										placeholder="New password"
-										{...register("password", {
-											required: "Password is required",
-											minLength: {
-												value: 6,
-												message: "Must be at least 6 characters",
-											},
-										})}
-										error={errors.password}
-									/>
-									<button
-										type="button"
-										onClick={() => setShowPassword(!showPassword)}
-										className="absolute right-4 top-[17px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
-										{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-									</button>
-								</div>
-								<div>
-									<div className="grid grid-cols-3 gap-2">
-										<div className="relative">
-											<select {...register("dobDay", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobDay ? selectErrorStyles : selectNormalStyles}`}>
-												<option value="" hidden>
-													Day
-												</option>
-												{days.map((day) => (
-													<option key={day} value={day}>
-														{day}
-													</option>
-												))}
-											</select>
-											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-										</div>
-										<div className="relative">
-											<select {...register("dobMonth", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobMonth ? selectErrorStyles : selectNormalStyles}`}>
-												<option value="" hidden>
-													Month
-												</option>
-												{months.map((month) => (
-													<option key={month} value={month}>
-														{month.substring(0, 3)}
-													</option>
-												))}
-											</select>
-											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-										</div>
-										<div className="relative">
-											<select {...register("dobYear", { required: true })} className={`${selectBaseStyles} px-3 ${errors.dobYear ? selectErrorStyles : selectNormalStyles}`}>
-												<option value="" hidden>
-													Year
-												</option>
-												{years.map((year) => (
-													<option key={year} value={year}>
-														{year}
-													</option>
-												))}
-											</select>
-											<ChevronDown size={16} className="absolute right-2 top-[17px] text-slate-400 pointer-events-none" />
-										</div>
-									</div>
-									{dobError && (
-										<p className="text-sm text-red-500 mt-0.5 flex items-center gap-1">
-											<Info size={15} />
-											{dobError}
-										</p>
-									)}
-								</div>
+								<button
+									type="button"
+									onClick={() => setShowPassword(!showPassword)}
+									className="absolute right-4 top-[17px] text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+									{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+								</button>
 							</div>
 						</div>
 
-						{/* Row 3 - Profile Picture and Submit */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+						{/* Row 4 - Profile Picture and Submit */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+							<InputField
+								type="tel"
+								placeholder="Mobile number (Optional)"
+								inputMode="numeric"
+								autoComplete="tel"
+								maxLength={10}
+								{...register("mobileNumber", {
+									validate: (value) => {
+										if (!value) return;
+										const mobileRegex = /^\d{10}$/;
+										return mobileRegex.test(value) || "Enter a valid 10-digit mobile number";
+									},
+								})}
+								error={errors.mobileNumber}
+							/>
+							<InputField type="date" max={currentDate} {...register("dob", { required: "Date of birth is required" })} error={errors.dob} />
+
 							<div className="md:col-span-2">
-								<div className={`flex items-center gap-4 p-2 bg-slate-50 rounded-2xl transition-colors ${errors.profilePicture ? "border border-red-300" : ""}`}>
+								<div
+									className={`flex flex-col justify-center text-center items-center gap-4 p-10 bg-slate-50 rounded-2xl transition-colors ${errors.profilePicture ? "border border-red-300" : ""}`}>
 									<div
 										onClick={triggerFileSelect}
-										className={`w-12 h-12 rounded-full border-2 border-dashed flex-shrink-0 ${
+										className={`w-16 h-16 rounded-full border-2 border-dashed flex-shrink-0 ${
 											errors.profilePicture ? "border-red-400 bg-red-50" : "border-slate-300 bg-white hover:border-[#FF3D94]"
 										} transition-all duration-200 flex items-center justify-center cursor-pointer overflow-hidden relative group`}
 										title="Upload profile picture">
@@ -337,27 +297,27 @@ const Signup = () => {
 									</p>
 								)}
 							</div>
+						</div>
 
-							{/* Sign Up Button */}
-							<div className="md:col-span-1 h-full">
-								<Button
-									variant="pink"
-									type="submit"
-									width="100%"
-									borderRadius="xl"
-									centerContent
-									className="h-full min-h-[64px] text-base font-bold tracking-wide transition-all active:scale-[0.99] disabled:opacity-70"
-									disabled={isLoading || !!dobError}>
-									{isLoading ? (
-										<div className="flex items-center gap-2 justify-center">
-											<div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-											<span>Wait...</span>
-										</div>
-									) : (
-										"Sign Up"
-									)}
-								</Button>
-							</div>
+						{/* Sign Up Button */}
+						<div className="mt-5 m-auto">
+							<Button
+								variant="pink"
+								type="submit"
+								width="100%"
+								borderRadius="xl"
+								centerContent
+								className="h-full min-h-[55px] px-12 text-base font-bold tracking-wide transition-all active:scale-[0.99] disabled:opacity-70"
+								disabled={isLoading}>
+								{isLoading ? (
+									<div className="flex items-center gap-2 justify-center">
+										<div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+										<span>Wait...</span>
+									</div>
+								) : (
+									"Sign Up"
+								)}
+							</Button>
 						</div>
 					</form>
 

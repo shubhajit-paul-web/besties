@@ -3,10 +3,11 @@ import loginPageIllustration from "../assets/login-page-illustration.svg";
 import Button from "./shared/Button";
 import { useForm } from "react-hook-form";
 import InputField from "./shared/InputField";
-import HttpInterceptor from "../lib/httpInterceptor";
+import HttpInterceptor from "../lib/HttpInterceptor";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
+import useAppContext from "../hooks/useAppContext";
 
 interface FormData {
 	identifier: string;
@@ -16,6 +17,7 @@ interface FormData {
 const Login = () => {
 	const navigate = useNavigate();
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const { setUser } = useAppContext();
 	const {
 		register,
 		handleSubmit,
@@ -33,6 +35,8 @@ const Login = () => {
 			});
 
 			if (res.status === 200) {
+				setUser(res.data?.data?.user);
+
 				toast.success(res.data?.message ?? "Login successful", {
 					position: "top-center",
 				});

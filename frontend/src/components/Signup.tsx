@@ -6,7 +6,10 @@ import InputField from "./shared/InputField";
 import Button from "./shared/Button";
 import defaultAvatar from "../assets/default-user-avatar.png";
 import bestiesLogo from "../assets/besties-logo.png";
-import HttpInterceptor from "../lib/httpInterceptor";
+import HttpInterceptor from "../lib/HttpInterceptor";
+import { AxiosError } from "axios";
+import { toast } from "react-toastify";
+import useAppContext from "../hooks/useAppContext";
 
 interface SignupFormData {
 	username: string;
@@ -26,6 +29,7 @@ const Signup = () => {
 	const [previewUrl, setPreviewUrl] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
+	const { setUser } = useAppContext();
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,26 +57,59 @@ const Signup = () => {
 		}
 	}, [watchedProfilePicture]);
 
+	// Register user
 	const registerUser = async (data: SignupFormData) => {
 		setIsLoading(true);
 		console.log("Submitting Signup Data:", data);
 
 		const formData = new FormData(document.forms[0]);
 
-		console.log(formData);
-
 		try {
 			const res = await HttpInterceptor.post("/auth/register", formData);
 
 			if (res.status === 201) {
 				setIsSuccess(true);
+
 				setTimeout(() => {
 					navigate("/app");
 				}, 2000);
 
-				console.log(res.data);
+				setUser(res.data?.data?.user);
+
+				console.log(res.data?.data?.user);
 			}
 		} catch (err) {
+			if (err instanceof AxiosError) {
+				const status = err.response?.status;
+
+				// Input validation
+				if (status === 400) {
+					return toast.error(err.response?.data?.message ?? "Validation faild", {
+						position: "bottom-right",
+						style: { width: "250px" },
+					});
+				}
+
+				// Business/database conflict
+				if (status === 409) {
+					return toast.error(err.response?.data?.message ?? "Something went wrong", {
+						position: "top-center",
+					});
+				}
+
+				// Network error (no response from server)
+				if (!err.response) {
+					return toast.error("Unable to connect to the server. Please check your internet connection.", {
+						position: "top-center",
+					});
+				}
+			}
+
+			// Unknown/unexpected error
+			toast.error("Something went wrong. Please try again.", {
+				position: "top-center",
+			});
+
 			console.error(err);
 		} finally {
 			setIsLoading(false);
@@ -118,7 +155,7 @@ const Signup = () => {
 				<div className="w-full max-w-md p-10 rounded-4xl flex flex-col items-center text-center">
 					<CheckCircle2 size={64} className="text-[#FF3D94] mb-5" />
 					<h2 className="font-bold text-2xl text-slate-800 mb-2">Account Created!</h2>
-					<p className="text-slate-500 text-base mb-8">Welcome to Besties. Redirecting you to login...</p>
+					<p className="text-slate-500 text-base mb-8">Welcome to Besties. Redirecting you to app...</p>
 					<div className="w-10 h-10 border-4 border-slate-100 border-t-[#FF3D94] rounded-full animate-spin"></div>
 				</div>
 			) : (

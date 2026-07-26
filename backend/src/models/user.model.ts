@@ -101,6 +101,7 @@ const userSchema = new Schema<User, UserModelType, UserMethods>(
         },
         usernameUpdatedAt: {
             type: Date,
+            select: false,
         },
         refreshToken: {
             type: String,
@@ -111,12 +112,12 @@ const userSchema = new Schema<User, UserModelType, UserMethods>(
 );
 
 userSchema.index(
-    {
-        mobileNumber: 1,
-    },
+    { mobileNumber: 1 },
     {
         unique: true,
-        partialFilterExpression: { $type: "string" },
+        partialFilterExpression: {
+            mobileNumber: { $type: "string" },
+        },
     },
 );
 

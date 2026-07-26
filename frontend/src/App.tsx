@@ -13,28 +13,35 @@ import ChatManager from "./components/app/ChatManager";
 import Profile from "./components/app/Profile";
 import NotFound from "./components/NotFound";
 import { ToastContainer } from "react-toastify";
+import Context from "./Context";
+import { useState } from "react";
+import type { UserType } from "./types/user.types";
 
 const App = () => {
+	const [user, setUser] = useState<UserType | null>(null);
+
 	return (
-		<BrowserRouter>
-			<Routes>
-				<Route path="/login" element={<Login />} />
-				<Route path="/signup" element={<Signup />} />
-				<Route path="/app" element={<Layout />}>
-					<Route index element={<Home />} />
-					<Route path="my-posts" element={<MyPosts />} />
-					<Route path="friends" element={<Friends />} />
-					<Route path="saved" element={<Saved />} />
-					<Route path="dashboard" element={<Dashboard />} />
-					<Route path="video-call" element={<VideoCallManager />} />
-					<Route path="audio-call" element={<AudioCallManager />} />
-					<Route path="chat" element={<ChatManager />} />
-					<Route path="profile" element={<Profile />} />
-				</Route>
-				<Route path="*" element={<NotFound />} />
-			</Routes>
-			<ToastContainer />
-		</BrowserRouter>
+		<Context.Provider value={{ user, setUser }}>
+			<BrowserRouter>
+				<Routes>
+					<Route path="/login" element={<Login />} />
+					<Route path="/signup" element={<Signup />} />
+					<Route path="/app" element={<Layout />}>
+						<Route index element={<Home />} />
+						<Route path="my-posts" element={<MyPosts />} />
+						<Route path="friends" element={<Friends />} />
+						<Route path="saved" element={<Saved />} />
+						<Route path="dashboard" element={<Dashboard />} />
+						<Route path="video-call" element={<VideoCallManager />} />
+						<Route path="audio-call" element={<AudioCallManager />} />
+						<Route path="chat" element={<ChatManager />} />
+						<Route path="profile" element={<Profile />} />
+					</Route>
+					<Route path="*" element={<NotFound />} />
+				</Routes>
+				<ToastContainer />
+			</BrowserRouter>
+		</Context.Provider>
 	);
 };
 

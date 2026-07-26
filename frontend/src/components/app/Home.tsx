@@ -1,6 +1,11 @@
 import Post from "../shared/Post";
+import useAppContext from "../../hooks/useAppContext";
 
 const Home = () => {
+	const { user } = useAppContext();
+
+	console.log("User Profile:", user);
+
 	const postsDummyData = [
 		{
 			id: "a4v45403450",

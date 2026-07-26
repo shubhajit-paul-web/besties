@@ -7,7 +7,7 @@ const existsByUsername = async (username: string) => {
 
 const existsByEmailOrMobile = async (email: string, mobileNumber: string | undefined) => {
     return await UserModel.exists({
-        $or: [{ email, mobileNumber }],
+        $or: [{ email }, { mobileNumber }],
     });
 };
 

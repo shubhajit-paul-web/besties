@@ -16,6 +16,7 @@ import { ToastContainer } from "react-toastify";
 import Context from "./Context";
 import { useState } from "react";
 import type { UserType } from "./types/user.types";
+import Guard from "./Guard";
 
 const App = () => {
 	const [user, setUser] = useState<UserType | null>(null);
@@ -26,16 +27,18 @@ const App = () => {
 				<Routes>
 					<Route path="/login" element={<Login />} />
 					<Route path="/signup" element={<Signup />} />
-					<Route path="/app" element={<Layout />}>
-						<Route index element={<Home />} />
-						<Route path="my-posts" element={<MyPosts />} />
-						<Route path="friends" element={<Friends />} />
-						<Route path="saved" element={<Saved />} />
-						<Route path="dashboard" element={<Dashboard />} />
-						<Route path="video-call" element={<VideoCallManager />} />
-						<Route path="audio-call" element={<AudioCallManager />} />
-						<Route path="chat" element={<ChatManager />} />
-						<Route path="profile" element={<Profile />} />
+					<Route element={<Guard />}>
+						<Route path="/app" element={<Layout />}>
+							<Route index element={<Home />} />
+							<Route path="my-posts" element={<MyPosts />} />
+							<Route path="friends" element={<Friends />} />
+							<Route path="saved" element={<Saved />} />
+							<Route path="dashboard" element={<Dashboard />} />
+							<Route path="video-call" element={<VideoCallManager />} />
+							<Route path="audio-call" element={<AudioCallManager />} />
+							<Route path="chat" element={<ChatManager />} />
+							<Route path="profile" element={<Profile />} />
+						</Route>
 					</Route>
 					<Route path="*" element={<NotFound />} />
 				</Routes>

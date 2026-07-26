@@ -15,20 +15,19 @@ const create = async (userData: RegisterUserDto) => {
     return await UserModel.create(userData);
 };
 
-// const updateRefreshTokenById = async (userId: string, refreshToken: string) => {
-//     return await UserModel.findByIdAndUpdate(
-//         userId,
-//         {
-//             refreshToken,
-//         },
-//         { new: true },
-//     );
-// };
-
 const findUserByIdentifier = async (identifier: string, fields: string) => {
     return await UserModel.findOne({
         $or: [{ username: identifier }, { email: identifier }],
     }).select(fields);
+};
+
+const findUserById = async (userId: string, lean: boolean = true, fields?: string) => {
+    const query = UserModel.findById(userId);
+
+    if (lean) query.lean();
+    if (fields) query.select(fields);
+
+    return await query;
 };
 
 export default {
@@ -36,4 +35,5 @@ export default {
     existsByEmailOrMobile,
     create,
     findUserByIdentifier,
+    findUserById,
 };

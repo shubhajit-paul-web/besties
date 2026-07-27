@@ -80,3 +80,6 @@ export const loginUserSchema = z.object({
         .toLowerCase(),
     password: z.string("Password is required").trim().min(1, "Password is required"),
 });
+
+// Export schema types
+export type RegisterUserInput = z.infer<typeof registerUserSchema>;

@@ -4,12 +4,7 @@ import userRepository from "../repositories/user.repository.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import logger from "../utils/logger.js";
-
-// Types
-interface LoginUser {
-    identifier: string;
-    password: string;
-}
+import type { LoginUserInput } from "../types/auth/auth.types.js";
 
 const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
     const { username, email, mobileNumber } = userData;
@@ -55,7 +50,7 @@ const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
     return { createdUser, tokens };
 };
 
-const loginUser = async (credentials: LoginUser, ip: unknown) => {
+const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
     const { identifier, password } = credentials;
 
     const user = await userRepository.findUserByIdentifier(identifier, "+password");

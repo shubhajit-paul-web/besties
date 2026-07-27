@@ -3,32 +3,25 @@ import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import config from "../config/environment.js";
+import type { AccessTokenPayload } from "../types/auth/auth.jwt.js";
 
-interface UserPayload {
-    _id: string;
-    username: string;
-    email: string;
-}
+const authenticate = (req: Request, _res: Response, next: NextFunction) => {
+    const headerToken = req.headers?.authorization?.startsWith("Bearer ")
+        ? req.headers.authorization.slice(7)
+        : undefined;
+    const cookieToken = req.cookies?.accessToken as string | undefined;
 
-export interface AuthenticatedRequest extends Request {
-    user?: UserPayload;
-    cookies: {
-        accessToken?: string;
-    };
-}
-
-interface JwtPayload extends jwt.JwtPayload, UserPayload {}
-
-const authenticate = (req: AuthenticatedRequest, _res: Response, next: NextFunction) => {
-    const accessToken =
-        req.cookies?.accessToken?.trim() ?? req.headers["authorization"]?.split(" ")[1]?.trim();
+    const accessToken = (cookieToken ?? headerToken)?.trim();
 
     if (!accessToken) {
         throw new ApiError(StatusCodes.UNAUTHORIZED, "Unauthorized: Access token is missing.");
     }
 
     try {
-        const decoded = jwt.verify(accessToken, config.JWT.ACCESS_TOKEN_SECRET!) as JwtPayload;
+        const decoded = jwt.verify(
+            accessToken,
+            config.JWT.ACCESS_TOKEN_SECRET!,
+        ) as AccessTokenPayload;
 
         req.user = decoded;
         next();

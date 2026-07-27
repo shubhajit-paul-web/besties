@@ -23,7 +23,7 @@ const Guard = () => {
 
 	useEffect(() => {
 		fetchCurrentUser();
-	});
+	}, []);
 
 	console.log("user", user);
 

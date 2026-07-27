@@ -6,7 +6,7 @@ import authController from "../controllers/auth.controller.js";
 
 const router = Router();
 
-// POST /auth/register
+// (Public) POST /auth/register
 router.post(
     "/register",
     upload.single("avatar"),
@@ -14,7 +14,7 @@ router.post(
     authController.registerUser,
 );
 
-// POST /auth/login
+// (Public) POST /auth/login
 router.post("/login", validate(loginUserSchema), authController.loginUser);
 
 export default router;

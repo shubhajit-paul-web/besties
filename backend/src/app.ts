@@ -5,6 +5,7 @@ import { httpLogStream } from "./utils/logger.js";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import compression from "compression";
+import helmet from "helmet";
 import globalErrorHandler from "./middlewares/error.middleware.js";
 import ApiError from "./utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
@@ -21,6 +22,7 @@ app.use(
         credentials: true,
     }),
 );
+app.use(helmet());
 app.use(compression());
 
 // Route imports
@@ -32,7 +34,7 @@ app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 
 // 404 Middleware
-app.use((req, res, next) =>
+app.use((req, _res, next) =>
     next(new ApiError(StatusCodes.NOT_FOUND, `${req.originalUrl} not found`)),
 );
 

@@ -8,17 +8,21 @@ import winston from "winston";
 const logDirectory = fileURLToPath(new URL("../../logs", import.meta.url));
 const logFile = (fileName: string) => join(logDirectory, fileName);
 
+// Keep log files in a single root folder and create it on startup.
 if (!fs.existsSync(logDirectory)) {
     fs.mkdirSync(logDirectory, { recursive: true });
 }
 
 const { combine, colorize, errors, printf, splat, timestamp, json } = winston.format;
 
+// Route each transport to one level so files stay easy to scan.
 const exactLevel = (level: string) =>
     winston.format((info) => (info.level === level ? info : false))();
 
+// Structured output for file transports.
 const fileFormat = combine(timestamp(), errors({ stack: true }), json());
 
+// Human-readable output for local development.
 const consoleFormat = combine(
     colorize({ all: true }),
     timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
@@ -43,6 +47,7 @@ const consoleFormat = combine(
 );
 
 const logger = winston.createLogger({
+    // Keep verbose logs locally and reduce noise in production.
     level: config.NODE_ENV === "prod" ? "info" : "debug",
     format: combine(errors({ stack: true }), timestamp(), splat()),
     transports: [
@@ -93,6 +98,7 @@ const logger = winston.createLogger({
     exitOnError: false,
 });
 
+// Mirror console logs only outside production.
 if (config.NODE_ENV !== "prod") {
     logger.add(
         new winston.transports.Console({
@@ -101,7 +107,7 @@ if (config.NODE_ENV !== "prod") {
     );
 }
 
-// HTTP log stream for morgan
+// Morgan writes request logs through Winston.
 export const httpLogStream = {
     write(message: string) {
         logger.http(message.trim());

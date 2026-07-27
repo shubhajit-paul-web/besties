@@ -1,5 +1,5 @@
 // Register User DTO
-export interface RegisterUserDto {
+export type RegisterUserDto = {
     username: string;
     name: {
         first: string;
@@ -10,4 +10,4 @@ export interface RegisterUserDto {
     email: string;
     mobileNumber?: string;
     password: string;
-}
+};

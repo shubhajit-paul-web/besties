@@ -5,6 +5,9 @@ import jwt from "jsonwebtoken";
 import config from "../config/environment.js";
 import type { AccessTokenPayload } from "../types/auth/auth.jwt.js";
 
+/**
+ * Authenticates requests by validating the access token and attaching the decoded user.
+ */
 const authenticate = (req: Request, _res: Response, next: NextFunction) => {
     const headerToken = req.headers?.authorization?.startsWith("Bearer ")
         ? req.headers.authorization.slice(7)

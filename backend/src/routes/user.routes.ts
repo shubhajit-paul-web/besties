@@ -4,7 +4,7 @@ import userController from "../controllers/user.controller.js";
 
 const router = Router();
 
-// (Private) /users/me
+// (Private) GET /users/me
 router.get("/me", authenticate, userController.getCurrentUser);
 
 export default router;

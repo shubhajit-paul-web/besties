@@ -1,12 +1,11 @@
-import z from "zod";
-import { registerUserSchema } from "../validators/auth.validator.js";
+import type { RegisterUserInput } from "../validators/auth.validator.js";
 import userRepository from "../repositories/user.repository.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import logger from "../utils/logger.js";
 import type { LoginUserInput } from "../types/auth/auth.types.js";
 
-const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
+const registerUser = async (userData: RegisterUserInput) => {
     const { username, email, mobileNumber } = userData;
 
     const isUsernameAlreadyExists = await userRepository.existsByUsername(username);
@@ -44,8 +43,6 @@ const registerUser = async (userData: z.infer<typeof registerUserSchema>) => {
     const createdUser = await userRepository.create(userPayload);
 
     const tokens = await createdUser.generateAccessAndRefreshTokens();
-
-    // const { password: _p, refreshToken: _r, ...safeUserData } = createdUser.toObject();
 
     return { createdUser, tokens };
 };

@@ -1,4 +1,4 @@
-import { Model, Schema, model } from "mongoose";
+import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import logger from "../utils/logger.js";
 import getErrorMessage from "../utils/getErrorMessage.js";
@@ -6,38 +6,9 @@ import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import config from "../config/environment.js";
+import type { UserDocument, UserMethods, UserModelType } from "./types/user.types.js";
 
-interface User {
-    username: string;
-    name: {
-        first: string;
-        last?: string;
-    };
-    avatar: {
-        url?: string;
-        fileId?: string;
-    };
-    bio?: string;
-    gender: "male" | "female" | "custom";
-    dob: Date;
-    email: string;
-    mobileNumber?: string;
-    password: string;
-    usernameUpdatedAt?: Date;
-    refreshToken?: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-interface UserMethods {
-    comparePassword(plainTextPassword: string): Promise<boolean>;
-    generateAccessAndRefreshTokens(): Promise<{ accessToken: string; refreshToken: string }>;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-type UserModelType = Model<User, {}, UserMethods>;
-
-const userSchema = new Schema<User, UserModelType, UserMethods>(
+const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
     {
         username: {
             type: String,
@@ -61,7 +32,6 @@ const userSchema = new Schema<User, UserModelType, UserMethods>(
                 type: String,
                 trim: true,
                 lowercase: true,
-                // required: true,
             },
         },
         avatar: {
@@ -128,7 +98,7 @@ userSchema.set("toJSON", {
     },
 });
 
-// Hash the password if it is being modified or created
+// Hash a changed password before saving the user document.
 userSchema.pre("save", async function () {
     try {
         if (this.isModified("password")) {
@@ -149,13 +119,14 @@ userSchema.pre("save", async function () {
     }
 });
 
-// Check if the username field was changed (or is new)
+// Record when an existing username changes.
 userSchema.pre("save", function () {
     if (this.isModified("username") && !this.isNew) {
         this.usernameUpdatedAt = new Date();
     }
 });
 
+// Compare a plain-text password against the stored hash.
 userSchema.methods.comparePassword = async function (plainTextPassword: string) {
     try {
         return await bcrypt.compare(plainTextPassword, this.password);
@@ -170,6 +141,7 @@ userSchema.methods.comparePassword = async function (plainTextPassword: string) 
     }
 };
 
+// Issue a new access token and refresh token pair for the user.
 userSchema.methods.generateAccessAndRefreshTokens = async function () {
     const payload = {
         _id: this._id,
@@ -200,5 +172,5 @@ userSchema.methods.generateAccessAndRefreshTokens = async function () {
     }
 };
 
-const UserModel = model<User, UserModelType>("User", userSchema);
+const UserModel = model<UserDocument, UserModelType>("User", userSchema);
 export default UserModel;

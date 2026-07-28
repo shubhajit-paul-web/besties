@@ -14,6 +14,10 @@ const REQUIRED_ENV_VARIABLES = [
     "REFRESH_TOKEN_SECRET",
     "ACCESS_TOKEN_EXPIRY",
     "REFRESH_TOKEN_EXPIRY",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_SECRET_ACCESS_KEY",
+    "AWS_BUCKET_NAME",
+    "AWS_REGION",
 ];
 
 const missingEnvVariables = REQUIRED_ENV_VARIABLES.filter((key) => !process.env[key]);
@@ -35,6 +39,12 @@ const config = {
         REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
         ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY as StringValue,
         REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY as StringValue,
+    },
+    AWS: {
+        ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+        SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+        BUCKET_NAME: process.env.AWS_BUCKET_NAME,
+        REGION: process.env.AWS_REGION,
     },
 };
 

@@ -1,26 +1,46 @@
-import { ZodObject, ZodError } from "zod";
+import { ZodError } from "zod";
 import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import { RequestValidationSchema } from "../types/utils.types.js";
 
-const validate = (schema: ZodObject) => (req: Request, res: Response, next: NextFunction) => {
-    try {
-        req.body = schema.parse(req.body);
-        next();
-    } catch (err) {
-        if (err instanceof ZodError) {
-            return res.status(StatusCodes.BAD_REQUEST).json({
-                success: false,
-                statusCode: StatusCodes.BAD_REQUEST,
-                message: "Validation failed",
-                errors: err.issues.map((value) => ({
-                    field: value.path[0],
-                    message: value.message,
-                })),
+const validate =
+    (schema: RequestValidationSchema) => (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const data = schema.parse({
+                body: req.body as unknown,
+                params: req.params as unknown,
+                query: req.query as unknown,
             });
-        }
 
-        next(err);
-    }
-};
+            if (data.body !== undefined) {
+                req.body = data.body;
+            }
+
+            if (data.params !== undefined) {
+                req.params = data.params as typeof req.params;
+            }
+
+            if (data.query !== undefined) {
+                req.query = data.query as typeof req.query;
+            }
+
+            next();
+        } catch (err) {
+            if (err instanceof ZodError) {
+                return res.status(StatusCodes.BAD_REQUEST).json({
+                    success: false,
+                    statusCode: StatusCodes.BAD_REQUEST,
+                    message: "Validation failed",
+                    errors: err.issues.map(({ path, message }) => ({
+                        source: path[0],
+                        field: path.slice(1).join("."),
+                        message: path.slice(1).length ? message : "Request body is required.",
+                    })),
+                });
+            }
+
+            next(err);
+        }
+    };
 
 export default validate;

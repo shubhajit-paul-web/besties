@@ -5,6 +5,9 @@ import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import getErrorMessage from "../utils/getErrorMessage.js";
+import { v4 as uuid } from "uuid";
+import { FILE_TYPE_EXTENSIONS } from "../constants/constants.js";
+import type { SupportedFileType } from "../types/storage/storage.service.js";
 
 const isFileExists = async (path: string) => {
     try {
@@ -54,10 +57,10 @@ const downloadFile = async (path: string) => {
     }
 };
 
-const uploadFile = async (path: string, type: string) => {
-    if (!path || !type) {
-        throw new ApiError(StatusCodes.BAD_REQUEST, "Both file path and type are required.");
-    }
+const uploadFile = async (path: string, type: SupportedFileType) => {
+    // if (!path || !type) {
+    //     throw new ApiError(StatusCodes.BAD_REQUEST, "Both file path and type are required.");
+    // }
 
     const isFileAlreadyExists = await isFileExists(path);
 
@@ -66,9 +69,11 @@ const uploadFile = async (path: string, type: string) => {
     }
 
     try {
+        const Key = `${path}/${uuid()}.${FILE_TYPE_EXTENSIONS[type]}`;
+
         const command = new PutObjectCommand({
             Bucket: config.AWS.BUCKET_NAME,
-            Key: path,
+            Key,
             ContentType: type,
         });
 
@@ -89,7 +94,6 @@ const uploadFile = async (path: string, type: string) => {
 };
 
 export default {
-    isFileExists,
     downloadFile,
     uploadFile,
 };

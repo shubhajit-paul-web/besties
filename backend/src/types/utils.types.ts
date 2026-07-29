@@ -1,8 +1,7 @@
-import { Request } from "express";
+import z from "zod";
 
-// Strongly typed Express request body, params, and query
-export interface TypedRequest<Body = unknown, Params = unknown, Query = unknown> extends Request {
-    body: Body;
-    params: Params & Request["params"];
-    query: Query & Request["query"];
-}
+export type RequestValidationSchema = z.ZodObject<{
+    body?: z.ZodType;
+    params?: z.ZodType;
+    query?: z.ZodType;
+}>;

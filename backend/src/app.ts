@@ -28,10 +28,12 @@ app.use(compression());
 // Route imports
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import storageRoutes from "./routes/storage.routes.js";
 
 // Route implementations
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/storage", storageRoutes);
 
 // 404 Middleware
 app.use((req, _res, next) =>

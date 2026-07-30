@@ -1,8 +1,9 @@
 import type { SupportedFileType } from "../types/storage/storage.service.js";
 
-export const ACCESS_TOKEN_COOKIE_EXPIRY = 10 * 60 * 1000; // 10 minutes
-export const REFRESH_TOKEN_COOKIE_EXPIRY = 365 * 24 * 60 * 60 * 1000; // 1 year
+export const ACCESS_TOKEN_COOKIE_EXPIRY = 10 * 60 * 1000; // valid for 10 minutes
+export const REFRESH_TOKEN_COOKIE_EXPIRY = 365 * 24 * 60 * 60 * 1000; // valid for 1 year
 
+// Allowed upload MIME types for the storage layer, keep this aligned with validators and S3 policies
 export const SUPPORTED_FILE_TYPES = [
     "image/jpeg",
     "image/png",
@@ -14,6 +15,7 @@ export const SUPPORTED_FILE_TYPES = [
     "video/quicktime",
 ] as const;
 
+// Map each allowed file type to its normal file extension
 export const FILE_TYPE_EXTENSIONS: Record<SupportedFileType, string> = {
     // Images
     "image/jpeg": "jpg",

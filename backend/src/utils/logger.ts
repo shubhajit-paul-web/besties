@@ -55,8 +55,8 @@ const logger = winston.createLogger({
             filename: logFile("errors.log"),
             level: "error",
             format: combine(exactLevel("error"), fileFormat),
-            handleExceptions: true,
-            handleRejections: true,
+            // handleExceptions: true,
+            // handleRejections: true,
         }),
         new winston.transports.File({
             filename: logFile("warn.log"),
@@ -83,18 +83,18 @@ const logger = winston.createLogger({
             format: fileFormat,
         }),
     ],
-    exceptionHandlers: [
-        new winston.transports.File({
-            filename: logFile("exceptions.log"),
-            format: fileFormat,
-        }),
-    ],
-    rejectionHandlers: [
-        new winston.transports.File({
-            filename: logFile("rejections.log"),
-            format: fileFormat,
-        }),
-    ],
+    // exceptionHandlers: [
+    //     new winston.transports.File({
+    //         filename: logFile("exceptions.log"),
+    //         format: fileFormat,
+    //     }),
+    // ],
+    // rejectionHandlers: [
+    //     new winston.transports.File({
+    //         filename: logFile("rejections.log"),
+    //         format: fileFormat,
+    //     }),
+    // ],
     exitOnError: false,
 });
 

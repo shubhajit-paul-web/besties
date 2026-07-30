@@ -43,7 +43,7 @@ const Avatar = ({ image, imageShape = "full", title, subtitle, imageSize = 36, d
 
 			{(title || subtitle) && (
 				<div>
-					{title && <div className="font-medium leading-tight">{title}</div>}
+					{title && <div className="font-medium leading-tight capitalize">{title}</div>}
 					{subtitle && <div className="leading-tight text-xs">{subtitle}</div>}
 				</div>
 			)}

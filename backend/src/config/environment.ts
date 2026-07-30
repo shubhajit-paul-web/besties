@@ -10,6 +10,7 @@ const REQUIRED_ENV_VARIABLES = [
     "NODE_ENV",
     "ALLOWED_ORIGIN",
     "MONGODB_URI",
+    "REDIS_URL",
     "ACCESS_TOKEN_SECRET",
     "REFRESH_TOKEN_SECRET",
     "ACCESS_TOKEN_EXPIRY",
@@ -34,6 +35,7 @@ const config = {
     ALLOWED_ORIGIN: process.env.ALLOWED_ORIGIN,
     SERVER_URL: process.env.SERVER_URL,
     MONGODB_URI: process.env.MONGODB_URI,
+    REDIS_URL: process.env.REDIS_URL,
     JWT: {
         ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
         REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,

@@ -3,6 +3,7 @@ import Avatar from "../Avatar";
 import Logo from "../Logo";
 import bestiesLogoImg from "../../../assets/besties-logo.png";
 import { NavLink } from "react-router-dom";
+import useAppContext from "../../../hooks/useAppContext";
 
 interface SidebarInterface {
 	isLeftSidebarOpen: boolean;
@@ -11,6 +12,8 @@ interface SidebarInterface {
 }
 
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: SidebarInterface) => {
+	const { user } = useAppContext();
+	const userFullName = user?.name.first + " " + (user?.name.last ? user?.name.last : "");
 	const menus = [
 		{
 			href: "/app",
@@ -77,7 +80,7 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 						<div className={`flex items-center pt-4 border-t border-t-slate-200 ${isLeftSidebarOpen ? "justify-between" : "justify-center"}`}>
 							{isLeftSidebarOpen ? (
 								<>
-									<Avatar image="/profile-img.jpeg" title="Shubhajit Paul" subtitle={<span className="opacity-70">Software Engineer</span>} />
+									<Avatar image="/profile-img.jpeg" title={userFullName} subtitle={<span className="opacity-70">Software Engineer</span>} />
 									<LogOut size={18} />
 								</>
 							) : (

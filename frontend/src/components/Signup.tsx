@@ -10,6 +10,7 @@ import HttpInterceptor from "../lib/HttpInterceptor";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import useAppContext from "../hooks/useAppContext";
+import VerifyOtp from "./shared/VerifyOtp";
 
 interface SignupFormData {
 	username: string;
@@ -29,6 +30,7 @@ const Signup = () => {
 	const [previewUrl, setPreviewUrl] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
+	const [showOtpInput, setShowOtpInput] = useState(false);
 	const { setUser } = useAppContext();
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -56,6 +58,34 @@ const Signup = () => {
 			setPreviewUrl("");
 		}
 	}, [watchedProfilePicture]);
+
+	const triggerFileSelect = () => {
+		fileInputRef.current?.click();
+	};
+
+	const removeProfilePicture = () => {
+		setValue("profilePicture", undefined);
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
+
+	const {
+		ref: fileRegisterRef,
+		onChange: fileRegisterOnChange,
+		...fileRegisterRest
+	} = register("profilePicture", {
+		validate: {
+			lessThan5MB: (files) => {
+				if (!files || files.length === 0) return true;
+				return files[0].size <= 5 * 1024 * 1024 || "Profile picture must be under 5 MB";
+			},
+			isImage: (files) => {
+				if (!files || files.length === 0) return true;
+				return files[0].type.startsWith("image/") || "Only image files are allowed";
+			},
+		},
+	});
 
 	// Register user
 	const registerUser = async (data: SignupFormData) => {
@@ -116,38 +146,14 @@ const Signup = () => {
 		}
 	};
 
-	const triggerFileSelect = () => {
-		fileInputRef.current?.click();
-	};
-
-	const removeProfilePicture = () => {
-		setValue("profilePicture", undefined);
-		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
-		}
-	};
-
-	const {
-		ref: fileRegisterRef,
-		onChange: fileRegisterOnChange,
-		...fileRegisterRest
-	} = register("profilePicture", {
-		validate: {
-			lessThan5MB: (files) => {
-				if (!files || files.length === 0) return true;
-				return files[0].size <= 5 * 1024 * 1024 || "Profile picture must be under 5 MB";
-			},
-			isImage: (files) => {
-				if (!files || files.length === 0) return true;
-				return files[0].type.startsWith("image/") || "Only image files are allowed";
-			},
-		},
-	});
-
 	// Common select styles to match InputField
 	const selectBaseStyles = "w-full py-3.5 px-4 rounded-xl border bg-white focus:outline-none appearance-none cursor-pointer transition-all duration-200 text-slate-700";
 	const selectNormalStyles = "border-slate-300 focus:border-slate-400";
 	const selectErrorStyles = "border-red-500 focus:outline-red-500 text-red-500";
+
+	if (showOtpInput) {
+		return <VerifyOtp />;
+	}
 
 	return (
 		<div className="min-h-screen flex justify-center items-center font-sans overflow-y-auto select-none">
@@ -344,7 +350,7 @@ const Signup = () => {
 								width="100%"
 								borderRadius="xl"
 								centerContent
-								className="h-full min-h-[55px] px-12 text-base font-bold tracking-wide transition-all active:scale-[0.99] disabled:opacity-70"
+								className="h-full min-h-13.75 px-12 text-base font-bold tracking-wide transition-all active:scale-[0.99] disabled:opacity-70"
 								disabled={isLoading}>
 								{isLoading ? (
 									<div className="flex items-center gap-2 justify-center">

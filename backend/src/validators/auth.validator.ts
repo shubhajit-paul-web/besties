@@ -74,4 +74,4 @@ export const loginUserSchema = z.object({
 });
 
 // Export schema types
-export type RegisterUserInput = z.infer<typeof registerUserSchema>;
+export type RegisterUserInput = z.infer<typeof registerUserSchema.shape.body>;

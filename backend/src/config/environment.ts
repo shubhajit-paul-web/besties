@@ -19,6 +19,12 @@ const REQUIRED_ENV_VARIABLES = [
     "AWS_SECRET_ACCESS_KEY",
     "AWS_BUCKET_NAME",
     "AWS_REGION",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_SECURE",
+    "SMTP_USER",
+    "SMTP_PASSWORD",
+    "SMTP_FROM",
 ];
 
 const missingEnvVariables = REQUIRED_ENV_VARIABLES.filter((key) => !process.env[key]);
@@ -47,6 +53,14 @@ const config = {
         SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
         BUCKET_NAME: process.env.AWS_BUCKET_NAME,
         REGION: process.env.AWS_REGION,
+    },
+    SMTP: {
+        HOST: process.env.SMTP_HOST,
+        PORT: Number(process.env.SMTP_PORT),
+        SECURE: process.env.SMTP_SECURE,
+        USER: process.env.SMTP_USER,
+        PASSWORD: process.env.SMTP_PASSWORD,
+        FROM: process.env.SMTP_FROM,
     },
 };
 

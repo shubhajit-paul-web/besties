@@ -131,12 +131,13 @@ userSchema.methods.comparePassword = async function (plainTextPassword: string) 
     try {
         return await bcrypt.compare(plainTextPassword, this.password);
     } catch (err) {
+        logger.warn(`BcryptError: Password verification faild for the user: ${this.email}`);
+
         throw new ApiError(
             StatusCodes.INTERNAL_SERVER_ERROR,
             "Internal server error",
             false,
-            `BcryptError: Password verification faild for the user: ${this.email}`,
-            String(err),
+            getErrorMessage(err),
         );
     }
 };

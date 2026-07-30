@@ -52,7 +52,6 @@ const downloadFile = async (path: string) => {
             "Failed to generate a pre-signed download URL.",
             false,
             getErrorMessage(err),
-            String(err),
         );
     }
 };
@@ -88,7 +87,6 @@ const uploadFile = async (path: string, type: SupportedFileType) => {
             "Failed to generate a pre-signed upload URL.",
             false,
             getErrorMessage(err),
-            String(err),
         );
     }
 };

@@ -5,6 +5,7 @@ import connectDB from "./config/database.js";
 import logger from "./utils/logger.js";
 import getErrorMessage from "./utils/getErrorMessage.js";
 import mongoose from "mongoose";
+import transporter from "./config/email.js";
 
 export let shuttingDown = false;
 
@@ -90,6 +91,9 @@ const gracefulShutdown = (server: ReturnType<typeof app.listen>, signal: NodeJS.
 void (async () => {
     try {
         await connectDB();
+        await transporter.verify();
+
+        logger.info("SMTP server connected");
 
         const server = app.listen(config.PORT, () => {
             logger.info("Server is running", {

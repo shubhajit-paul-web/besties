@@ -1,7 +1,14 @@
 import { z } from "zod";
 
-// Signup schema
-export const registerUserSchema = z.object({
+// OTP schema
+const otpSchema = z.object({
+    body: z.object({
+        otp: z.string("OTP is required").length(6, "OTP must be 6 digits"),
+    }),
+});
+
+// Initiate registration schema
+export const initiateRegistrationSchema = z.object({
     body: z.object({
         username: z
             .string("Username is required")
@@ -14,20 +21,22 @@ export const registerUserSchema = z.object({
                 "Username can only contain letters, numbers, and underscores.",
             )
             .toLowerCase(),
-        firstName: z
-            .string("First name is required")
-            .trim()
-            .min(1, "First name is required")
-            .min(3, "First name must be at least 3 characters long.")
-            .max(20, "First name cannot exceed 20 characters.")
-            .toLowerCase(),
-        lastName: z
-            .string()
-            .trim()
-            .min(3, "Last name must be at least 3 characters long.")
-            .max(20, "Last name cannot exceed 20 characters.")
-            .toLowerCase()
-            .optional(),
+        name: z.object({
+            first: z
+                .string("First name is required")
+                .trim()
+                .min(1, "First name is required")
+                .min(3, "First name must be at least 3 characters long.")
+                .max(20, "First name cannot exceed 20 characters.")
+                .toLowerCase(),
+            last: z
+                .string()
+                .trim()
+                .min(3, "Last name must be at least 3 characters long.")
+                .max(20, "Last name cannot exceed 20 characters.")
+                .toLowerCase()
+                .optional(),
+        }),
         gender: z.enum(
             ["male", "female", "custom"],
             "Selection must be either male, female, or custom",
@@ -61,6 +70,11 @@ export const registerUserSchema = z.object({
     }),
 });
 
+// Verify registration schema
+export const verifyRegistrationOtpSchema = z.object({
+    body: initiateRegistrationSchema.shape.body.extend(otpSchema.shape.body.shape),
+});
+
 // Login schema
 export const loginUserSchema = z.object({
     body: z.object({
@@ -74,4 +88,4 @@ export const loginUserSchema = z.object({
 });
 
 // Export schema types
-export type RegisterUserInput = z.infer<typeof registerUserSchema.shape.body>;
+export type VerifyRegistrationOtpInput = z.infer<typeof verifyRegistrationOtpSchema.shape.body>;

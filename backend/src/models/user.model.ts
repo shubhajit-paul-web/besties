@@ -114,7 +114,9 @@ userSchema.pre("save", async function () {
             StatusCodes.INTERNAL_SERVER_ERROR,
             "Failed to hash user password",
             false,
-            getErrorMessage(err),
+            {
+                details: getErrorMessage(err),
+            },
         );
     }
 });
@@ -133,12 +135,9 @@ userSchema.methods.comparePassword = async function (plainTextPassword: string) 
     } catch (err) {
         logger.warn(`BcryptError: Password verification faild for the user: ${this.email}`);
 
-        throw new ApiError(
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            "Internal server error",
-            false,
-            getErrorMessage(err),
-        );
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Internal server error", false, {
+            details: getErrorMessage(err),
+        });
     }
 };
 
@@ -162,14 +161,14 @@ userSchema.methods.generateAccessAndRefreshTokens = async function () {
         await this.save();
 
         return { accessToken, refreshToken };
-    } catch (error) {
-        throw new ApiError(
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            "Internal server error",
-            false,
+    } catch (err) {
+        logger.warn(
             `JWTError: Failed to generate JWT access and refresh tokens for user: ${payload.email}`,
-            String(error),
         );
+
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Internal server error", false, {
+            details: getErrorMessage(err),
+        });
     }
 };
 

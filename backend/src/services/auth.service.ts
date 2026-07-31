@@ -1,11 +1,16 @@
-import type { RegisterUserInput } from "../validators/auth.validator.js";
+import type { VerifyRegistrationOtpInput } from "../validators/auth.validator.js";
 import userRepository from "../repositories/user.repository.js";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import logger from "../utils/logger.js";
 import type { LoginUserInput } from "../types/auth/auth.types.js";
+import { InitiateRegistration } from "../types/auth/auth.types.js";
+import redis from "../config/redis.js";
+import generateOtp from "../utils/generateOtp.js";
+import emailService from "./email.service.js";
+import verificationTemplate from "../templates/email/verification.js";
 
-const registerUser = async (userData: RegisterUserInput) => {
+const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     const { username, email, mobileNumber } = userData;
 
     const isUsernameAlreadyExists = await userRepository.existsByUsername(username);
@@ -22,23 +27,82 @@ const registerUser = async (userData: RegisterUserInput) => {
             "An account with the provided email or phone number already exists",
         );
     }
+};
 
-    const { firstName, lastName, gender, dob, password } = userData;
+const initiateRegistration = async (userData: InitiateRegistration) => {
+    const { username, email, mobileNumber } = userData;
+
+    await isUserAlreadyExist({
+        username,
+        email,
+        mobileNumber,
+    });
+
+    const key = `auth:register:otp:email:${email}`;
+
+    const existingOtp = await redis.get(key);
+
+    if (existingOtp) {
+        const ttl = await redis.ttl(key);
+
+        throw new ApiError(StatusCodes.CONFLICT, "An OTP has already been sent.", true, {
+            meta: {
+                retryAfter: ttl,
+            },
+        });
+    }
+
+    const OTP = generateOtp();
+
+    await redis.set(key, OTP, "EX", 5 * 60); // valid for 5 minutes
+
+    await emailService.sendEmail({
+        subject: "Verify your email",
+        to: email,
+        html: verificationTemplate(OTP, 5),
+    });
+};
+
+const verifyRegistrationOtp = async (userData: VerifyRegistrationOtpInput) => {
+    const { username, email, mobileNumber, otp: submittedOtp } = userData;
+
+    await isUserAlreadyExist({
+        username,
+        email,
+        mobileNumber,
+    });
+
+    const key = `auth:register:otp:email:${email}`;
+
+    const expectedOtp = await redis.get(key);
+
+    if (!expectedOtp) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "The OTP has expired. Please request a new one.",
+        );
+    }
+
+    if (expectedOtp !== submittedOtp) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "The OTP you entered is incorrect. Please try again.",
+        );
+    }
+
+    await redis.del(key);
+
+    const { name, gender, dob, password } = userData;
 
     const userPayload = {
         username,
-        name: {
-            first: firstName,
-            last: lastName,
-        },
+        name,
         gender,
         dob: new Date(dob),
         email,
         mobileNumber,
         password,
     };
-
-    // check if the avatar file exists, verify it is an image format, upload it to cloud storage, and save the resulting secure URL and asset/image ID to your database
 
     const createdUser = await userRepository.create(userPayload);
 
@@ -72,6 +136,7 @@ const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
 };
 
 export default {
-    registerUser,
+    initiateRegistration,
+    verifyRegistrationOtp,
     loginUser,
 };

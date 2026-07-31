@@ -1,5 +1,3 @@
-import logger from "./logger.js";
-
 /**
  * API error type for consistent HTTP error handling.
  *
@@ -21,30 +19,28 @@ class ApiError extends Error {
         public statusCode: number,
         public message: string,
         public isOperational: boolean = true,
-        public details?: object | string,
-        public stack?: string | undefined,
+        public options?: {
+            details?: object | string;
+            stack?: string;
+            meta?: object;
+        },
     ) {
         super(message);
-        this.statusCode = statusCode;
-        this.isOperational = isOperational;
-        this.details = details;
 
-        if (stack) this.stack = stack;
+        this.name = "ApiError";
+        this.statusCode = statusCode;
+
+        if (options?.stack) this.stack = options.stack;
         else Error.captureStackTrace(this, this.constructor);
 
-        // Meta info of the error (log payload)
-        const logPayload = { statusCode, isOperational, details };
+        // // Meta info of the error (log payload)
+        // const logPayload = { statusCode, isOperational, details: options?.details };
 
-        // Log error when it's created
-        if (statusCode >= 500) {
-            logger.error(`INTERNAL_SERVER_ERROR: ${message}`, {
-                ...logPayload,
-                stack: this.stack,
-            });
-        }
-        // else {
-        //     logger.error(message, {
-        //         meta: logPayload,
+        // // Log error when it's created
+        // if (statusCode >= 500) {
+        //     logger.error(`INTERNAL_SERVER_ERROR: ${message}`, {
+        //         ...logPayload,
+        //         stack: this.stack,
         //     });
         // }
     }

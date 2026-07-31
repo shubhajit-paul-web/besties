@@ -51,7 +51,7 @@ const downloadFile = async (path: string) => {
             StatusCodes.INTERNAL_SERVER_ERROR,
             "Failed to generate a pre-signed download URL.",
             false,
-            getErrorMessage(err),
+            { details: getErrorMessage(err) },
         );
     }
 };
@@ -86,7 +86,7 @@ const uploadFile = async (path: string, type: SupportedFileType) => {
             StatusCodes.INTERNAL_SERVER_ERROR,
             "Failed to generate a pre-signed upload URL.",
             false,
-            getErrorMessage(err),
+            { details: getErrorMessage(err) },
         );
     }
 };

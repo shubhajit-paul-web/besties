@@ -1,17 +1,22 @@
 import { Router } from "express";
 import validate from "../middlewares/validator.middleware.js";
-import upload from "../middlewares/multer.middleware.js";
-import { registerUserSchema, loginUserSchema } from "../validators/auth.validator.js";
+import {
+    initiateRegistrationSchema,
+    verifyRegistrationOtpSchema,
+    loginUserSchema,
+} from "../validators/auth.validator.js";
 import authController from "../controllers/auth.controller.js";
 
 const router = Router();
 
 // (Public) POST /auth/register
+router.post("/register", validate(initiateRegistrationSchema), authController.initiateRegistration);
+
+// (Public) POST /auth/register/verify
 router.post(
-    "/register",
-    upload.single("avatar"),
-    validate(registerUserSchema),
-    authController.registerUser,
+    "/register/verify",
+    validate(verifyRegistrationOtpSchema),
+    authController.verifyRegistrationOtp,
 );
 
 // (Public) POST /auth/login

@@ -4,11 +4,22 @@ import authService from "../services/auth.service.js";
 import getCookieOptions from "../utils/getCookieOptions.js";
 import { ACCESS_TOKEN_COOKIE_EXPIRY, REFRESH_TOKEN_COOKIE_EXPIRY } from "../constants/constants.js";
 import ApiResponse from "../utils/apiResponse.js";
-import type { LoginUserRequest, RegisterUserRequest } from "../types/auth/auth.request.js";
+import type {
+    InitiateRegistrationRequest,
+    LoginUserRequest,
+    VerifyRegistrationOtpRequest,
+} from "../types/auth/auth.request.js";
+
+// Initiate registration
+const initiateRegistration = asyncHandler(async (req: InitiateRegistrationRequest, res) => {
+    await authService.initiateRegistration(req.body);
+
+    return res.status(StatusCodes.CREATED).json(ApiResponse.success("OTP sent successfully."));
+});
 
 // Register User
-const registerUser = asyncHandler(async (req: RegisterUserRequest, res) => {
-    const { createdUser, tokens } = await authService.registerUser(req.body);
+const verifyRegistrationOtp = asyncHandler(async (req: VerifyRegistrationOtpRequest, res) => {
+    const { createdUser, tokens } = await authService.verifyRegistrationOtp(req.body);
 
     res.cookie("accessToken", tokens.accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
     res.cookie("refreshToken", tokens.refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
@@ -29,6 +40,7 @@ const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
 });
 
 export default {
-    registerUser,
+    initiateRegistration,
+    verifyRegistrationOtp,
     loginUser,
 };

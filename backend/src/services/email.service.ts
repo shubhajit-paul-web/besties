@@ -12,12 +12,9 @@ const sendEmail = async (options: SendEmailOptions) => {
             ...options,
         });
     } catch (err) {
-        throw new ApiError(
-            StatusCodes.INTERNAL_SERVER_ERROR,
-            "Failed to send email",
-            false,
-            getErrorMessage(err),
-        );
+        throw new ApiError(StatusCodes.INTERNAL_SERVER_ERROR, "Failed to send email", false, {
+            details: getErrorMessage(err),
+        });
     }
 };
 

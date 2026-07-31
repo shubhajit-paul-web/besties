@@ -1,5 +1,6 @@
 import type { RegisterUserDto } from "../dto/user.dto.js";
 import UserModel from "../models/user.model.js";
+import { QueryFilter } from "mongoose";
 
 /**
  * Checks whether a username already exists.
@@ -19,8 +20,14 @@ const existsByUsername = async (username: string) => {
  * @returns {Promise<boolean>} A promise resolving to whether either value exists.
  */
 const existsByEmailOrMobile = async (email: string, mobileNumber: string | undefined) => {
+    const conditions: QueryFilter<{ email: string; mobileNumber?: string }>[] = [{ email }];
+
+    if (mobileNumber) {
+        conditions.push({ mobileNumber });
+    }
+
     return await UserModel.exists({
-        $or: [{ email }, { mobileNumber }],
+        $or: conditions,
     });
 };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Info, Eye, EyeOff, Camera, Trash2, ChevronDown, CheckCircle2 } from "lucide-react";
 import InputField from "./shared/InputField";
@@ -9,29 +9,16 @@ import bestiesLogo from "../assets/besties-logo.png";
 import HttpInterceptor from "../lib/HttpInterceptor";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
-import useAppContext from "../hooks/useAppContext";
 import VerifyOtp from "./shared/VerifyOtp";
-
-interface SignupFormData {
-	username: string;
-	firstName: string;
-	lastName: string;
-	dob: string;
-	gender: "female" | "male" | "custom" | "";
-	email: string;
-	mobileNumber?: string;
-	password: string;
-	profilePicture?: FileList;
-}
+import type { SignupFormData } from "../types/user.types";
 
 const Signup = () => {
-	const navigate = useNavigate();
 	const [showPassword, setShowPassword] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string>("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
 	const [showOtpInput, setShowOtpInput] = useState(false);
-	const { setUser } = useAppContext();
+	const [submittedFormData, setSubmittedFormData] = useState({});
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -88,27 +75,31 @@ const Signup = () => {
 	});
 
 	// Register user
-	const registerUser = async (data: SignupFormData) => {
+	const initiateRegistration = async (data: SignupFormData) => {
 		setIsLoading(true);
-		console.log("Submitting Signup Data:", data);
 
-		const formData = new FormData(document.forms[0]);
+		const formData = {
+			...data,
+			name: {
+				first: data.firstName,
+				last: data.lastName,
+			},
+		};
 
 		try {
 			const res = await HttpInterceptor.post("/auth/register", formData);
 
 			if (res.status === 201) {
-				setIsSuccess(true);
+				toast.success("OTP sent successfully.", {
+					position: "top-center",
+				});
 
-				setTimeout(() => {
-					navigate("/app");
-				}, 2000);
-
-				setUser(res.data?.data?.user);
-
-				console.log(res.data?.data?.user);
+				setSubmittedFormData(formData);
+				setShowOtpInput(true);
 			}
 		} catch (err) {
+			console.log(err);
+
 			if (err instanceof AxiosError) {
 				const status = err.response?.status;
 
@@ -152,7 +143,7 @@ const Signup = () => {
 	const selectErrorStyles = "border-red-500 focus:outline-red-500 text-red-500";
 
 	if (showOtpInput) {
-		return <VerifyOtp />;
+		return <VerifyOtp formData={submittedFormData} />;
 	}
 
 	return (
@@ -177,7 +168,7 @@ const Signup = () => {
 					</div>
 
 					{/* Form */}
-					<form onSubmit={handleSubmit(registerUser)} className="flex flex-col gap-5">
+					<form onSubmit={handleSubmit(initiateRegistration)} className="flex flex-col gap-5">
 						{/* Row 1 */}
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 							<InputField

@@ -13,3 +13,15 @@ export type UserType = {
 	createdAt: Date;
 	updatedAt: Date;
 };
+
+export type SignupFormData = {
+	username: string;
+	firstName: string;
+	lastName: string;
+	dob: string;
+	gender: "female" | "male" | "custom" | "";
+	email: string;
+	mobileNumber?: string;
+	password: string;
+	profilePicture?: FileList;
+};

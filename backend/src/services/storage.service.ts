@@ -7,7 +7,11 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import getErrorMessage from "../utils/getErrorMessage.js";
 import { v4 as uuid } from "uuid";
 import { FILE_TYPE_EXTENSIONS } from "../constants/constants.js";
-import type { SupportedFileType } from "../types/storage/storage.service.js";
+import type {
+    CreatePresignedPostUpload,
+    SupportedFileType,
+} from "../types/storage/storage.service.js";
+import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
 const isFileExists = async (path: string) => {
     try {
@@ -57,9 +61,9 @@ const downloadFile = async (path: string) => {
 };
 
 const uploadFile = async (path: string, type: SupportedFileType) => {
-    // if (!path || !type) {
-    //     throw new ApiError(StatusCodes.BAD_REQUEST, "Both file path and type are required.");
-    // }
+    if (!path || !type) {
+        throw new ApiError(StatusCodes.BAD_REQUEST, "Both file path and type are required.");
+    }
 
     const isFileAlreadyExists = await isFileExists(path);
 
@@ -91,7 +95,39 @@ const uploadFile = async (path: string, type: SupportedFileType) => {
     }
 };
 
+const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => {
+    const { userId, path, type, expires, maxFileSize } = options;
+
+    try {
+        const Key = `${path}/${uuid()}.${FILE_TYPE_EXTENSIONS[type]}`;
+
+        const result = await createPresignedPost(s3, {
+            Bucket: config.AWS.BUCKET_NAME!,
+            Key,
+            Expires: expires,
+            Conditions: [
+                ["content-length-range", 1, maxFileSize],
+                ["starts-with", "$Content-Type", type],
+                ["eq", "$x-amz-meta-user-id", userId],
+            ],
+            Fields: {
+                "x-amz-meta-user-id": userId,
+            },
+        });
+
+        return result;
+    } catch (err) {
+        throw new ApiError(
+            StatusCodes.INTERNAL_SERVER_ERROR,
+            "Failed to generate a pre-signed upload URL.",
+            false,
+            { details: getErrorMessage(err) },
+        );
+    }
+};
+
 export default {
     downloadFile,
     uploadFile,
+    createPresignedPostUpload,
 };

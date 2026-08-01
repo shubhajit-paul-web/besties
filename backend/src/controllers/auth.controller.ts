@@ -17,7 +17,7 @@ const initiateRegistration = asyncHandler(async (req: InitiateRegistrationReques
     return res.status(StatusCodes.CREATED).json(ApiResponse.success("OTP sent successfully."));
 });
 
-// Register User
+// Verify registration OTP
 const verifyRegistrationOtp = asyncHandler(async (req: VerifyRegistrationOtpRequest, res) => {
     const { createdUser, tokens } = await authService.verifyRegistrationOtp(req.body);
 

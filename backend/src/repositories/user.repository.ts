@@ -71,10 +71,15 @@ const findUserById = async (userId: string, lean: boolean = true, fields?: strin
     return await query;
 };
 
+const updateAvatarByUserId = async (userId: string, path: string) => {
+    return await UserModel.updateOne({ _id: userId }, { $set: { avatar: path } }).lean();
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
     create,
     findUserByIdentifier,
     findUserById,
+    updateAvatarByUserId,
 };

@@ -1,18 +1,23 @@
 import { useForm } from "react-hook-form";
-import Button from "./Button";
-import InputField from "./InputField";
-import type { SignupFormData } from "../../types/user.types";
-import HttpInterceptor from "../../lib/HttpInterceptor";
+import Button from "../Button";
+import InputField from "../InputField";
+import type { SignupFormPayload } from "../../../types/user.types";
+import HttpInterceptor from "../../../lib/HttpInterceptor";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import useAppContext from "../../hooks/useAppContext";
-import { useState } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import { AxiosError } from "axios";
+import useAppContext from "../../../hooks/useAppContext";
+import { CheckCircle2 } from "lucide-react";
 
-const VerifyOtp = ({ formData }: { formData: any }) => {
-	const [isSubmitting, setIsSubmitting] = useState(false);
+type VerifyOtpProps = {
+	setStep: Dispatch<SetStateAction<number>>;
+	submittedFormData?: SignupFormPayload;
+};
+
+const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
 	const { setUser } = useAppContext();
-	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isSuccess, setIsSuccess] = useState(false);
 	const {
 		register,
 		handleSubmit,
@@ -21,11 +26,12 @@ const VerifyOtp = ({ formData }: { formData: any }) => {
 
 	const verifyRegistrationOtp = async ({ otp }: { otp: string }) => {
 		setIsSubmitting(true);
-		console.log("formData", formData);
+
+		if (!submittedFormData) return;
 
 		try {
 			const res = await HttpInterceptor.post("/auth/register/verify", {
-				...formData,
+				...submittedFormData,
 				otp,
 			});
 
@@ -34,11 +40,12 @@ const VerifyOtp = ({ formData }: { formData: any }) => {
 					position: "top-center",
 				});
 
-				setTimeout(() => {
-					navigate("/app");
-				}, 2000);
-
 				setUser(res.data?.data?.user);
+				setIsSuccess(true);
+
+				setTimeout(() => {
+					setStep(3);
+				}, 2000);
 			}
 		} catch (err) {
 			console.error(err);
@@ -66,13 +73,26 @@ const VerifyOtp = ({ formData }: { formData: any }) => {
 		}
 	};
 
+	if (isSuccess) {
+		return (
+			<div className="h-screen flex justify-center items-center">
+				<div className="w-full max-w-md p-10 rounded-4xl flex flex-col items-center text-center">
+					<CheckCircle2 size={64} className="text-[#FF3D94] mb-5" />
+					<h2 className="font-bold text-2xl text-slate-800 mb-2">Account Created!</h2>
+					<p className="text-slate-500 text-base mb-8">Welcome to Besties. Redirecting you to app...</p>
+					<div className="w-10 h-10 border-4 border-slate-100 border-t-[#FF3D94] rounded-full animate-spin"></div>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="w-screen h-screen absolute top-0 left-0 z-50 flex justify-center items-center">
 			<div className="w-120">
 				<div className="space-y-1.5">
 					<h1 className="text-2xl font-semibold">Enter the confirmation code</h1>
 					<p className="leading-5">
-						To confirm your account, enter the 6-digit code that we've sent to <span className="font-semibold">example@gmail.com.</span>
+						To confirm your account, enter the 6-digit code that we've sent to <span className="font-semibold">{submittedFormData?.email ?? "example@gmail.com"}.</span>
 					</p>
 				</div>
 				<form onSubmit={handleSubmit(verifyRegistrationOtp)} className="space-y-6 mt-6">
@@ -101,7 +121,7 @@ const VerifyOtp = ({ formData }: { formData: any }) => {
 								"Confirm"
 							)}
 						</Button>
-						<Button variant="graySoft" width="100%" borderRadius="full" centerContent className="py-3">
+						<Button variant="graySoft" width="100%" borderRadius="full" centerContent className="py-3" disabled={isSubmitting}>
 							Resend confirmation code
 						</Button>
 					</div>

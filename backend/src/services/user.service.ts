@@ -26,7 +26,18 @@ const generateAvatarUploadUrl = async (userId: string, type: SupportedFileType) 
     return result;
 };
 
+const updateAvatar = async (userId: string, path: string) => {
+    await storageService.validateObjectOwnership(userId, path);
+
+    const { matchedCount } = await userRepository.updateAvatarByUserId(userId, path);
+
+    if (matchedCount === 0) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "User does not exists.");
+    }
+};
+
 export default {
     getCurrentUser,
     generateAvatarUploadUrl,
+    updateAvatar,
 };

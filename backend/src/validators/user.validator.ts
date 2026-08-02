@@ -11,3 +11,9 @@ export const generateAvatarUploadUrlSchema = z.object({
         ),
     }),
 });
+
+export const updateAvatarSchema = z.object({
+    body: z.object({
+        path: z.string("Path is required").trim().min(1, "Path is required"),
+    }),
+});

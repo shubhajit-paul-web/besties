@@ -2,7 +2,10 @@ import asyncHandler from "../utils/asyncHandler.js";
 import userService from "../services/user.service.js";
 import { StatusCodes } from "http-status-codes";
 import ApiResponse from "../utils/apiResponse.js";
-import type { GenerateAvatarUploadUrlRequest } from "../types/user/user.request.js";
+import type {
+    GenerateAvatarUploadUrlRequest,
+    UpdateAvatarRequest,
+} from "../types/user/user.request.js";
 
 const getCurrentUser = asyncHandler(async (req, res) => {
     const user = await userService.getCurrentUser(req.user?._id as string);
@@ -18,12 +21,17 @@ const generateAvatarUploadUrl = asyncHandler(async (req: GenerateAvatarUploadUrl
         req.body.type,
     );
 
-    return res.status(StatusCodes.OK).json({
-        upload: result,
-    });
+    return res.status(StatusCodes.OK).json(result);
+});
+
+const updateAvatar = asyncHandler(async (req: UpdateAvatarRequest, res) => {
+    await userService.updateAvatar(req.user?._id as string, req.body.path);
+
+    res.status(StatusCodes.OK).json(ApiResponse.success("Avatar updated successfully."));
 });
 
 export default {
     getCurrentUser,
     generateAvatarUploadUrl,
+    updateAvatar,
 };

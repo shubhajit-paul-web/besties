@@ -34,10 +34,7 @@ const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
                 lowercase: true,
             },
         },
-        avatar: {
-            url: String,
-            fileId: String,
-        },
+        avatar: String,
         bio: {
             type: String,
             trim: true,

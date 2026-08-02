@@ -19,9 +19,22 @@ export type SignupFormData = {
 	firstName: string;
 	lastName: string;
 	dob: string;
-	gender: "female" | "male" | "custom" | "";
+	gender: "female" | "male" | "custom";
 	email: string;
 	mobileNumber?: string;
 	password: string;
-	profilePicture?: FileList;
+};
+
+export type SignupFormPayload = {
+	username: string;
+	name: {
+		first: string;
+		last?: string;
+	};
+	dob: string;
+	gender: "female" | "male" | "custom";
+	email: string;
+	mobileNumber?: string;
+	password: string;
+	otp?: string;
 };

@@ -7,10 +7,7 @@ export type UserDocument = {
         first: string;
         last?: string;
     };
-    avatar: {
-        url?: string;
-        fileId?: string;
-    };
+    avatar?: string;
     bio?: string;
     gender: "male" | "female" | "custom";
     dob: Date;

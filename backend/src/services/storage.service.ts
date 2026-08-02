@@ -126,8 +126,32 @@ const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => 
     }
 };
 
+const validateObjectOwnership = async (userId: string, path: string) => {
+    try {
+        const command = new HeadObjectCommand({
+            Bucket: config.AWS.BUCKET_NAME,
+            Key: path,
+        });
+
+        const { Metadata } = await s3.send(command);
+
+        if (Metadata?.["user-id"] !== userId) {
+            throw new ApiError(StatusCodes.FORBIDDEN, "You are not authorized to use this file.");
+        }
+
+        return true;
+    } catch (err) {
+        if (err instanceof ApiError) {
+            throw new ApiError(err.statusCode, err.message);
+        }
+
+        throw new ApiError(StatusCodes.NOT_FOUND, "File does not exists.");
+    }
+};
+
 export default {
     downloadFile,
     uploadFile,
     createPresignedPostUpload,
+    validateObjectOwnership,
 };

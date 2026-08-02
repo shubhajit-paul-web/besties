@@ -2,7 +2,7 @@ import { Router } from "express";
 import authenticate from "../middlewares/auth.middleware.js";
 import userController from "../controllers/user.controller.js";
 import validate from "../middlewares/validator.middleware.js";
-import { generateAvatarUploadUrlSchema } from "../validators/user.validator.js";
+import { generateAvatarUploadUrlSchema, updateAvatarSchema } from "../validators/user.validator.js";
 
 const router = Router();
 
@@ -17,5 +17,8 @@ router.post(
     validate(generateAvatarUploadUrlSchema),
     userController.generateAvatarUploadUrl,
 );
+
+// (Private) PUT /users/me/avatar
+router.put("/me/avatar", validate(updateAvatarSchema), userController.updateAvatar);
 
 export default router;

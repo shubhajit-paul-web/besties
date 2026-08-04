@@ -75,6 +75,12 @@ const updateAvatarByUserId = async (userId: string, path: string) => {
     return await UserModel.updateOne({ _id: userId }, { $set: { avatar: path } }).lean();
 };
 
+const findUserByRefreshToken = async (refreshToken: string) => {
+    return await UserModel.findOne({ refreshToken }).select(
+        "+refreshToken +expiresAt -createdAt -updatedAt -dob -gender",
+    );
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
@@ -82,4 +88,5 @@ export default {
     findUserByIdentifier,
     findUserById,
     updateAvatarByUserId,
+    findUserByRefreshToken,
 };

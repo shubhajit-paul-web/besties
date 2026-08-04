@@ -12,9 +12,7 @@ const REQUIRED_ENV_VARIABLES = [
     "MONGODB_URI",
     "REDIS_URL",
     "ACCESS_TOKEN_SECRET",
-    "REFRESH_TOKEN_SECRET",
     "ACCESS_TOKEN_EXPIRY",
-    "REFRESH_TOKEN_EXPIRY",
     "AWS_ACCESS_KEY_ID",
     "AWS_SECRET_ACCESS_KEY",
     "AWS_BUCKET_NAME",
@@ -44,9 +42,7 @@ const config = {
     REDIS_URL: process.env.REDIS_URL,
     JWT: {
         ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET,
-        REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET,
         ACCESS_TOKEN_EXPIRY: process.env.ACCESS_TOKEN_EXPIRY as StringValue,
-        REFRESH_TOKEN_EXPIRY: process.env.REFRESH_TOKEN_EXPIRY as StringValue,
     },
     AWS: {
         ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,

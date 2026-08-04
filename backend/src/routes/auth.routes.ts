@@ -22,4 +22,7 @@ router.post(
 // (Public) POST /auth/login
 router.post("/login", validate(loginUserSchema), authController.loginUser);
 
+// (Public) /POST /auth/refresh
+router.post("/refresh", authController.refreshTokens);
+
 export default router;

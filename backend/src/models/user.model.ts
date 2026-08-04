@@ -8,7 +8,7 @@ import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import config from "../config/environment.js";
 import type { UserDocument, UserMethods, UserModelType } from "./types/user.types.js";
-import { generateRandomToken, shah256 } from "../utils/crypto.js";
+import { generateRandomToken, sha256 } from "../utils/crypto.js";
 import moment from "moment";
 
 const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
@@ -164,7 +164,7 @@ userSchema.methods.generateAccessAndRefreshTokens = async function () {
         });
         const refreshToken = generateRandomToken(64);
 
-        this.refreshToken = shah256(refreshToken);
+        this.refreshToken = sha256(refreshToken);
         this.expiresAt = moment().add(1, "year").toDate(); // after 1 year from creation
 
         await this.save();

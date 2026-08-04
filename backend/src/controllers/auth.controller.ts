@@ -39,8 +39,20 @@ const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Login successfully.", { user }));
 });
 
+const refreshTokens = asyncHandler(async (req, res) => {
+    const cookies = req.cookies as { refreshToken?: string };
+
+    const { accessToken, refreshToken } = await authService.refreshTokens(cookies.refreshToken!);
+
+    res.cookie("accessToken", accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
+    res.cookie("refreshToken", refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Tokens refreshed successfully."));
+});
+
 export default {
     initiateRegistration,
     verifyRegistrationOtp,
     loginUser,
+    refreshTokens,
 };

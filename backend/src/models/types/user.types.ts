@@ -16,8 +16,9 @@ export type UserDocument = {
     password: string;
     usernameUpdatedAt?: Date;
     refreshToken?: string;
-    createdAt?: string;
-    updatedAt?: string;
+    expiresAt?: Date;
+    createdAt: Date;
+    updatedAt: Date;
 };
 
 export type UserMethods = {

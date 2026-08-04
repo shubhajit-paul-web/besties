@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Schema, model } from "mongoose";
 import bcrypt from "bcrypt";
 import logger from "../utils/logger.js";
@@ -7,6 +8,8 @@ import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
 import config from "../config/environment.js";
 import type { UserDocument, UserMethods, UserModelType } from "./types/user.types.js";
+import { generateRandomToken, shah256 } from "../utils/crypto.js";
+import moment from "moment";
 
 const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
     {
@@ -74,6 +77,10 @@ const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
             type: String,
             select: false,
         },
+        expiresAt: {
+            type: Date,
+            select: false,
+        },
     },
     { timestamps: true },
 );
@@ -90,7 +97,7 @@ userSchema.index(
 
 userSchema.set("toJSON", {
     transform: (_userDocument, userObject) => {
-        const { __v, refreshToken: _refreshToken, password: _password, ...publicUser } = userObject;
+        const { __v, refreshToken, password, expiresAt, ...publicUser } = userObject;
         return publicUser;
     },
 });
@@ -144,17 +151,22 @@ userSchema.methods.generateAccessAndRefreshTokens = async function () {
         _id: this._id,
         username: this.username,
         email: this.email,
+        avatar: this.avatar ?? null,
+        name: {
+            first: this.name.first,
+            last: this.name.last ?? null,
+        },
     };
 
     try {
         const accessToken = jwt.sign(payload, config.JWT.ACCESS_TOKEN_SECRET!, {
             expiresIn: config.JWT.ACCESS_TOKEN_EXPIRY,
         });
-        const refreshToken = jwt.sign(payload, config.JWT.REFRESH_TOKEN_SECRET!, {
-            expiresIn: config.JWT.REFRESH_TOKEN_EXPIRY,
-        });
+        const refreshToken = generateRandomToken(64);
 
-        this.refreshToken = refreshToken;
+        this.refreshToken = shah256(refreshToken);
+        this.expiresAt = moment().add(1, "year").toDate(); // after 1 year from creation
+
         await this.save();
 
         return { accessToken, refreshToken };

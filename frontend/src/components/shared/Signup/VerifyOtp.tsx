@@ -6,7 +6,6 @@ import HttpInterceptor from "../../../lib/HttpInterceptor";
 import { toast } from "react-toastify";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { AxiosError } from "axios";
-import useAppContext from "../../../hooks/useAppContext";
 import { CheckCircle2 } from "lucide-react";
 
 type VerifyOtpProps = {
@@ -15,7 +14,6 @@ type VerifyOtpProps = {
 };
 
 const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
-	const { setUser } = useAppContext();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [isSuccess, setIsSuccess] = useState(false);
 	const {
@@ -40,7 +38,6 @@ const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
 					position: "top-center",
 				});
 
-				setUser(res.data?.data?.user);
 				setIsSuccess(true);
 
 				setTimeout(() => {

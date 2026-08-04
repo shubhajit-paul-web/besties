@@ -145,6 +145,8 @@ const UpdateProfilePicture = () => {
 				}
 			})
 			.catch((err) => {
+				toast.error("Failed to upload file.", toastPosition);
+
 				console.error(err);
 			})
 			.finally(() => {

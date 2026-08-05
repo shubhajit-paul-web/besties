@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { Model } from "mongoose";
+import { Model, Types } from "mongoose";
 
 export type UserDocument = {
+    _id: Types.ObjectId;
     username: string;
     name: {
         first: string;

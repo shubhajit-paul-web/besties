@@ -2,8 +2,9 @@ import { Bookmark, ChartNoAxesCombined, House, Image, LogOut, UserRound, Users }
 import Avatar from "../Avatar";
 import Logo from "../Logo";
 import bestiesLogoImg from "../../../assets/besties-logo.png";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import useAppContext from "../../../hooks/useAppContext";
+import { authApi } from "../../../lib/axios";
 
 interface SidebarInterface {
 	isLeftSidebarOpen: boolean;
@@ -12,6 +13,7 @@ interface SidebarInterface {
 }
 
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: SidebarInterface) => {
+	const navigate = useNavigate();
 	const { user } = useAppContext();
 	const userFullName = user?.name.first + " " + (user?.name.last ? user?.name.last : "");
 	const menus = [
@@ -47,6 +49,15 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 		},
 	];
 
+	const logout = async () => {
+		try {
+			await authApi.post("/auth/logout");
+			navigate("/login");
+		} catch {
+			navigate("/login");
+		}
+	};
+
 	const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
 		return `${isActive && `font-bold ${isLeftSidebarOpen || "bg-slate-200/60"}`} flex items-center gap-3 cursor-pointer hover:bg-slate-200/60 px-4 py-3 rounded-lg transition-all`;
 	};
@@ -81,7 +92,11 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 							{isLeftSidebarOpen ? (
 								<>
 									<Avatar image="/profile-img.jpeg" title={userFullName} subtitle={<span className="opacity-70">Software Engineer</span>} />
-									<LogOut size={18} />
+
+									{/* Logout button */}
+									<div onClick={logout} className="hover:text-red-500 cursor-pointer">
+										<LogOut size={18} />
+									</div>
 								</>
 							) : (
 								<Avatar image="/profile-img.jpeg" />

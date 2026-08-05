@@ -1,7 +1,12 @@
 import axios, { AxiosError } from "axios";
 
-const HttpInterceptor = axios.create({
-	baseURL: "http://localhost:8080",
+axios.defaults.baseURL = "http://localhost:8080";
+
+export const authApi = axios.create({
+	withCredentials: true,
+});
+
+export const HttpInterceptor = axios.create({
 	withCredentials: true,
 });
 
@@ -21,14 +26,13 @@ HttpInterceptor.interceptors.response.use(
 			if (error.response?.status === 401 && !originalRequest?._retry) {
 				originalRequest._retry = true;
 
-				await HttpInterceptor.post("/auth/refresh");
+				await authApi.post("/auth/refresh");
 
 				return HttpInterceptor(originalRequest);
 			}
 		} catch {
+			await authApi.post("/auth/logout");
 			window.location.href = "/login";
 		}
 	},
 );
-
-export default HttpInterceptor;

@@ -6,6 +6,7 @@ import {
     loginUserSchema,
 } from "../validators/auth.validator.js";
 import authController from "../controllers/auth.controller.js";
+import validateRefreshToken from "../middlewares/refresh.middleware.js";
 
 const router = Router();
 
@@ -22,7 +23,10 @@ router.post(
 // (Public) POST /auth/login
 router.post("/login", validate(loginUserSchema), authController.loginUser);
 
-// (Public) /POST /auth/refresh
-router.post("/refresh", authController.refreshTokens);
+// (Private) POST /auth/logout
+router.post("/logout", validateRefreshToken, authController.logout);
+
+// (Private) POST /auth/refresh
+router.post("/refresh", validateRefreshToken, authController.refreshTokens);
 
 export default router;

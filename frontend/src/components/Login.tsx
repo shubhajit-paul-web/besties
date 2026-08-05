@@ -3,7 +3,7 @@ import loginPageIllustration from "../assets/login-page-illustration.svg";
 import Button from "./shared/Button";
 import { useForm } from "react-hook-form";
 import InputField from "./shared/InputField";
-import HttpInterceptor from "../lib/HttpInterceptor";
+import { authApi } from "../lib/axios";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
@@ -29,7 +29,7 @@ const Login = () => {
 		const { identifier, password } = data;
 
 		try {
-			const res = await HttpInterceptor.post("/auth/login", {
+			const res = await authApi.post("/auth/login", {
 				identifier,
 				password,
 			});

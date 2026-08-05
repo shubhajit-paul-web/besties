@@ -9,6 +9,8 @@ import type {
     LoginUserRequest,
     VerifyRegistrationOtpRequest,
 } from "../types/auth/auth.request.js";
+import config from "../config/environment.js";
+import type { CookieOptions } from "express";
 
 // Initiate registration
 const initiateRegistration = asyncHandler(async (req: InitiateRegistrationRequest, res) => {
@@ -39,10 +41,23 @@ const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Login successfully.", { user }));
 });
 
-const refreshTokens = asyncHandler(async (req, res) => {
-    const cookies = req.cookies as { refreshToken?: string };
+const logout = asyncHandler(async (req, res) => {
+    await authService.logout(String(req.refreshAuth?._id));
 
-    const { accessToken, refreshToken } = await authService.refreshTokens(cookies.refreshToken!);
+    const options: CookieOptions = {
+        httpOnly: true,
+        secure: config.NODE_ENV === "prod",
+        sameSite: "strict",
+    };
+
+    res.clearCookie("accessToken", options);
+    res.clearCookie("refreshToken", options);
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Logout successful."));
+});
+
+const refreshTokens = asyncHandler(async (req, res) => {
+    const { accessToken, refreshToken } = await authService.refreshTokens(req.refreshAuth!);
 
     res.cookie("accessToken", accessToken, getCookieOptions(ACCESS_TOKEN_COOKIE_EXPIRY));
     res.cookie("refreshToken", refreshToken, getCookieOptions(REFRESH_TOKEN_COOKIE_EXPIRY));
@@ -54,5 +69,6 @@ export default {
     initiateRegistration,
     verifyRegistrationOtp,
     loginUser,
+    logout,
     refreshTokens,
 };

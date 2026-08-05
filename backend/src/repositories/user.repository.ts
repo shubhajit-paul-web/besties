@@ -77,7 +77,18 @@ const updateAvatarByUserId = async (userId: string, path: string) => {
 
 const findUserByRefreshToken = async (refreshToken: string) => {
     return await UserModel.findOne({ refreshToken }).select(
-        "+refreshToken +expiresAt -createdAt -updatedAt -dob -gender",
+        "+refreshToken +expiresAt -createdAt -updatedAt -dob -gender -__v",
+    );
+};
+
+const removeRefreshTokenByUserId = async (userId: string) => {
+    return await UserModel.updateOne(
+        {
+            _id: userId,
+        },
+        {
+            $unset: { refreshToken: "", expiresAt: "" },
+        },
     );
 };
 
@@ -89,4 +100,5 @@ export default {
     findUserById,
     updateAvatarByUserId,
     findUserByRefreshToken,
+    removeRefreshTokenByUserId,
 };

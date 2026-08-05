@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import Button from "../Button";
 import InputField from "../InputField";
 import type { SignupFormPayload } from "../../../types/user.types";
-import HttpInterceptor from "../../../lib/HttpInterceptor";
+import { authApi } from "../../../lib/axios";
 import { toast } from "react-toastify";
 import { useState, type Dispatch, type SetStateAction } from "react";
 import { AxiosError } from "axios";
@@ -28,7 +28,7 @@ const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
 		if (!submittedFormData) return;
 
 		try {
-			const res = await HttpInterceptor.post("/auth/register/verify", {
+			const res = await authApi.post("/auth/register/verify", {
 				...submittedFormData,
 				otp,
 			});

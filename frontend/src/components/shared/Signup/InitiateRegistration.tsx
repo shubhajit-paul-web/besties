@@ -5,7 +5,7 @@ import { Info, Eye, EyeOff, ChevronDown } from "lucide-react";
 import InputField from "../InputField";
 import Button from "../Button";
 import bestiesLogo from "../../../assets/besties-logo.png";
-import HttpInterceptor from "../../../lib/HttpInterceptor";
+import { authApi } from "../../../lib/axios";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import type { SignupFormData, SignupFormPayload } from "../../../types/user.types";
@@ -42,7 +42,7 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 		console.log(formData);
 
 		try {
-			const res = await HttpInterceptor.post("/auth/register", formData);
+			const res = await authApi.post("/auth/register", formData);
 
 			if (res.status === 201) {
 				toast.success("OTP sent successfully.", {

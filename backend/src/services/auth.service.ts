@@ -9,8 +9,7 @@ import redis from "../config/redis.js";
 import generateOtp from "../utils/generateOtp.js";
 import emailService from "./email.service.js";
 import verificationTemplate from "../templates/email/verification.js";
-import { sha256 } from "../utils/crypto.js";
-import moment from "moment";
+import { RefreshAuthType } from "../types/auth/auth.request.js";
 
 const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     const { username, email, mobileNumber } = userData;
@@ -137,25 +136,11 @@ const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
     return { user, tokens };
 };
 
-const refreshTokens = async (refreshToken: string) => {
-    if (!refreshToken) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, "Refresh token is required.");
-    }
+const logout = async (userId: string) => {
+    await userRepository.removeRefreshTokenByUserId(userId);
+};
 
-    const refreshTokenHash = sha256(refreshToken);
-
-    const user = await userRepository.findUserByRefreshToken(refreshTokenHash);
-
-    if (!user) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, "Invalid refresh token.");
-    }
-
-    const isExpired = moment().isAfter(user.expiresAt);
-
-    if (isExpired) {
-        throw new ApiError(StatusCodes.UNAUTHORIZED, "Refresh token has expired.");
-    }
-
+const refreshTokens = async (user: RefreshAuthType) => {
     const tokens = await user.generateAccessAndRefreshTokens();
 
     return tokens;
@@ -165,5 +150,6 @@ export default {
     initiateRegistration,
     verifyRegistrationOtp,
     loginUser,
+    logout,
     refreshTokens,
 };

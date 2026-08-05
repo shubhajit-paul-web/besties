@@ -1,12 +1,5 @@
 import jwt from "jsonwebtoken";
+import type { UserDocument } from "../../models/types/user.types.js";
 
-export type AccessTokenPayload = jwt.JwtPayload & {
-    _id: string;
-    username: string;
-    email: string;
-    avatar: string | null;
-    name: {
-        first: string;
-        last: string | null;
-    };
-};
+export type AccessTokenPayload = jwt.JwtPayload &
+    Pick<UserDocument, "_id" | "username" | "email" | "avatar" | "name">;

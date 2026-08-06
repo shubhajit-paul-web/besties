@@ -24,7 +24,7 @@ router.post(
 router.post("/login", validate(loginUserSchema), authController.loginUser);
 
 // (Private) POST /auth/logout
-router.post("/logout", validateRefreshToken, authController.logout);
+router.post("/logout", authController.logout);
 
 // (Private) POST /auth/refresh
 router.post("/refresh", validateRefreshToken, authController.refreshTokens);

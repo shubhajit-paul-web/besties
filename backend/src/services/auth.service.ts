@@ -10,6 +10,7 @@ import generateOtp from "../utils/generateOtp.js";
 import emailService from "./email.service.js";
 import verificationTemplate from "../templates/email/verification.js";
 import { RefreshAuthType } from "../types/auth/auth.request.js";
+import { sha256 } from "../utils/crypto.js";
 
 const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     const { username, email, mobileNumber } = userData;
@@ -136,8 +137,13 @@ const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
     return { user, tokens };
 };
 
-const logout = async (userId: string) => {
-    await userRepository.removeRefreshTokenByUserId(userId);
+const logout = (refreshToken: string | undefined) => {
+    if (!refreshToken) return;
+
+    const refreshTokenHash = sha256(refreshToken);
+
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    userRepository.removeRefreshToken(refreshTokenHash);
 };
 
 const refreshTokens = async (user: RefreshAuthType) => {

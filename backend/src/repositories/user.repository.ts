@@ -81,10 +81,10 @@ const findUserByRefreshToken = async (refreshToken: string) => {
     );
 };
 
-const removeRefreshTokenByUserId = async (userId: string) => {
-    return await UserModel.updateOne(
+const removeRefreshToken = async (refreshTokenHash: string) => {
+    return UserModel.updateOne(
         {
-            _id: userId,
+            refreshToken: refreshTokenHash,
         },
         {
             $unset: { refreshToken: "", expiresAt: "" },
@@ -100,5 +100,5 @@ export default {
     findUserById,
     updateAvatarByUserId,
     findUserByRefreshToken,
-    removeRefreshTokenByUserId,
+    removeRefreshToken,
 };

@@ -7,6 +7,7 @@ import ApiResponse from "../utils/apiResponse.js";
 import type {
     InitiateRegistrationRequest,
     LoginUserRequest,
+    RefreshTokenRequest,
     VerifyRegistrationOtpRequest,
 } from "../types/auth/auth.request.js";
 import config from "../config/environment.js";
@@ -41,8 +42,8 @@ const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Login successfully.", { user }));
 });
 
-const logout = asyncHandler(async (req, res) => {
-    await authService.logout(String(req.refreshAuth?._id));
+const logout = asyncHandler((req: RefreshTokenRequest, res) => {
+    authService.logout(req.cookies?.refreshToken);
 
     const options: CookieOptions = {
         httpOnly: true,

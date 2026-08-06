@@ -1,19 +1,13 @@
-import type { NextFunction, Request, Response } from "express";
+import type { NextFunction, Response } from "express";
 import ApiError from "../utils/apiError.js";
 import { sha256 } from "../utils/crypto.js";
 import userRepository from "../repositories/user.repository.js";
 import { StatusCodes } from "http-status-codes";
 import moment from "moment";
-import type { RefreshAuthType } from "../types/auth/auth.request.js";
-
-type ValidateRefreshTokenRequest = Request & {
-    cookies: {
-        refreshToken?: string;
-    };
-};
+import type { RefreshAuthType, RefreshTokenRequest } from "../types/auth/auth.request.js";
 
 const validateRefreshToken = async (
-    req: ValidateRefreshTokenRequest,
+    req: RefreshTokenRequest,
     res: Response,
     next: NextFunction,
 ) => {

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import loginPageIllustration from "../assets/login-page-illustration.svg";
 import Button from "./shared/Button";
 import { useForm } from "react-hook-form";
@@ -15,7 +15,6 @@ interface FormData {
 }
 
 const Login = () => {
-	const navigate = useNavigate();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { setUser } = useAppContext();
 	const {
@@ -42,8 +41,8 @@ const Login = () => {
 				});
 
 				setTimeout(() => {
-					navigate("/app");
-				}, 2000);
+					location.href = "/app";
+				}, 1500);
 			}
 
 			toast.success(res.data?.message, {

@@ -16,7 +16,8 @@ import { ToastContainer } from "react-toastify";
 import Context from "./Context";
 import { useState } from "react";
 import type { UserType } from "./types/user.types";
-import Guard from "./Guard";
+import AuthGuard from "./guards/AuthGuard";
+import RedirectGuard from "./guards/RedirectGuard";
 
 const App = () => {
 	const [user, setUser] = useState<UserType | null>(null);
@@ -25,9 +26,11 @@ const App = () => {
 		<Context.Provider value={{ user, setUser }}>
 			<BrowserRouter>
 				<Routes>
-					<Route path="/login" element={<Login />} />
-					<Route path="/signup" element={<Signup />} />
-					<Route element={<Guard />}>
+					<Route element={<RedirectGuard />}>
+						<Route path="/login" element={<Login />} />
+						<Route path="/signup" element={<Signup />} />
+					</Route>
+					<Route element={<AuthGuard />}>
 						<Route path="/app" element={<Layout />}>
 							<Route index element={<Home />} />
 							<Route path="my-posts" element={<MyPosts />} />

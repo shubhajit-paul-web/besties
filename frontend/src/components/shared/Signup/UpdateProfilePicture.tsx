@@ -8,6 +8,8 @@ import { toast, type ToastOptions } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { AxiosResponse } from "axios";
 import axios from "axios";
+import useAppContext from "../../../hooks/useAppContext";
+import { mutate } from "swr";
 
 type ProfilePicture = {
 	profilePicture?: FileList;
@@ -20,6 +22,7 @@ type PresignedPostResponse = {
 
 const UpdateProfilePicture = () => {
 	const navigate = useNavigate();
+	const { setUser } = useAppContext();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string>("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
@@ -119,8 +122,11 @@ const UpdateProfilePicture = () => {
 							toast.success("Profile picture updated successfully.", toastPosition);
 
 							setTimeout(() => {
+								setUser(null);
+								mutate("/users/me");
+
 								navigate("/app");
-							}, 2000);
+							}, 1500);
 						} catch (err) {
 							toast.error("Failed to upload file.", toastPosition);
 

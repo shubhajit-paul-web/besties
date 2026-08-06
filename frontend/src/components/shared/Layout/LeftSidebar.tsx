@@ -5,6 +5,7 @@ import bestiesLogoImg from "../../../assets/besties-logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
 import useAppContext from "../../../hooks/useAppContext";
 import { authApi } from "../../../lib/axios";
+import { mutate } from "swr";
 
 interface SidebarInterface {
 	isLeftSidebarOpen: boolean;
@@ -14,8 +15,8 @@ interface SidebarInterface {
 
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: SidebarInterface) => {
 	const navigate = useNavigate();
-	const { user } = useAppContext();
-	const userFullName = user?.name.first + " " + (user?.name.last ? user?.name.last : "");
+	const { user, setUser } = useAppContext();
+	const userFullName = user?.name?.first + " " + (user?.name?.last ? user?.name?.last : "");
 	const menus = [
 		{
 			href: "/app",
@@ -52,9 +53,13 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 	const logout = async () => {
 		try {
 			await authApi.post("/auth/logout");
-			navigate("/login");
 		} catch {
-			navigate("/login");
+			// empty because of special reason
+		} finally {
+			setUser(null);
+			mutate("/users/me");
+
+			navigate("/login", { replace: true });
 		}
 	};
 

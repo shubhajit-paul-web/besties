@@ -17,3 +17,9 @@ export type RefreshAuthType = Pick<
 > &
     Required<Pick<UserDocument, "refreshToken" | "expiresAt">> &
     Pick<UserMethods, "generateAccessAndRefreshTokens">;
+
+export type RefreshTokenRequest = Request & {
+    cookies: {
+        refreshToken?: string;
+    };
+};

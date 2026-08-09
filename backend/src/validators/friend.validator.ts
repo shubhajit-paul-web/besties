@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import z from "zod";
 
-export const addFriendSchema = z.object({
+export const sendFriendRequest = z.object({
     body: z.object({
         receiverId: z
             .string("Receiver ID is required")

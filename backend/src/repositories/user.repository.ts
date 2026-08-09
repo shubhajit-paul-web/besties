@@ -1,6 +1,7 @@
 import type { RegisterUserDto } from "../dto/user.dto.js";
 import UserModel from "../models/user.model.js";
-import { QueryFilter } from "mongoose";
+import { PipelineStage, QueryFilter, Types } from "mongoose";
+import type { UserSuggestion } from "../types/user/user.request.js";
 
 /**
  * Checks whether a username already exists.
@@ -92,6 +93,35 @@ const removeRefreshToken = async (refreshTokenHash: string) => {
     );
 };
 
+const findRandomUserSuggestions = async (
+    currentUserId: string,
+    friendIds: Types.ObjectId[],
+): Promise<UserSuggestion[] | []> => {
+    const pipeline: PipelineStage[] = [
+        {
+            $match: {
+                _id: {
+                    $nin: [currentUserId, ...friendIds],
+                },
+            },
+        },
+        {
+            $sample: {
+                size: 5,
+            },
+        },
+        {
+            $project: {
+                username: 1,
+                name: 1,
+                avatar: 1,
+            },
+        },
+    ];
+
+    return UserModel.aggregate(pipeline);
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
@@ -101,4 +131,5 @@ export default {
     updateAvatarByUserId,
     findUserByRefreshToken,
     removeRefreshToken,
+    findRandomUserSuggestions,
 };

@@ -122,6 +122,19 @@ const findRandomUserSuggestions = async (
     return UserModel.aggregate(pipeline);
 };
 
+const findUsersByIds = async (
+    userIds: Types.ObjectId[],
+    fields: string = "username name avatar",
+) => {
+    return UserModel.find({
+        _id: {
+            $in: userIds,
+        },
+    })
+        .select(fields)
+        .lean();
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
@@ -132,4 +145,5 @@ export default {
     findUserByRefreshToken,
     removeRefreshToken,
     findRandomUserSuggestions,
+    findUsersByIds,
 };

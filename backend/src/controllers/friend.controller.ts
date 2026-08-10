@@ -27,4 +27,14 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
     );
 });
 
-export default { sendFriendRequest, getFriendSuggestions };
+const getAcceptedFriends = asyncHandler(async (req, res) => {
+    const userId = String(req.user?._id);
+
+    const friends = await friendService.getAcceptedFriends(userId);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success("Accepted friends retrieved successfully.", { friends }));
+});
+
+export default { sendFriendRequest, getFriendSuggestions, getAcceptedFriends };

@@ -14,4 +14,7 @@ router.post("/", validate(sendFriendRequest), friendController.sendFriendRequest
 // (Private) GET /friends/suggestions
 router.get("/suggestions", friendController.getFriendSuggestions);
 
+// (Private) GET /friends
+router.get("/", friendController.getAcceptedFriends);
+
 export default router;

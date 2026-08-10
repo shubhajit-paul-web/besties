@@ -1,4 +1,4 @@
-import { Schema, Types, model } from "mongoose";
+import { InferSchemaType, Schema, Types, model } from "mongoose";
 
 const friendSchema = new Schema(
     {
@@ -24,6 +24,8 @@ const friendSchema = new Schema(
 );
 
 friendSchema.index({ sender: 1, receiver: 1 }, { unique: true });
+
+export type FriendDocument = InferSchemaType<typeof friendSchema>;
 
 const FriendModel = model("Friend", friendSchema);
 export default FriendModel;

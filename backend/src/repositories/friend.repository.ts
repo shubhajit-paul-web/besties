@@ -7,7 +7,7 @@ const create = async (senderId: string, receiverId: string) => {
     });
 };
 
-const hasPendingIncoming = async (senderId: string, receiverId: string) => {
+const hasPendingFriendRequest = async (senderId: string, receiverId: string) => {
     return FriendModel.exists({
         sender: receiverId,
         receiver: senderId,
@@ -15,7 +15,7 @@ const hasPendingIncoming = async (senderId: string, receiverId: string) => {
     });
 };
 
-const findAcceptedFriends = async (userId: string, fields: string = "sender receiver -_id") => {
+const findAcceptedFriendships = async (userId: string, fields: string = "sender receiver -_id") => {
     return FriendModel.find({
         $or: [{ sender: userId }, { receiver: userId }],
         status: "accepted",
@@ -24,4 +24,4 @@ const findAcceptedFriends = async (userId: string, fields: string = "sender rece
         .lean();
 };
 
-export default { create, hasPendingIncoming, findAcceptedFriends };
+export default { create, hasPendingFriendRequest, findAcceptedFriendships };

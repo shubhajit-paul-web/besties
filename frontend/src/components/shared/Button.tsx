@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import { LoaderCircle, type LucideIcon } from "lucide-react";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 const buttonBackgroundVariants = {
@@ -58,6 +58,8 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	borderRadius?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "full" | "none";
 	centerContent?: boolean;
 	borderColor?: string;
+	loader?: boolean;
+	loaderText?: string;
 }
 
 const Button = ({
@@ -75,15 +77,27 @@ const Button = ({
 	borderRadius = "lg",
 	centerContent = false,
 	borderColor = "",
+	loader = false,
+	loaderText = "Loading...",
 	...props
 }: ButtonInterface) => {
+	const styles = `flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${borderColor && "border"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`;
+
+	if (loader) {
+		const style = { width, borderColor, ...props.style };
+
+		return (
+			<button disabled className={styles} style={style}>
+				<LoaderCircle className="animate-spin" size={14} />
+				<span>{loaderText}</span>
+			</button>
+		);
+	}
+
 	return (
-		<button
-			className={`flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${borderColor && "border"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`}
-			style={{ width, borderColor }}
-			type={type}
-			{...props}>
+		<button className={styles} style={{ width, borderColor }} type={type} {...props}>
 			{Icon && <Icon size={iconSize} {...(iconFill && { fill: iconFill })} {...(iconColor && { color: iconColor })} />}
+
 			{children}
 		</button>
 	);

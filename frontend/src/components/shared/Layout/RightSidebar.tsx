@@ -1,41 +1,15 @@
-import { MessageSquareMore, Phone, UserRoundPlus, Video } from "lucide-react";
+import { MessageSquareMore, Phone, Video } from "lucide-react";
 import Avatar from "../Avatar";
 import { Link } from "react-router-dom";
-import Button from "../Button";
 import Card from "./Card";
+import FriendSuggestions from "./FriendSuggestions";
 
 const RightSidebar = ({ rightSidebarWidth }: { rightSidebarWidth: number }) => {
 	return (
 		<aside className={`w-[${rightSidebarWidth}px] h-screen p-8 fixed top-0 right-0`} style={{ width: rightSidebarWidth + "px" }}>
 			<div className="h-full bg-slate-50 border-l border-slate-100 rounded-xl py-5 px-5 flex flex-col gap-4">
 				{/* Suggested friends */}
-				<Card title="Suggested" height="43%">
-					<div
-						className="mt-3 space-y-1 overflow-y-auto"
-						style={{
-							height: `calc(100% - 52px)`,
-						}}>
-						{Array(10)
-							.fill(0)
-							.map((_, index) => (
-								<div key={index} className="py-3 px-5 hover:bg-slate-50">
-									<Avatar
-										image="/profile-img.jpeg"
-										imageShape="md"
-										imageSize={56}
-										title="Avinash Kumar"
-										subtitle={
-											<div className="flex items-center gap-1 mt-3">
-												<Button variant="primary" icon={UserRoundPlus} iconSize={13} style={{ padding: "5px 10px", borderRadius: "6px" }}>
-													Add Friend
-												</Button>
-											</div>
-										}
-									/>
-								</div>
-							))}
-					</div>
-				</Card>
+				<FriendSuggestions />
 
 				{/* My friends */}
 				<Card title="My Friends" height="55%">

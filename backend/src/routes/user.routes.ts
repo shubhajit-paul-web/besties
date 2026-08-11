@@ -18,7 +18,7 @@ router.post(
     userController.generateAvatarUploadUrl,
 );
 
-// (Private) PUT /users/me/avatar
-router.put("/me/avatar", validate(updateAvatarSchema), userController.updateAvatar);
+// (Private) PATCH /users/me/avatar
+router.patch("/me/avatar", validate(updateAvatarSchema), userController.updateAvatar);
 
 export default router;

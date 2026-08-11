@@ -96,7 +96,7 @@ const uploadFile = async (path: string, type: SupportedFileType) => {
 };
 
 const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => {
-    const { userId, path, type, expires, maxFileSize } = options;
+    const { userId, path, type, expires, maxFileSize, acl } = options;
 
     try {
         const Key = `${path}/${uuid()}.${FILE_TYPE_EXTENSIONS[type]}`;
@@ -109,9 +109,11 @@ const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => 
                 ["content-length-range", 1, maxFileSize],
                 ["starts-with", "$Content-Type", type],
                 ["eq", "$x-amz-meta-user-id", userId],
+                ["eq", "$acl", acl],
             ],
             Fields: {
                 "x-amz-meta-user-id": userId,
+                acl,
             },
         });
 

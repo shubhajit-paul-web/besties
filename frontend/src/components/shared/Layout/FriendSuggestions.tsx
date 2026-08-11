@@ -61,17 +61,17 @@ const FriendSuggestions = () => {
 			mutate(); // refresh the suggestions
 
 			toast.success("Friend request sent successfully.", {
-				position: "bottom-right",
+				position: "top-center",
 			});
 		} catch (err) {
 			if (axios.isAxiosError(err)) {
 				return toast.error(err.response?.data?.message ?? "Friend request send failed.", {
-					position: "bottom-right",
+					position: "top-center",
 				});
 			}
 
 			toast.error("Friend request send failed.", {
-				position: "bottom-right",
+				position: "top-center",
 			});
 
 			console.error(err);

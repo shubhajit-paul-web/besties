@@ -6,6 +6,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import useAppContext from "../../../hooks/useAppContext";
 import { authApi } from "../../../lib/axios";
 import { mutate } from "swr";
+import { Tooltip } from "antd";
 
 interface SidebarInterface {
 	isLeftSidebarOpen: boolean;
@@ -82,11 +83,21 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 						{menus.map((item, index) => {
 							const Icon = item.icon;
 
+							if (isLeftSidebarOpen) {
+								return (
+									<NavLink className={getNavLinkClass} to={item.href} key={index}>
+										<Icon size={21} />
+										<span className="capitalize">{item.label}</span>
+									</NavLink>
+								);
+							}
+
 							return (
-								<NavLink className={getNavLinkClass} to={item.href} key={index} title={isLeftSidebarOpen ? "" : item.label[0].toUpperCase() + item.label.slice(1)}>
-									<Icon size={21} />
-									{isLeftSidebarOpen && <span className="capitalize">{item.label}</span>}
-								</NavLink>
+								<Tooltip placement="right" title={item.label[0].toUpperCase() + item.label.slice(1)}>
+									<NavLink className={getNavLinkClass} to={item.href} key={index}>
+										<Icon size={21} />
+									</NavLink>
+								</Tooltip>
 							);
 						})}
 					</div>
@@ -96,15 +107,17 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 						<div className={`flex items-center pt-4 border-t border-t-slate-200 ${isLeftSidebarOpen ? "justify-between" : "justify-center"}`}>
 							{isLeftSidebarOpen ? (
 								<>
-									<Avatar image="/profile-img.jpeg" title={userFullName} subtitle={<span className="opacity-70">Software Engineer</span>} />
+									<Avatar image={user?.avatar || "/profile-img.jpeg"} title={userFullName} subtitle={<span className="opacity-70">Software Engineer</span>} />
 
 									{/* Logout button */}
-									<div onClick={logout} className="hover:text-red-500 cursor-pointer">
-										<LogOut size={18} />
-									</div>
+									<Tooltip title="Logout">
+										<div onClick={logout} className="hover:text-red-500 cursor-pointer">
+											<LogOut size={18} />
+										</div>
+									</Tooltip>
 								</>
 							) : (
-								<Avatar image="/profile-img.jpeg" />
+								<Avatar image={user?.avatar || "/profile-img.jpeg"} />
 							)}
 						</div>
 					</div>

@@ -29,3 +29,5 @@ export const FILE_TYPE_EXTENSIONS: Record<SupportedFileType, string> = {
     "video/webm": "webm",
     "video/quicktime": "mov",
 } as const;
+
+export const FRIENDSHIP_STATUSES = ["pending", "accepted", "rejected", "canceled"] as const;

@@ -1,4 +1,6 @@
-import FriendModel from "../models/friend.model.js";
+import FriendModel, { type FriendDocument } from "../models/friend.model.js";
+import type { FindFriendshipsByStatus } from "../types/friend/friend.repository.js";
+import type { QueryFilter } from "mongoose";
 
 const create = async (senderId: string, receiverId: string) => {
     return FriendModel.create({
@@ -15,13 +17,44 @@ const hasPendingFriendRequest = async (senderId: string, receiverId: string) => 
     });
 };
 
-const findAcceptedFriendships = async (userId: string, fields: string = "sender receiver -_id") => {
-    return FriendModel.find({
-        $or: [{ sender: userId }, { receiver: userId }],
-        status: "accepted",
-    })
-        .select(fields)
-        .lean();
+const findFriendshipsByStatus = async ({
+    currentUserId,
+    status,
+    fields = "sender receiver -_id",
+}: FindFriendshipsByStatus) => {
+    const filter: QueryFilter<FriendDocument> = {
+        $or: [{ sender: currentUserId }, { receiver: currentUserId }],
+    };
+
+    if (status) {
+        filter.status = status;
+    }
+
+    return FriendModel.find(filter).select(fields).lean();
 };
 
-export default { create, hasPendingFriendRequest, findAcceptedFriendships };
+const updateStatusById = async (friendshipId: string, status: FriendDocument["status"]) => {
+    return FriendModel.updateOne(
+        {
+            _id: friendshipId,
+        },
+        {
+            $set: { status },
+        },
+    );
+};
+
+const findFriendshipById = async (
+    friendshipId: string,
+    fields: string = "-createdAt -updatedAt",
+) => {
+    return FriendModel.findById(friendshipId).select(fields).lean();
+};
+
+export default {
+    create,
+    hasPendingFriendRequest,
+    findFriendshipsByStatus,
+    updateStatusById,
+    findFriendshipById,
+};

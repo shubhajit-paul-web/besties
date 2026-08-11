@@ -13,15 +13,15 @@ const validate =
             });
 
             if (data.body !== undefined) {
-                req.body = data.body;
+                Object.assign(req.body, data.body);
             }
 
             if (data.params !== undefined) {
-                req.params = data.params as typeof req.params;
+                Object.assign(req.params, data.params);
             }
 
             if (data.query !== undefined) {
-                req.query = data.query as typeof req.query;
+                Object.assign(req.query, data.query);
             }
 
             next();

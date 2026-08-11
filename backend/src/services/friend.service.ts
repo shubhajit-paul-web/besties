@@ -5,6 +5,7 @@ import friendRepository from "../repositories/friend.repository.js";
 import isDuplicateKeyError from "../utils/isDuplicateKeyError.js";
 import userRepository from "../repositories/user.repository.js";
 import getFriendIds from "../utils/getFriendIds.js";
+import FriendModel, { FriendDocument } from "../models/friend.model.js";
 
 const sendFriendRequest = async (senderId: string, receiverId: string) => {
     const isSelfRequest = senderId === receiverId;
@@ -42,17 +43,23 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
 };
 
 const getFriendSuggestions = async (userId: string) => {
-    const friends = await friendRepository.findAcceptedFriendships(userId);
+    const friendships = await friendRepository.findFriendshipsByStatus({
+        currentUserId: userId,
+    });
 
-    const friendIds = getFriendIds(userId, friends);
+    const friendIds = getFriendIds(userId, friendships);
 
     const suggestions = await userRepository.findRandomUserSuggestions(userId, friendIds);
 
     return suggestions;
 };
 
-const getAcceptedFriends = async (userId: string) => {
-    const friendships = await friendRepository.findAcceptedFriendships(userId, "sender receiver");
+const getFriendsByStatus = async (userId: string, status: FriendDocument["status"]) => {
+    const friendships = await friendRepository.findFriendshipsByStatus({
+        currentUserId: userId,
+        status,
+        fields: "sender receiver",
+    });
 
     if (friendships.length === 0) {
         return [];
@@ -65,4 +72,34 @@ const getAcceptedFriends = async (userId: string) => {
     return friendProfiles;
 };
 
-export default { sendFriendRequest, getFriendSuggestions, getAcceptedFriends };
+const acceptFriendRequest = async (userId: string, friendshipId: string) => {
+    const friendship = await FriendModel.findOne({
+        _id: friendshipId,
+        receiver: userId,
+    })
+        .select("-createdAt -updatedAt")
+        .lean();
+
+    if (!friendship) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Unable to accept friend request.");
+    }
+
+    if (friendship.status === "accepted") {
+        throw new ApiError(StatusCodes.CONFLICT, "You're already friends with this user.");
+    }
+
+    if (friendship.status === "canceled") {
+        throw new ApiError(
+            StatusCodes.CONFLICT,
+            "This friend request has been canceled and cannot be accepted.",
+        );
+    }
+
+    if (friendship.status === "rejected") {
+        throw new ApiError(StatusCodes.CONFLICT, "You already rejected this friend request.");
+    }
+
+    await friendRepository.updateStatusById(friendshipId, "accepted");
+};
+
+export default { sendFriendRequest, getFriendSuggestions, getFriendsByStatus, acceptFriendRequest };

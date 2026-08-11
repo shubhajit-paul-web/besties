@@ -1,4 +1,5 @@
 import { InferSchemaType, Schema, Types, model } from "mongoose";
+import { FRIENDSHIP_STATUSES } from "../constants/constants.js";
 
 const friendSchema = new Schema(
     {
@@ -14,7 +15,7 @@ const friendSchema = new Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "accepted", "rejected"],
+            enum: FRIENDSHIP_STATUSES,
             default: "pending",
         },
     },

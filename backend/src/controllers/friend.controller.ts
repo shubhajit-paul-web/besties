@@ -2,7 +2,9 @@ import asyncHandler from "../utils/asyncHandler.js";
 import friendService from "../services/friend.service.js";
 import { StatusCodes } from "http-status-codes";
 import ApiResponse from "../utils/apiResponse.js";
-import type { AddFriendRequest } from "../types/friend/friend.request.js";
+import type { AcceptFriendRequest, AddFriendRequest } from "../types/friend/friend.request.js";
+import type { GetFriendsByStatus } from "../types/friend/friend.service.js";
+import _ from "lodash";
 
 const sendFriendRequest = asyncHandler(async (req: AddFriendRequest, res) => {
     const senderId = String(req.user?._id);
@@ -27,14 +29,28 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
     );
 });
 
-const getAcceptedFriends = asyncHandler(async (req, res) => {
+const getFriendsByStatus = asyncHandler(async (req: GetFriendsByStatus, res) => {
     const userId = String(req.user?._id);
+    const status = req.query?.status || "accepted";
 
-    const friends = await friendService.getAcceptedFriends(userId);
+    const friends = await friendService.getFriendsByStatus(userId, status);
+
+    return res.status(StatusCodes.OK).json(
+        ApiResponse.success(`${_.capitalize(status)} friends retrieved successfully.`, {
+            friends,
+        }),
+    );
+});
+
+const acceptFriendRequest = asyncHandler(async (req: AcceptFriendRequest, res) => {
+    const userId = String(req.user?._id);
+    const friendshipId = req.params.id;
+
+    await friendService.acceptFriendRequest(userId, friendshipId);
 
     return res
         .status(StatusCodes.OK)
-        .json(ApiResponse.success("Accepted friends retrieved successfully.", { friends }));
+        .json(ApiResponse.success("Friend request accepted successfully."));
 });
 
-export default { sendFriendRequest, getFriendSuggestions, getAcceptedFriends };
+export default { sendFriendRequest, getFriendSuggestions, getFriendsByStatus, acceptFriendRequest };

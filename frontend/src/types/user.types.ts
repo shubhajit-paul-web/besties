@@ -5,6 +5,7 @@ export type UserType = {
 		first: string;
 		last?: string;
 	};
+	avatar?: string;
 	bio?: string;
 	gender: "male" | "female" | "custom";
 	dob: Date;

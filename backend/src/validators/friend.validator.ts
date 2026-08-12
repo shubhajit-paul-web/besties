@@ -29,7 +29,7 @@ export const acceptFriendRequestSchema = z.object({
     }),
 });
 
-export const getFriendshipsByStatusSchema = z.object({
+export const getSentFriendshipsByStatusSchema = z.object({
     query: z.object({
         status: z
             .enum(

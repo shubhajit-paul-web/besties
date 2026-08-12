@@ -60,6 +60,25 @@ const findFriendshipByIdAndReceiver = async (friendshipId: string, receiverId: s
         .lean();
 };
 
+const findSentFriendRequestsByStatus = async (userId: string, status: FriendDocument["status"]) => {
+    return FriendModel.find({
+        sender: userId,
+        status,
+    })
+        .populate("receiver", "username name avatar")
+        .lean();
+};
+
+const findPendingRequestsByReceiver = async (userId: string) => {
+    return FriendModel.find({
+        receiver: userId,
+        status: "pending",
+    })
+        .populate("sender", "username name avatar")
+        .select("sender createdAt")
+        .lean();
+};
+
 export default {
     create,
     hasPendingFriendRequest,
@@ -67,4 +86,6 @@ export default {
     updateStatusById,
     findFriendshipById,
     findFriendshipByIdAndReceiver,
+    findSentFriendRequestsByStatus,
+    findPendingRequestsByReceiver,
 };

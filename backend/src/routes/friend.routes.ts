@@ -5,7 +5,7 @@ import validate from "../middlewares/validator.middleware.js";
 import {
     acceptFriendRequestSchema,
     getFriendsByStatusSchema,
-    getFriendshipsByStatusSchema,
+    getSentFriendshipsByStatusSchema,
     sendFriendRequestSchema,
 } from "../validators/friend.validator.js";
 
@@ -29,11 +29,14 @@ router.patch(
     friendController.acceptFriendRequest,
 );
 
-// (Private) GET /friends/requests?status="pending"
+// (Private) GET /friends/requests/sent?status="pending"
 router.get(
     "/requests",
-    validate(getFriendshipsByStatusSchema),
-    friendController.getFriendshipsByStatus,
+    validate(getSentFriendshipsByStatusSchema),
+    friendController.getSentFriendshipsByStatus,
 );
+
+// (Private) GET /friends/requests/received
+router.get("/requests/received", friendController.getReceivedFriendRequests);
 
 export default router;

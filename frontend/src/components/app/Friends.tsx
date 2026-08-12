@@ -2,29 +2,13 @@ import { MessageSquareMore, UserRoundX } from "lucide-react";
 import Button from "../shared/Button";
 import ProfileCard from "../shared/Friends/ProfileCard";
 import ProfileCardsWrapper from "../shared/Friends/ProfileCardsWrapper";
+import FriendRequests from "../shared/Friends/FriendRequests";
 
 const Friends = () => {
 	return (
 		<div>
 			<div className="bg-slate-50 p-8 pt-6 rounded-2xl">
-				<ProfileCardsWrapper title="Friend requests" totalProfilesCount={8}>
-					{Array(8)
-						.fill(0)
-						.map(() => (
-							<ProfileCard name="Shubhajit Paul" image="/public/profile-img.jpeg">
-								<div className="space-y-2">
-									<Button width="100%" centerContent>
-										Confirm
-									</Button>
-									<Button width="100%" centerContent variant="lightPlus">
-										Delete
-									</Button>
-								</div>
-							</ProfileCard>
-						))}
-				</ProfileCardsWrapper>
-
-				<div className="w-full border-b-2 border-b-slate-300/70 my-12"></div>
+				<FriendRequests />
 
 				<ProfileCardsWrapper title="Suggested">
 					{Array(4)

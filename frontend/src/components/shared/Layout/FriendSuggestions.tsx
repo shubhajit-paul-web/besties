@@ -10,6 +10,7 @@ import { useState } from "react";
 import { HttpInterceptor } from "../../../lib/axios";
 import { toast } from "react-toastify";
 import axios from "axios";
+import type { UserType } from "../../../types/user.types";
 
 type Loading = {
 	state: boolean;
@@ -54,7 +55,7 @@ const FriendSuggestions = () => {
 		setLoading({ state: true, index: index });
 
 		try {
-			await HttpInterceptor.post("/friends", {
+			await HttpInterceptor.post("/friends/requests", {
 				receiverId: id,
 			});
 
@@ -91,7 +92,7 @@ const FriendSuggestions = () => {
 					<SkeletonLoader />
 				) : (
 					<>
-						{friendSuggestions.map((user, index: number) => {
+						{friendSuggestions.map((user: Pick<UserType, "_id" | "name" | "avatar">, index: number) => {
 							if (!user) {
 								return;
 							}

@@ -6,3 +6,12 @@ import type { UserDocument } from "../../models/types/user.types.js";
 export type UserSuggestion = Pick<UserDocument, "_id" | "username" | "avatar" | "name">;
 
 export type GetFriendsByStatus = Request<{}, {}, {}, { status?: FriendDocument["status"] }>;
+
+// type FriendshipUser = Pick<UserDocument, "_id" | "username" | "name" | "avatar">;
+
+// export type Friendship = {
+//     _id: Types.ObjectId;
+//     status: FriendDocument["status"];
+//     sender: FriendshipUser;
+//     receiver: FriendshipUser;
+// };

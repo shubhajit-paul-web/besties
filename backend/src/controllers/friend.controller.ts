@@ -57,19 +57,27 @@ const acceptFriendRequest: RequestHandler<{ id: string }> = asyncHandler(async (
         .json(ApiResponse.success("Friend request accepted successfully."));
 });
 
-const getFriendshipsByStatus = asyncHandler(async (req: GetFriendshipsByStatusRequest, res) => {
+const getSentFriendshipsByStatus = asyncHandler(async (req: GetFriendshipsByStatusRequest, res) => {
     const userId = String(req.user?._id);
     const status = req.query?.status || "pending";
 
-    const friendships = await friendService.getFriendshipsByStatus(userId, status);
+    const friendships = await friendService.getSentFriendshipsByStatus(userId, status);
+
+    return res.status(StatusCodes.OK).json(
+        ApiResponse.success(`${_.capitalize(status)} friends retrieved successfully.`, {
+            friendships,
+        }),
+    );
+});
+
+const getReceivedFriendRequests = asyncHandler(async (req, res) => {
+    const userId = String(req.user?._id);
+
+    const requests = await friendService.getReceivedFriendRequests(userId);
 
     return res
         .status(StatusCodes.OK)
-        .json(
-            ApiResponse.success(`${_.capitalize(status)} friends retrieved successfully.`, {
-                friendships,
-            }),
-        );
+        .json(ApiResponse.success("Friend requests retrieved successfully.", { requests }));
 });
 
 export default {
@@ -77,5 +85,6 @@ export default {
     getFriendSuggestions,
     getFriendsByStatus,
     acceptFriendRequest,
-    getFriendshipsByStatus,
+    getSentFriendshipsByStatus,
+    getReceivedFriendRequests,
 };

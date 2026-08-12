@@ -2,9 +2,13 @@ import asyncHandler from "../utils/asyncHandler.js";
 import friendService from "../services/friend.service.js";
 import { StatusCodes } from "http-status-codes";
 import ApiResponse from "../utils/apiResponse.js";
-import type { AcceptFriendRequest, AddFriendRequest } from "../types/friend/friend.request.js";
+import type {
+    AddFriendRequest,
+    GetFriendshipsByStatusRequest,
+} from "../types/friend/friend.request.js";
 import type { GetFriendsByStatus } from "../types/friend/friend.service.js";
 import _ from "lodash";
+import { RequestHandler } from "express";
 
 const sendFriendRequest = asyncHandler(async (req: AddFriendRequest, res) => {
     const senderId = String(req.user?._id);
@@ -42,9 +46,9 @@ const getFriendsByStatus = asyncHandler(async (req: GetFriendsByStatus, res) => 
     );
 });
 
-const acceptFriendRequest = asyncHandler(async (req: AcceptFriendRequest, res) => {
+const acceptFriendRequest: RequestHandler<{ id: string }> = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
-    const friendshipId = req.params.id;
+    const friendshipId = String(req.params.id);
 
     await friendService.acceptFriendRequest(userId, friendshipId);
 
@@ -53,4 +57,25 @@ const acceptFriendRequest = asyncHandler(async (req: AcceptFriendRequest, res) =
         .json(ApiResponse.success("Friend request accepted successfully."));
 });
 
-export default { sendFriendRequest, getFriendSuggestions, getFriendsByStatus, acceptFriendRequest };
+const getFriendshipsByStatus = asyncHandler(async (req: GetFriendshipsByStatusRequest, res) => {
+    const userId = String(req.user?._id);
+    const status = req.query?.status || "pending";
+
+    const friendships = await friendService.getFriendshipsByStatus(userId, status);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(
+            ApiResponse.success(`${_.capitalize(status)} friends retrieved successfully.`, {
+                friendships,
+            }),
+        );
+});
+
+export default {
+    sendFriendRequest,
+    getFriendSuggestions,
+    getFriendsByStatus,
+    acceptFriendRequest,
+    getFriendshipsByStatus,
+};

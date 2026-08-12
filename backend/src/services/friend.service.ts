@@ -5,7 +5,7 @@ import friendRepository from "../repositories/friend.repository.js";
 import isDuplicateKeyError from "../utils/isDuplicateKeyError.js";
 import userRepository from "../repositories/user.repository.js";
 import getFriendIds from "../utils/getFriendIds.js";
-import FriendModel, { FriendDocument } from "../models/friend.model.js";
+import FriendModel, { type FriendDocument } from "../models/friend.model.js";
 
 const sendFriendRequest = async (senderId: string, receiverId: string) => {
     const isSelfRequest = senderId === receiverId;
@@ -73,12 +73,7 @@ const getFriendsByStatus = async (userId: string, status: FriendDocument["status
 };
 
 const acceptFriendRequest = async (userId: string, friendshipId: string) => {
-    const friendship = await FriendModel.findOne({
-        _id: friendshipId,
-        receiver: userId,
-    })
-        .select("-createdAt -updatedAt")
-        .lean();
+    const friendship = await friendRepository.findFriendshipByIdAndReceiver(friendshipId, userId);
 
     if (!friendship) {
         throw new ApiError(StatusCodes.NOT_FOUND, "Unable to accept friend request.");
@@ -102,4 +97,37 @@ const acceptFriendRequest = async (userId: string, friendshipId: string) => {
     await friendRepository.updateStatusById(friendshipId, "accepted");
 };
 
-export default { sendFriendRequest, getFriendSuggestions, getFriendsByStatus, acceptFriendRequest };
+const getFriendshipsByStatus = async (userId: string, status: FriendDocument["status"]) => {
+    const friendships = await FriendModel.find({
+        $or: [{ sender: userId }, { receiver: userId }],
+        status,
+    })
+        .populate("sender receiver", "username name avatar")
+        .lean();
+
+    const friendshipsWithFriend = friendships.map((friendship) => {
+        if (String(friendship.sender._id) === userId) {
+            return {
+                _id: friendship._id,
+                status: friendship.status,
+                friend: friendship.receiver,
+            };
+        }
+
+        return {
+            _id: friendship._id,
+            status: friendship.status,
+            friend: friendship.sender,
+        };
+    });
+
+    return friendshipsWithFriend;
+};
+
+export default {
+    sendFriendRequest,
+    getFriendSuggestions,
+    getFriendsByStatus,
+    acceptFriendRequest,
+    getFriendshipsByStatus,
+};

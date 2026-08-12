@@ -51,10 +51,20 @@ const findFriendshipById = async (
     return FriendModel.findById(friendshipId).select(fields).lean();
 };
 
+const findFriendshipByIdAndReceiver = async (friendshipId: string, receiverId: string) => {
+    return FriendModel.findOne({
+        _id: friendshipId,
+        receiver: receiverId,
+    })
+        .select("-createdAt -updatedAt")
+        .lean();
+};
+
 export default {
     create,
     hasPendingFriendRequest,
     findFriendshipsByStatus,
     updateStatusById,
     findFriendshipById,
+    findFriendshipByIdAndReceiver,
 };

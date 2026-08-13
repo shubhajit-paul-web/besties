@@ -85,9 +85,7 @@ const removeFriend = asyncHandler(async (req, res) => {
 
     await friendService.removeFriend(userId, friendshipId);
 
-    return res
-        .status(StatusCodes.NO_CONTENT)
-        .json(ApiResponse.noContent("Friend removed successfully."));
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Friend removed successfully."));
 });
 
 const rejectFriendRequest = asyncHandler(async (req, res) => {
@@ -97,8 +95,19 @@ const rejectFriendRequest = asyncHandler(async (req, res) => {
     await friendService.rejectFriendRequest(userId, friendshipId);
 
     return res
-        .status(StatusCodes.NO_CONTENT)
-        .json(ApiResponse.noContent("Friend request rejected successfully."));
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success("Friend request rejected successfully."));
+});
+
+const cancelFriendRequest = asyncHandler(async (req, res) => {
+    const userId = String(req.user?._id);
+    const friendshipId = String(req.params?.friendshipId);
+
+    await friendService.cancelFriendRequest(userId, friendshipId);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success("Friend request canceled successfully."));
 });
 
 export default {
@@ -110,4 +119,5 @@ export default {
     getReceivedFriendRequests,
     removeFriend,
     rejectFriendRequest,
+    cancelFriendRequest,
 };

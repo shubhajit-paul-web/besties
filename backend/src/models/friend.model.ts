@@ -18,6 +18,14 @@ const friendSchema = new Schema(
             enum: FRIENDSHIP_STATUSES,
             default: "pending",
         },
+        rejectedAt: {
+            type: Date,
+            select: false,
+        },
+        rejectionExpiresAt: {
+            type: Date,
+            select: false,
+        },
     },
     {
         timestamps: true,

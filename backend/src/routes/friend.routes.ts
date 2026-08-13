@@ -36,6 +36,13 @@ router.patch(
     friendController.rejectFriendRequest,
 );
 
+// (Private) PATCH /friends/requests/:friendshipId/cancel
+router.patch(
+    "/requests/:friendshipId/cancel",
+    validate(friendshipIdSchema),
+    friendController.cancelFriendRequest,
+);
+
 // (Private) GET /friends/requests/sent?status="pending"
 router.get(
     "/requests/sent",

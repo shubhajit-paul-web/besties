@@ -5,7 +5,8 @@ import friendRepository from "../repositories/friend.repository.js";
 import isDuplicateKeyError from "../utils/isDuplicateKeyError.js";
 import userRepository from "../repositories/user.repository.js";
 import getFriendIds from "../utils/getFriendIds.js";
-import { type FriendDocument } from "../models/friend.model.js";
+import FriendModel, { type FriendDocument } from "../models/friend.model.js";
+import moment from "moment";
 
 const sendFriendRequest = async (senderId: string, receiverId: string) => {
     const isSelfRequest = senderId === receiverId;
@@ -17,14 +18,53 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
         );
     }
 
-    const existingFriendship = await friendRepository.findFriendshipBetween(senderId, receiverId);
+    const existingFriendship = await friendRepository.findRelationshipBetweenUsers(
+        senderId,
+        receiverId,
+    );
 
-    if (existingFriendship?.status === "pending") {
-        throw new ApiError(StatusCodes.CONFLICT, "A friend request is already pending.");
-    }
+    if (existingFriendship) {
+        const { _id: friendshipId, sender, status, rejectionExpiresAt } = existingFriendship;
 
-    if (existingFriendship?.status === "canceled") {
-        await friendRepository.deleteFriendshipByIdAndStatus(existingFriendship._id, "canceled");
+        if (status === "pending") {
+            throw new ApiError(StatusCodes.CONFLICT, "A friend request is already pending.");
+        }
+
+        if (status === "accepted") {
+            throw new ApiError(StatusCodes.CONFLICT, "You are already friends with this user.");
+        }
+
+        if (status === "rejected") {
+            if (String(sender) === senderId) {
+                const now = moment();
+                const expiry = moment(rejectionExpiresAt);
+
+                if (now.isBefore(expiry)) {
+                    const remaining = moment.duration(expiry.diff(now));
+
+                    const days = Math.floor(remaining.asDays());
+                    const hours = remaining.hours();
+
+                    throw new ApiError(
+                        StatusCodes.CONFLICT,
+                        `You can send a friend request again in ${days} days and ${hours} hours.`,
+                    );
+                }
+
+                // remove the rejectedAt and rejectionExpiresAt fields
+                FriendModel.updateOne(
+                    {
+                        _id: friendshipId,
+                    },
+                    {
+                        $unset: {
+                            rejectedAt: "",
+                            rejectionExpiresAt: "",
+                        },
+                    },
+                );
+            }
+        }
     }
 
     try {
@@ -35,7 +75,7 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
         if (isDuplicateKeyError(err)) {
             throw new ApiError(
                 StatusCodes.CONFLICT,
-                "You’ve already sent a friend request to this user.",
+                "A friend request already exists for this user.",
             );
         }
 
@@ -84,12 +124,12 @@ const acceptFriendRequest = async (userId: string, friendshipId: string) => {
         throw new ApiError(StatusCodes.CONFLICT, "You're already friends with this user.");
     }
 
-    if (friendship.status === "canceled") {
-        throw new ApiError(
-            StatusCodes.CONFLICT,
-            "This friend request has been canceled and cannot be accepted.",
-        );
-    }
+    // if (friendship.status === "canceled") {
+    //     throw new ApiError(
+    //         StatusCodes.CONFLICT,
+    //         "This friend request has been canceled and cannot be accepted.",
+    //     );
+    // }
 
     if (friendship.status === "rejected") {
         throw new ApiError(StatusCodes.CONFLICT, "You already rejected this friend request.");
@@ -100,22 +140,6 @@ const acceptFriendRequest = async (userId: string, friendshipId: string) => {
 
 const getSentFriendshipsByStatus = async (userId: string, status: FriendDocument["status"]) => {
     const friendships = await friendRepository.findSentFriendRequestsByStatus(userId, status);
-
-    // const friendshipsWithFriend = friendships.map((friendship) => {
-    //     if (String(friendship.sender._id) === userId) {
-    //         return {
-    //             _id: friendship._id,
-    //             status: friendship.status,
-    //             friend: friendship.receiver,
-    //         };
-    //     }
-
-    //     return {
-    //         _id: friendship._id,
-    //         status: friendship.status,
-    //         friend: friendship.sender,
-    //     };
-    // });
 
     return friendships;
 };
@@ -145,10 +169,6 @@ const rejectFriendRequest = async (userId: string, friendshipId: string) => {
         throw new ApiError(StatusCodes.NOT_FOUND, "Friend request not found.");
     }
 
-    if (friendRequest.status === "canceled") {
-        throw new ApiError(StatusCodes.CONFLICT, "This request was canceled.");
-    }
-
     if (friendRequest.status !== "pending") {
         throw new ApiError(
             StatusCodes.CONFLICT,
@@ -156,7 +176,26 @@ const rejectFriendRequest = async (userId: string, friendshipId: string) => {
         );
     }
 
-    await friendRepository.updateStatusById(friendshipId, "rejected");
+    const now = moment();
+    const rejectionExpiresAt = now.clone().add(7, "days").toDate();
+
+    await friendRepository.rejectFriendRequest(friendshipId, now.toDate(), rejectionExpiresAt);
+};
+
+const cancelFriendRequest = async (userId: string, friendshipId: string) => {
+    const friendRequest = await friendRepository.findFriendshipByIdAndSender(friendshipId, userId);
+
+    if (!friendRequest) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Friend request not found.");
+    }
+
+    if (friendRequest.status !== "pending") {
+        throw new ApiError(StatusCodes.CONFLICT, "Only pending friend requests can be canceled.");
+    }
+
+    await FriendModel.deleteOne({
+        _id: friendshipId,
+    });
 };
 
 export default {
@@ -168,4 +207,5 @@ export default {
     getReceivedFriendRequests,
     removeFriend,
     rejectFriendRequest,
+    cancelFriendRequest,
 };

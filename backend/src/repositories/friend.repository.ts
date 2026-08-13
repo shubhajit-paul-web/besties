@@ -9,14 +9,16 @@ const create = async (senderId: string, receiverId: string) => {
     });
 };
 
-const findFriendshipBetween = async (
+const findRelationshipBetweenUsers = async (
     senderId: string,
     receiverId: string,
-    fields: string = "status",
+    fields: string = "sender status +rejectedAt +rejectionExpiresAt",
 ) => {
     return FriendModel.findOne({
-        sender: receiverId,
-        receiver: senderId,
+        $or: [
+            { sender: senderId, receiver: receiverId },
+            { sender: receiverId, receiver: senderId },
+        ],
     })
         .select(fields)
         .lean();
@@ -79,6 +81,19 @@ const findFriendshipByIdAndReceiver = async (
         .lean();
 };
 
+const findFriendshipByIdAndSender = async (
+    friendshipId: string,
+    senderId: string,
+    fields: string = "status",
+) => {
+    return FriendModel.findOne({
+        _id: friendshipId,
+        sender: senderId,
+    })
+        .select(fields)
+        .lean();
+};
+
 const findSentFriendRequestsByStatus = async (userId: string, status: FriendDocument["status"]) => {
     return FriendModel.find({
         sender: userId,
@@ -106,15 +121,36 @@ const deleteFriendship = async (userId: string, friendshipId: string) => {
     });
 };
 
+const rejectFriendRequest = async (
+    friendshipId: string,
+    rejectedAt: Date,
+    rejectionExpiresAt: Date,
+) => {
+    return FriendModel.updateOne(
+        {
+            _id: friendshipId,
+        },
+        {
+            $set: {
+                status: "rejected",
+                rejectedAt,
+                rejectionExpiresAt,
+            },
+        },
+    );
+};
+
 export default {
     create,
-    findFriendshipBetween,
+    findRelationshipBetweenUsers,
     deleteFriendshipByIdAndStatus,
     findFriendshipsByStatus,
     updateStatusById,
     findFriendshipById,
     findFriendshipByIdAndReceiver,
+    findFriendshipByIdAndSender,
     findSentFriendRequestsByStatus,
     findPendingRequestsByReceiver,
     deleteFriendship,
+    rejectFriendRequest,
 };

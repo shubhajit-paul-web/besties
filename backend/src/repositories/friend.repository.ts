@@ -51,12 +51,16 @@ const findFriendshipById = async (
     return FriendModel.findById(friendshipId).select(fields).lean();
 };
 
-const findFriendshipByIdAndReceiver = async (friendshipId: string, receiverId: string) => {
+const findFriendshipByIdAndReceiver = async (
+    friendshipId: string,
+    receiverId: string,
+    fields: string = "-createdAt -updatedAt",
+) => {
     return FriendModel.findOne({
         _id: friendshipId,
         receiver: receiverId,
     })
-        .select("-createdAt -updatedAt")
+        .select(fields)
         .lean();
 };
 
@@ -79,6 +83,14 @@ const findPendingRequestsByReceiver = async (userId: string) => {
         .lean();
 };
 
+const deleteFriendship = async (userId: string, friendshipId: string) => {
+    return FriendModel.deleteOne({
+        _id: friendshipId,
+        $or: [{ sender: userId }, { receiver: userId }],
+        status: "accepted",
+    });
+};
+
 export default {
     create,
     hasPendingFriendRequest,
@@ -88,4 +100,5 @@ export default {
     findFriendshipByIdAndReceiver,
     findSentFriendRequestsByStatus,
     findPendingRequestsByReceiver,
+    deleteFriendship,
 };

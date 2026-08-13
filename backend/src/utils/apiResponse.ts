@@ -49,6 +49,16 @@ class ApiResponse {
     static created(message: string, data?: object, meta?: object) {
         return new ApiResponse(201, message, data, meta);
     }
+
+    /**
+     * Creates a 204 No Content response.
+     * Used when the action was successful but there is no data to return.
+     * @param message - Message describing the outcome.
+     * @returns ApiResponse instance.
+     */
+    static noContent(message: string) {
+        return new ApiResponse(204, message);
+    }
 }
 
 export default ApiResponse;

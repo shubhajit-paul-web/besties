@@ -125,6 +125,39 @@ const getReceivedFriendRequests = async (userId: string) => {
     return requests;
 };
 
+const removeFriend = async (userId: string, friendshipId: string) => {
+    const deleted = await friendRepository.deleteFriendship(userId, friendshipId);
+
+    if (deleted.deletedCount === 0) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Friendship not found.");
+    }
+};
+
+const rejectFriendRequest = async (userId: string, friendshipId: string) => {
+    const friendRequest = await friendRepository.findFriendshipByIdAndReceiver(
+        friendshipId,
+        userId,
+        "status",
+    );
+
+    if (!friendRequest) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Friend request not found.");
+    }
+
+    if (friendRequest.status === "canceled") {
+        throw new ApiError(StatusCodes.CONFLICT, "This request was canceled.");
+    }
+
+    if (friendRequest.status !== "pending") {
+        throw new ApiError(
+            StatusCodes.CONFLICT,
+            `This request is already ${friendRequest.status}.`,
+        );
+    }
+
+    await friendRepository.updateStatusById(friendshipId, "rejected");
+};
+
 export default {
     sendFriendRequest,
     getFriendSuggestions,
@@ -132,4 +165,6 @@ export default {
     acceptFriendRequest,
     getSentFriendshipsByStatus,
     getReceivedFriendRequests,
+    removeFriend,
+    rejectFriendRequest,
 };

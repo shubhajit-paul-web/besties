@@ -8,7 +8,6 @@ import type {
 } from "../types/friend/friend.request.js";
 import type { GetFriendsByStatus } from "../types/friend/friend.service.js";
 import _ from "lodash";
-import { RequestHandler } from "express";
 
 const sendFriendRequest = asyncHandler(async (req: AddFriendRequest, res) => {
     const senderId = String(req.user?._id);
@@ -46,9 +45,9 @@ const getFriendsByStatus = asyncHandler(async (req: GetFriendsByStatus, res) => 
     );
 });
 
-const acceptFriendRequest: RequestHandler<{ id: string }> = asyncHandler(async (req, res) => {
+const acceptFriendRequest = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
-    const friendshipId = String(req.params.id);
+    const friendshipId = String(req.params?.friendshipId);
 
     await friendService.acceptFriendRequest(userId, friendshipId);
 
@@ -80,6 +79,28 @@ const getReceivedFriendRequests = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Friend requests retrieved successfully.", { requests }));
 });
 
+const removeFriend = asyncHandler(async (req, res) => {
+    const userId = String(req.user?._id);
+    const friendshipId = String(req.params?.friendshipId);
+
+    await friendService.removeFriend(userId, friendshipId);
+
+    return res
+        .status(StatusCodes.NO_CONTENT)
+        .json(ApiResponse.noContent("Friend removed successfully."));
+});
+
+const rejectFriendRequest = asyncHandler(async (req, res) => {
+    const userId = String(req.user?._id);
+    const friendshipId = String(req.params?.friendshipId);
+
+    await friendService.rejectFriendRequest(userId, friendshipId);
+
+    return res
+        .status(StatusCodes.NO_CONTENT)
+        .json(ApiResponse.noContent("Friend request rejected successfully."));
+});
+
 export default {
     sendFriendRequest,
     getFriendSuggestions,
@@ -87,4 +108,6 @@ export default {
     acceptFriendRequest,
     getSentFriendshipsByStatus,
     getReceivedFriendRequests,
+    removeFriend,
+    rejectFriendRequest,
 };

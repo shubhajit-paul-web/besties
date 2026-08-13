@@ -3,7 +3,7 @@ import authenticate from "../middlewares/auth.middleware.js";
 import friendController from "../controllers/friend.controller.js";
 import validate from "../middlewares/validator.middleware.js";
 import {
-    acceptFriendRequestSchema,
+    friendshipIdSchema,
     getFriendsByStatusSchema,
     getSentFriendshipsByStatusSchema,
     sendFriendRequestSchema,
@@ -22,21 +22,31 @@ router.get("/suggestions", friendController.getFriendSuggestions);
 // (Private) GET /friends?status="pending"
 router.get("/", validate(getFriendsByStatusSchema), friendController.getFriendsByStatus);
 
-// (Private) PATCH /friends/requests/:id/accept
+// (Private) PATCH /friends/requests/:friendshipId/accept
 router.patch(
-    "/requests/:id/accept",
-    validate(acceptFriendRequestSchema),
+    "/requests/:friendshipId/accept",
+    validate(friendshipIdSchema),
     friendController.acceptFriendRequest,
+);
+
+// (Private) PATCH /friends/requests/:friendshipId/reject
+router.patch(
+    "/requests/:friendshipId/reject",
+    validate(friendshipIdSchema),
+    friendController.rejectFriendRequest,
 );
 
 // (Private) GET /friends/requests/sent?status="pending"
 router.get(
-    "/requests",
+    "/requests/sent",
     validate(getSentFriendshipsByStatusSchema),
     friendController.getSentFriendshipsByStatus,
 );
 
 // (Private) GET /friends/requests/received
 router.get("/requests/received", friendController.getReceivedFriendRequests);
+
+// (Private) DELETE /friends/:friendshipId
+router.delete("/:friendshipId", validate(friendshipIdSchema), friendController.removeFriend);
 
 export default router;

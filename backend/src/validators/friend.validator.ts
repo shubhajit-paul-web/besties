@@ -23,12 +23,6 @@ export const getFriendsByStatusSchema = z.object({
     }),
 });
 
-export const acceptFriendRequestSchema = z.object({
-    params: z.object({
-        id: z.refine(mongoose.isValidObjectId, "Invalid friendship ID"),
-    }),
-});
-
 export const getSentFriendshipsByStatusSchema = z.object({
     query: z.object({
         status: z
@@ -37,5 +31,11 @@ export const getSentFriendshipsByStatusSchema = z.object({
                 `Invalid status. Must be one of: ${FRIENDSHIP_STATUSES.join(", ")}.`,
             )
             .optional(),
+    }),
+});
+
+export const friendshipIdSchema = z.object({
+    params: z.object({
+        friendshipId: z.refine(mongoose.isValidObjectId, "Invalid friendship id"),
     }),
 });

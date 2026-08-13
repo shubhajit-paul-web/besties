@@ -17,13 +17,14 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
         );
     }
 
-    const alreadyReceivedRequest = await friendRepository.hasPendingFriendRequest(
-        senderId,
-        receiverId,
-    );
+    const existingFriendship = await friendRepository.findFriendshipBetween(senderId, receiverId);
 
-    if (alreadyReceivedRequest) {
+    if (existingFriendship?.status === "pending") {
         throw new ApiError(StatusCodes.CONFLICT, "A friend request is already pending.");
+    }
+
+    if (existingFriendship?.status === "canceled") {
+        await friendRepository.deleteFriendshipByIdAndStatus(existingFriendship._id, "canceled");
     }
 
     try {

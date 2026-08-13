@@ -1,6 +1,6 @@
 import FriendModel, { type FriendDocument } from "../models/friend.model.js";
 import type { FindFriendshipsByStatus } from "../types/friend/friend.repository.js";
-import type { QueryFilter } from "mongoose";
+import type { QueryFilter, Types } from "mongoose";
 
 const create = async (senderId: string, receiverId: string) => {
     return FriendModel.create({
@@ -9,11 +9,26 @@ const create = async (senderId: string, receiverId: string) => {
     });
 };
 
-const hasPendingFriendRequest = async (senderId: string, receiverId: string) => {
-    return FriendModel.exists({
+const findFriendshipBetween = async (
+    senderId: string,
+    receiverId: string,
+    fields: string = "status",
+) => {
+    return FriendModel.findOne({
         sender: receiverId,
         receiver: senderId,
-        status: "pending",
+    })
+        .select(fields)
+        .lean();
+};
+
+const deleteFriendshipByIdAndStatus = async (
+    friendshipId: string | Types.ObjectId,
+    status: FriendDocument["status"],
+) => {
+    return FriendModel.deleteOne({
+        _id: friendshipId,
+        status,
     });
 };
 
@@ -93,7 +108,8 @@ const deleteFriendship = async (userId: string, friendshipId: string) => {
 
 export default {
     create,
-    hasPendingFriendRequest,
+    findFriendshipBetween,
+    deleteFriendshipByIdAndStatus,
     findFriendshipsByStatus,
     updateStatusById,
     findFriendshipById,

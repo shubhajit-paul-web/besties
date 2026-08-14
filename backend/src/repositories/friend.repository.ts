@@ -34,6 +34,10 @@ const deleteFriendshipByIdAndStatus = async (
     });
 };
 
+const deleteFriendshipById = async (friendshipId: string | Types.ObjectId) => {
+    return FriendModel.deleteOne({ _id: friendshipId });
+};
+
 const findFriendshipsByStatus = async ({
     currentUserId,
     status,
@@ -144,6 +148,7 @@ export default {
     create,
     findRelationshipBetweenUsers,
     deleteFriendshipByIdAndStatus,
+    deleteFriendshipById,
     findFriendshipsByStatus,
     updateStatusById,
     findFriendshipById,

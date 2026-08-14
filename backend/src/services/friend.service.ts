@@ -51,18 +51,8 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
                     );
                 }
 
-                // remove the rejectedAt and rejectionExpiresAt fields
-                FriendModel.updateOne(
-                    {
-                        _id: friendshipId,
-                    },
-                    {
-                        $unset: {
-                            rejectedAt: "",
-                            rejectionExpiresAt: "",
-                        },
-                    },
-                );
+                // remove the previous rejected friend request
+                await friendRepository.deleteFriendshipById(friendshipId);
             }
         }
     }

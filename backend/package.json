@@ -42,6 +42,7 @@
         "@aws-sdk/s3-presigned-post": "^3.1101.0",
         "@aws-sdk/s3-request-presigner": "^3.1097.0",
         "@eslint/js": "^10.0.1",
+        "@types/swagger-ui-express": "^4.1.8",
         "bcrypt": "^6.0.0",
         "compression": "^1.8.1",
         "cookie-parser": "^1.4.7",
@@ -59,6 +60,7 @@
         "morgan": "^1.11.0",
         "multer": "^2.2.0",
         "nodemailer": "^9.0.3",
+        "swagger-ui-express": "^5.0.1",
         "uuid": "^14.0.1",
         "winston": "^3.19.0",
         "zod": "^4.4.3"

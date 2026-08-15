@@ -30,7 +30,8 @@ const validate =
                 return res.status(StatusCodes.BAD_REQUEST).json({
                     success: false,
                     statusCode: StatusCodes.BAD_REQUEST,
-                    message: "Validation failed",
+                    message: "Validation failed.",
+                    isOperational: true,
                     errors: err.issues.map(({ path, message }) => ({
                         source: path[0],
                         field: path.slice(1).join("."),

@@ -17,7 +17,7 @@ import type { CookieOptions } from "express";
 const initiateRegistration = asyncHandler(async (req: InitiateRegistrationRequest, res) => {
     await authService.initiateRegistration(req.body);
 
-    return res.status(StatusCodes.CREATED).json(ApiResponse.success("OTP sent successfully."));
+    return res.status(StatusCodes.OK).json(ApiResponse.success("OTP sent successfully."));
 });
 
 // Verify registration OTP

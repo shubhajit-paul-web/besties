@@ -33,7 +33,7 @@ function globalErrorHandler(err: ErrorRequest, req: Request, res: Response, _nex
         success: false,
         statusCode,
         isOperational,
-        message: err?.statusCode ? err?.message : "Internal server error",
+        message: err?.statusCode ? err?.message : "Internal server error.",
     };
 
     if (err.options?.meta) payload.meta = err.options?.meta;

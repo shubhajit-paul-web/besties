@@ -18,7 +18,7 @@ const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     const isUsernameAlreadyExists = await userRepository.existsByUsername(username);
 
     if (isUsernameAlreadyExists) {
-        throw new ApiError(StatusCodes.CONFLICT, "Username is already taken");
+        throw new ApiError(StatusCodes.CONFLICT, "Username is already taken.");
     }
 
     const isUserAlreadyExist = await userRepository.existsByEmailOrMobile(email, mobileNumber);
@@ -26,7 +26,7 @@ const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     if (isUserAlreadyExist) {
         throw new ApiError(
             StatusCodes.CONFLICT,
-            "An account with the provided email or phone number already exists",
+            "An account with the provided email or phone number already exists.",
         );
     }
 };

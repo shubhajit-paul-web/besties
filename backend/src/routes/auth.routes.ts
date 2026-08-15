@@ -10,8 +10,12 @@ import validateRefreshToken from "../middlewares/refresh.middleware.js";
 
 const router = Router();
 
-// (Public) POST /auth/register
-router.post("/register", validate(initiateRegistrationSchema), authController.initiateRegistration);
+// (Public) POST /auth/register/initiate
+router.post(
+    "/register/initiate",
+    validate(initiateRegistrationSchema),
+    authController.initiateRegistration,
+);
 
 // (Public) POST /auth/register/verify
 router.post(

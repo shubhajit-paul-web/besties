@@ -28,12 +28,16 @@ const swaggerDocument: OpenAPIV3.Document = {
                         example: false,
                     },
                     statusCode: {
-                        type: "number",
+                        type: "integer",
                         example: 400,
+                    },
+                    isOperational: {
+                        type: "boolean",
+                        example: true,
                     },
                     message: {
                         type: "string",
-                        example: "Validation faild",
+                        example: "Validation faild.",
                     },
                     data: {
                         type: "array",
@@ -54,6 +58,66 @@ const swaggerDocument: OpenAPIV3.Document = {
                                 },
                             },
                         },
+                    },
+                },
+            },
+
+            SuccessResponse: {
+                type: "object",
+                properties: {
+                    success: {
+                        type: "boolean",
+                        example: true,
+                    },
+                    statusCode: {
+                        type: "integer",
+                        example: 200,
+                    },
+                    message: {
+                        type: "string",
+                    },
+                },
+            },
+
+            FailureResponse: {
+                type: "object",
+                properties: {
+                    success: {
+                        type: "boolean",
+                        example: false,
+                    },
+                    statusCode: {
+                        type: "integer",
+                        example: 400,
+                    },
+                    isOperational: {
+                        type: "boolean",
+                        example: true,
+                    },
+                    message: {
+                        type: "string",
+                    },
+                },
+            },
+
+            InternalServerErrorResponse: {
+                type: "object",
+                properties: {
+                    success: {
+                        type: "boolean",
+                        example: false,
+                    },
+                    statusCode: {
+                        type: "integer",
+                        example: 500,
+                    },
+                    isOperational: {
+                        type: "boolean",
+                        example: false,
+                    },
+                    message: {
+                        type: "string",
+                        example: "Internal server error.",
                     },
                 },
             },

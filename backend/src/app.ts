@@ -10,7 +10,7 @@ import globalErrorHandler from "./middlewares/error.middleware.js";
 import ApiError from "./utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import swaggerUi from "swagger-ui-express";
-import SwaggerConfig from "./config/swagger.js";
+import swaggerUiConfig from "./config/swagger.js";
 
 const app = express();
 
@@ -36,7 +36,11 @@ import friendRoutes from "./routes/friend.routes.js";
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/friends", friendRoutes);
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(SwaggerConfig));
+app.use(
+    "/api-docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerUiConfig.swaggerDocument, swaggerUiConfig.swaggerUiOptions),
+);
 
 // 404 Middleware
 app.use((req, _res, next) =>

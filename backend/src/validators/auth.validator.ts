@@ -14,26 +14,23 @@ export const initiateRegistrationSchema = z.object({
             .string("Username is required")
             .trim()
             .min(1, "Username is required")
-            .min(3, "Username must be at least 3 characters long.")
-            .max(30, "Username cannot exceed 30 characters.")
-            .regex(
-                /^[a-zA-Z0-9_]+$/,
-                "Username can only contain letters, numbers, and underscores.",
-            )
+            .min(3, "Username must be at least 3 characters long")
+            .max(30, "Username cannot exceed 30 characters")
+            .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores")
             .toLowerCase(),
         name: z.object({
             first: z
                 .string("First name is required")
                 .trim()
                 .min(1, "First name is required")
-                .min(3, "First name must be at least 3 characters long.")
-                .max(20, "First name cannot exceed 20 characters.")
+                .min(3, "First name must be at least 3 characters long")
+                .max(20, "First name cannot exceed 20 characters")
                 .toLowerCase(),
             last: z
                 .string()
                 .trim()
-                .min(3, "Last name must be at least 3 characters long.")
-                .max(20, "Last name cannot exceed 20 characters.")
+                .min(3, "Last name must be at least 3 characters long")
+                .max(20, "Last name cannot exceed 20 characters")
                 .toLowerCase()
                 .optional(),
         }),
@@ -63,7 +60,7 @@ export const initiateRegistrationSchema = z.object({
             .string("Password is required")
             .trim()
             .min(1, "Password is required")
-            .min(8, "Password must be at least 8 characters long.")
+            .min(8, "Password must be at least 8 characters long")
             .regex(/[A-Z]/, "Must contain an uppercase letter")
             .regex(/[0-9]/, "Must contain a number")
             .regex(/[^A-Za-z0-9]/, "Must contain a special character"),

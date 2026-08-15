@@ -34,7 +34,7 @@ const validate =
                     errors: err.issues.map(({ path, message }) => ({
                         source: path[0],
                         field: path.slice(1).join("."),
-                        message: path.slice(1).length ? message : "Request body is required.",
+                        message: path.slice(1).length ? message : "Request body is required",
                     })),
                 });
             }

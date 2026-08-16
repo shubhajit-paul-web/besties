@@ -114,13 +114,6 @@ const acceptFriendRequest = async (userId: string, friendshipId: string) => {
         throw new ApiError(StatusCodes.CONFLICT, "You're already friends with this user.");
     }
 
-    // if (friendship.status === "canceled") {
-    //     throw new ApiError(
-    //         StatusCodes.CONFLICT,
-    //         "This friend request has been canceled and cannot be accepted.",
-    //     );
-    // }
-
     if (friendship.status === "rejected") {
         throw new ApiError(StatusCodes.CONFLICT, "You already rejected this friend request.");
     }

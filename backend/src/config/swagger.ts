@@ -19,6 +19,18 @@ const swaggerDocument: OpenAPIV3.Document = {
     servers: [{ url: config.SERVER_URL! }],
 
     components: {
+        headers: {
+            AuthCookies: {
+                description:
+                    "Sets HTTP-only cookies containing the access token and refresh token.",
+                schema: {
+                    type: "string",
+                    example:
+                        "accessToken=<JWT>; HttpOnly; Secure; SameSite=Strict; Path=/, refreshToken=<Crypto>; HttpOnly; Secure; SameSite=Strict; Path=/",
+                },
+            },
+        },
+
         schemas: {
             ValidationErrorResponse: {
                 type: "object",

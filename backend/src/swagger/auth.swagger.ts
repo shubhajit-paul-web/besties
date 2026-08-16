@@ -3,7 +3,7 @@ import type { OpenAPIV3 } from "openapi-types";
 const AuthApiDoc: OpenAPIV3.PathsObject = {
     "/auth/register/initiate": {
         post: {
-            summary: "Initiate registration and send OTP to user's email",
+            summary: "Start account registration by validating details and sending an email OTP",
             tags: ["Authentication"],
 
             requestBody: {
@@ -73,7 +73,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
 
             responses: {
                 200: {
-                    description: "Accepted",
+                    description:
+                        "Registration data accepted and OTP sent to the provided email address",
                     content: {
                         "application/json": {
                             schema: {
@@ -89,7 +90,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                 },
 
                 400: {
-                    description: "Bad request",
+                    description:
+                        "Validation failed due to missing, malformed, or invalid registration fields",
                     content: {
                         "application/json": {
                             schema: {
@@ -100,7 +102,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                 },
 
                 409: {
-                    description: "Conflict",
+                    description:
+                        "Registration cannot proceed because the username/account already exists or an active OTP request is present",
                     content: {
                         "application/json": {
                             schema: {
@@ -141,7 +144,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                 },
 
                 500: {
-                    description: "Internal server error",
+                    description:
+                        "Unexpected server error while initiating registration or sending OTP",
                     content: {
                         "application/json": {
                             schema: {
@@ -156,7 +160,7 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
 
     "/auth/register/verify": {
         post: {
-            summary: "Verify registration OTP and create user account",
+            summary: "Complete registration by verifying OTP and creating the user account",
             tags: ["Authentication"],
 
             requestBody: {
@@ -231,7 +235,13 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
 
             responses: {
                 201: {
-                    description: "Created",
+                    description:
+                        "OTP verified successfully, account created, and authentication cookies set",
+                    headers: {
+                        "Set-Cookie": {
+                            $ref: "#/components/headers/AuthCookies",
+                        },
+                    },
                     content: {
                         "application/json": {
                             schema: {
@@ -247,7 +257,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                 },
 
                 400: {
-                    description: "Bad request",
+                    description:
+                        "Request validation failed or OTP is invalid/expired for the provided registration payload",
                     content: {
                         "application/json": {
                             schema: {
@@ -293,7 +304,8 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                 },
 
                 409: {
-                    description: "Conflict",
+                    description:
+                        "Account creation failed because the username or account identity already exists",
                     content: {
                         "application/json": {
                             schema: {
@@ -319,6 +331,284 @@ const AuthApiDoc: OpenAPIV3.PathsObject = {
                                             "An account with the provided email or phone number already exists.",
                                     },
                                 },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+
+    "/auth/login": {
+        post: {
+            summary: "Authenticate user and issue authentication tokens",
+            tags: ["Authentication"],
+
+            requestBody: {
+                required: true,
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "object",
+                            required: ["identifier", "password"],
+                            properties: {
+                                identifier: {
+                                    type: "string",
+                                    example: "shubhajit_123",
+                                    description:
+                                        "Username or email address associated with the account",
+                                },
+                                password: {
+                                    type: "string",
+                                    example: "Password@123",
+                                    description: "User's account password",
+                                },
+                            },
+                        },
+                        examples: {
+                            withUsername: {
+                                summary: "Login with username",
+                                value: {
+                                    identifier: "shubhajit_123",
+                                    password: "Password@123",
+                                },
+                            },
+                            withEmail: {
+                                summary: "Login with email",
+                                value: {
+                                    identifier: "shubhajit@example.com",
+                                    password: "Password@123",
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+
+            responses: {
+                200: {
+                    description: "Login successful",
+                    headers: {
+                        "Set-Cookie": {
+                            $ref: "#/components/headers/AuthCookies",
+                        },
+                    },
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/SuccessResponse",
+                            },
+                            example: {
+                                success: true,
+                                statusCode: 200,
+                                message: "Login successfully.",
+                                data: {
+                                    user: {
+                                        _id: "60b5c3c3c3c3c3c3c3c3c3c3",
+                                        username: "shubhajit_123",
+                                        email: "shubhajit@example.com",
+                                        name: {
+                                            first: "shubhajit",
+                                            last: "paul",
+                                        },
+                                        gender: "male",
+                                        dob: "2006-04-21T00:00:00.000Z",
+                                        avatar: "https://example.com/avatar.jpg",
+                                        bio: "My bio",
+                                        mobileNumber: "0123456789",
+                                        createdAt: "2026-08-16T00:00:00.000Z",
+                                        updatedAt: "2026-08-16T00:00:00.000Z",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+
+                400: {
+                    description: "Bad request or validation error",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/ValidationErrorResponse",
+                            },
+                            example: {
+                                success: false,
+                                statusCode: 400,
+                                isOperational: true,
+                                message: "Validation failed.",
+                                errors: [
+                                    {
+                                        source: "body",
+                                        field: "identifier",
+                                        message: "Username or email is required",
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                },
+
+                401: {
+                    description: "Unauthorized - Invalid credentials",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/FailureResponse",
+                            },
+                            example: {
+                                success: false,
+                                statusCode: 401,
+                                isOperational: true,
+                                message: "Incorrect email, username, or password",
+                            },
+                        },
+                    },
+                },
+
+                500: {
+                    description: "Internal server error",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/InternalServerErrorResponse",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+
+    "/auth/logout": {
+        post: {
+            summary: "Logout user and clear authentication tokens",
+            tags: ["Authentication"],
+
+            responses: {
+                200: {
+                    description: "Logout successful",
+                    headers: {
+                        "Set-Cookie": {
+                            description:
+                                "Clears authentication cookies (accessToken, refreshToken) with httpOnly=true, secure=true (in prod), sameSite=strict",
+                            schema: {
+                                type: "string",
+                            },
+                        },
+                    },
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/SuccessResponse",
+                            },
+                            example: {
+                                success: true,
+                                statusCode: 200,
+                                message: "Logout successful.",
+                            },
+                        },
+                    },
+                },
+
+                500: {
+                    description: "Internal server error",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/InternalServerErrorResponse",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+    },
+
+    "/auth/refresh": {
+        post: {
+            summary: "Refresh access and refresh tokens using valid refresh token",
+            tags: ["Authentication"],
+            description:
+                "Requires a valid refresh token in cookies. Validates the token and issues new access and refresh tokens.",
+
+            responses: {
+                200: {
+                    description: "Tokens refreshed successfully",
+                    headers: {
+                        "Set-Cookie": {
+                            $ref: "#/components/headers/AuthCookies",
+                        },
+                    },
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/SuccessResponse",
+                            },
+                            example: {
+                                success: true,
+                                statusCode: 200,
+                                message: "Tokens refreshed successfully.",
+                            },
+                        },
+                    },
+                },
+
+                400: {
+                    description: "Bad request - Invalid or expired refresh token",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/FailureResponse",
+                            },
+                            examples: {
+                                tokenExpired: {
+                                    summary: "Refresh token expired",
+                                    value: {
+                                        success: false,
+                                        statusCode: 400,
+                                        isOperational: true,
+                                        message: "Refresh token has expired",
+                                    },
+                                },
+                                tokenInvalid: {
+                                    summary: "Refresh token invalid",
+                                    value: {
+                                        success: false,
+                                        statusCode: 400,
+                                        isOperational: true,
+                                        message: "Invalid refresh token",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+
+                401: {
+                    description:
+                        "Unauthorized - No refresh token provided or token validation failed",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/FailureResponse",
+                            },
+                            example: {
+                                success: false,
+                                statusCode: 401,
+                                isOperational: true,
+                                message: "Refresh token not found or invalid",
+                            },
+                        },
+                    },
+                },
+
+                500: {
+                    description: "Internal server error",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/InternalServerErrorResponse",
                             },
                         },
                     },

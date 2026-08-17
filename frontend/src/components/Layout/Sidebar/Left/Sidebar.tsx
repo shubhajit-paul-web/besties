@@ -1,5 +1,5 @@
 import { Bookmark, ChartNoAxesCombined, House, Image, LogOut, UserRound, Users } from "lucide-react";
-import bestiesLogoImg from "../../../assets/besties-logo.png";
+import bestiesLogoImg from "@/assets/images/besties-logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
 import { mutate } from "swr";
 import { Tooltip } from "antd";

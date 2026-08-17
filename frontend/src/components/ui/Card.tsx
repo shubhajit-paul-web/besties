@@ -1,11 +1,11 @@
-import { ArrowRightIcon } from "lucide-react"
-import Button from "../Button"
-import type { ReactNode } from "react"
+import { ArrowRightIcon } from "lucide-react";
+import Button from "./Button/Button";
+import type { ReactNode } from "react";
 
 interface CardInterface {
-	children: ReactNode
-	title: string
-	height: string
+	children: ReactNode;
+	title: string;
+	height: string;
 }
 
 const Card = ({ children, title, height }: CardInterface) => {
@@ -21,7 +21,7 @@ const Card = ({ children, title, height }: CardInterface) => {
 
 			{children}
 		</div>
-	)
-}
+	);
+};
 
-export default Card
+export default Card;

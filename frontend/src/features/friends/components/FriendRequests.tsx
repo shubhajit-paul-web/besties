@@ -1,14 +1,14 @@
 import { toast } from "react-toastify";
-import { HttpInterceptor } from "../../../lib/axios";
-import fetcher from "../../../utils/fetcher";
-import Button from "../../../components/ui/Button/Button";
+import { HttpInterceptor } from "@/lib/axios";
+import fetcher from "@/utils/fetcher";
+import Button from "@/components/ui/Button/Button";
 import ProfileCard from "./ProfileCard";
 import ProfileCardsWrapper from "./ProfileCardsWrapper";
 import useSWR from "swr";
 import CandidateSkeleton from "./CandidateSkeleton";
-import ErrorMessage from "../../../components/ui/ErrorMessage";
+import ErrorMessage from "@/components/ui/ErrorMessage";
 import type { FriendRequest } from "../types/friend.types";
-import formatUserName from "../../../utils/formatUserName";
+import formatUserName from "@/utils/formatUserName";
 
 const FriendRequests = () => {
 	const { data, error, isLoading, mutate } = useSWR("/friends/requests/received", fetcher);

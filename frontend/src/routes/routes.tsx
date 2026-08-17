@@ -1,9 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { Home, Layout } from "lucide-react";
 import PublicRoute from "./guards/PublicRoute";
 import ProtectedRoute from "./guards/ProtectedRoute";
 import Login from "../features/auth/pages/Login";
 import Signup from "../features/auth/pages/Signup";
+import AppLayout from "@/components/Layout/AppLayout";
+import Home from "@/features/home/pages/Home";
 import Saved from "../features/saved/pages/Saved";
 import Dashboard from "../features/dashboard/pages/Dashboard";
 import MyPosts from "../features/posts/pages/MyPosts";
@@ -24,7 +25,7 @@ const router = () => {
 					<Route path="/signup" element={<Signup />} />
 				</Route>
 				<Route element={<ProtectedRoute />}>
-					<Route path="/app" element={<Layout />}>
+					<Route path="/app" element={<AppLayout />}>
 						<Route index element={<Home />} />
 						<Route path="my-posts" element={<MyPosts />} />
 						<Route path="friends" element={<Friends />} />

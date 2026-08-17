@@ -4,7 +4,7 @@ import { Bookmark, EarthIcon, Ellipsis, Heart, LinkIcon, MessageCircle, MessageS
 import IconButton from "./Button/IconButton";
 import Button from "./Button/Button";
 import utils from "../../utils/index";
-import defaultAvatarImage from "../../assets/default-user-avatar.png";
+import defaultAvatarImage from "../../assets/images/default-user-avatar.png";
 import type { PostComponentProps } from "../../types/post.types";
 
 const Post = ({ post }: PostComponentProps) => {

@@ -10,9 +10,7 @@ const ProtectedRoute = () => {
 	useEffect(() => {
 		const user = data?.data?.user;
 
-		if (user) {
-			setUser(user);
-		}
+		if (user) setUser(user);
 	}, [data, setUser]);
 
 	if (isLoading) {

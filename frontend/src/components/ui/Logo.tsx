@@ -1,4 +1,4 @@
-import logo from "../../assets/besties-logo.png"
+import logo from "@/assets/images/besties-logo.png";
 
 const Logo = () => {
 	return (
@@ -8,7 +8,7 @@ const Logo = () => {
 			</div>
 			<h1 className="text-xl font-medium">Besties</h1>
 		</div>
-	)
-}
+	);
+};
 
-export default Logo
+export default Logo;

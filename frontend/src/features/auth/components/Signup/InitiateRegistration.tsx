@@ -1,92 +1,27 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import moment from "moment";
 import { Info, Eye, EyeOff, ChevronDown } from "lucide-react";
-import InputField from "../../../../components/ui/InputField";
-import Button from "../../../../components/ui/Button/Button";
-import bestiesLogo from "../../../assets/besties-logo.png";
-import { authApi } from "../../../../lib/axios";
-import { AxiosError } from "axios";
-import { toast } from "react-toastify";
-import type { SignupFormData } from "../../../../types/user.types";
-import type { InitiateRegistrationProps } from "../../types/registration.types";
+import InputField from "@/components/ui/InputField";
+import Button from "@/components/ui/Button/Button";
+import bestiesLogo from "@/assets/images/besties-logo.png";
+import type { InitiateRegistrationFormData, InitiateRegistrationProps } from "../../types/registration.types";
+import useInitiateRegistration from "../../hooks/useInitiateRegistration";
 
 const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistrationProps) => {
 	const [showPassword, setShowPassword] = useState(false);
-	const [isLoading, setIsLoading] = useState(false);
 
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
-	} = useForm<SignupFormData>({});
+	} = useForm<InitiateRegistrationFormData>({});
 
-	const currentDate = new Date().toISOString().split("T")[0];
+	const currentDate = moment().format("YYYY-MM-DD");
 
 	// Register user
-	const initiateRegistration = async (data: SignupFormData) => {
-		setIsLoading(true);
-
-		const formData = {
-			...data,
-			name: {
-				first: data.firstName,
-				last: data.lastName,
-			},
-		};
-
-		console.log(formData);
-
-		try {
-			const res = await authApi.post("/auth/register/initiate", formData);
-
-			if (res.status === 201) {
-				toast.success("OTP sent successfully.", {
-					position: "top-center",
-				});
-
-				setSubmittedFormData(formData);
-				setStep(2);
-			}
-		} catch (err) {
-			console.log(err);
-
-			if (err instanceof AxiosError) {
-				const status = err.response?.status;
-
-				// Input validation
-				if (status === 400) {
-					return toast.error(err.response?.data?.message ?? "Validation faild", {
-						position: "bottom-right",
-						style: { width: "250px" },
-					});
-				}
-
-				// Business/database conflict
-				if (status === 409) {
-					return toast.error(err.response?.data?.message ?? "Something went wrong", {
-						position: "top-center",
-					});
-				}
-
-				// Network error (no response from server)
-				if (!err.response) {
-					return toast.error("Unable to connect to the server. Please check your internet connection.", {
-						position: "top-center",
-					});
-				}
-			}
-
-			// Unknown/unexpected error
-			toast.error("Something went wrong. Please try again.", {
-				position: "top-center",
-			});
-
-			console.error(err);
-		} finally {
-			setIsLoading(false);
-		}
-	};
+	const { handleInitiateRegistration, isLoading } = useInitiateRegistration({ setStep, setSubmittedFormData });
 
 	// Common select styles to match InputField
 	const selectBaseStyles = "w-full py-3.5 px-4 rounded-xl border bg-white focus:outline-none appearance-none cursor-pointer transition-all duration-200 text-slate-700";
@@ -107,7 +42,7 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 				</div>
 
 				{/* Form */}
-				<form onSubmit={handleSubmit(initiateRegistration)} className="flex flex-col gap-5">
+				<form onSubmit={handleSubmit(handleInitiateRegistration)} className="flex flex-col gap-5">
 					{/* Row 1 */}
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 						<InputField

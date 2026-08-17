@@ -2,11 +2,11 @@ import { useState } from "react";
 import UpdateProfilePicture from "../components/Signup/UpdateProfilePicture";
 import InitiateRegistration from "../components/Signup/InitiateRegistration";
 import VerifyOtp from "../components/Signup/VerifyOtp";
-import type { SignupFormPayload } from "../types/registration.types";
+import type { InitiateRegistrationFormPayload } from "../types/registration.types";
 
 const Signup = () => {
 	const [step, setStep] = useState(1);
-	const [submittedFormData, setSubmittedFormData] = useState<SignupFormPayload>();
+	const [submittedFormData, setSubmittedFormData] = useState<InitiateRegistrationFormPayload>();
 
 	switch (step) {
 		case 1:

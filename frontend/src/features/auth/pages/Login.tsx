@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import loginPageIllustration from "../assets/login-page-illustration.svg";
+import loginPageIllustration from "../../../assets/images/login-page-illustration.svg";
 import Button from "../../../components/ui/Button/Button";
 import { useForm } from "react-hook-form";
 import InputField from "../../../components/ui/InputField";

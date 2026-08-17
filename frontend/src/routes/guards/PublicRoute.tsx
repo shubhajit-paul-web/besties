@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
-import useCurrentUser from "../hooks/useCurrentUser";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
-const RedirectGuard = () => {
+const PublicRoute = () => {
 	const { data: user, error, isLoading } = useCurrentUser();
 
 	if (isLoading) {
@@ -19,4 +19,4 @@ const RedirectGuard = () => {
 	return <Outlet />;
 };
 
-export default RedirectGuard;
+export default PublicRoute;

@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Home, Layout } from "lucide-react";
-import RedirectGuard from "./guards/PublicRoute";
-import AuthGuard from "./guards/ProtectedRoute";
+import PublicRoute from "./guards/PublicRoute";
+import ProtectedRoute from "./guards/ProtectedRoute";
 import Login from "../features/auth/pages/Login";
 import Signup from "../features/auth/pages/Signup";
 import Saved from "../pages/Saved";
@@ -19,11 +19,11 @@ const router = () => {
 	return (
 		<BrowserRouter>
 			<Routes>
-				<Route element={<RedirectGuard />}>
+				<Route element={<PublicRoute />}>
 					<Route path="/login" element={<Login />} />
 					<Route path="/signup" element={<Signup />} />
 				</Route>
-				<Route element={<AuthGuard />}>
+				<Route element={<ProtectedRoute />}>
 					<Route path="/app" element={<Layout />}>
 						<Route index element={<Home />} />
 						<Route path="my-posts" element={<MyPosts />} />

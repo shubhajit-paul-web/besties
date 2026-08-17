@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import useAppContext from "../../hooks/useAppContext";
 import useCurrentUser from "../../hooks/useCurrentUser";
 
-const PublicRoute = () => {
+const ProtectedRoute = () => {
 	const { setUser } = useAppContext();
 	const { data, error, isLoading } = useCurrentUser();
 
@@ -28,4 +28,4 @@ const PublicRoute = () => {
 	return <Outlet />;
 };
 
-export default PublicRoute;
+export default ProtectedRoute;

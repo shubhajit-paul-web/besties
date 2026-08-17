@@ -1,16 +1,16 @@
 import { UserRoundPlus } from "lucide-react";
-import Avatar from "../Avatar";
-import Button from "../Button";
-import Card from "./Card";
+import Avatar from "../../../ui/Avatar";
+import Button from "../../../ui/Button";
+import Card from "../../../ui/Card";
 import useSWR from "swr";
-import fetcher from "../../../utils/fetcher";
+import fetcher from "../../../../utils/fetcher";
 import { Skeleton } from "antd";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../../../ui/ErrorMessage";
 import { useState } from "react";
-import { HttpInterceptor } from "../../../lib/axios";
 import { toast } from "react-toastify";
 import axios from "axios";
-import type { UserType } from "../../../types/user.types";
+import { HttpInterceptor } from "../../../../lib/axios";
+import type { UserType } from "../../../../types/user.types";
 
 type Loading = {
 	state: boolean;

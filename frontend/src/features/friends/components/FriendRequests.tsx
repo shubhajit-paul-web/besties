@@ -1,13 +1,13 @@
 import { toast } from "react-toastify";
 import { HttpInterceptor } from "../../../lib/axios";
 import fetcher from "../../../utils/fetcher";
-import Button from "../Button";
+import Button from "../../ui/Button";
 import ProfileCard from "./ProfileCard";
 import ProfileCardsWrapper from "./ProfileCardsWrapper";
 import useSWR from "swr";
 import type { UserType } from "../../../types/user.types";
 import CandidateSkeleton from "./CandidateSkeleton";
-import ErrorMessage from "../ErrorMessage";
+import ErrorMessage from "../../ui/ErrorMessage";
 
 type FriendRequest = {
 	_id: string;

@@ -9,6 +9,7 @@ import type {
     LoginUserRequest,
     RefreshTokenRequest,
     VerifyRegistrationOtpRequest,
+    ForgotPasswordRequest,
 } from "../types/auth/auth.request.js";
 import config from "../config/environment.js";
 import type { CookieOptions } from "express";
@@ -66,10 +67,19 @@ const refreshTokens = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Tokens refreshed successfully."));
 });
 
+const forgotPassword = asyncHandler(async (req: ForgotPasswordRequest, res) => {
+    const identifier = req.body.identifier;
+
+    await authService.forgotPassword(identifier);
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("OTP sent successfully."));
+});
+
 export default {
     initiateRegistration,
     verifyRegistrationOtp,
     loginUser,
     logout,
     refreshTokens,
+    forgotPassword,
 };

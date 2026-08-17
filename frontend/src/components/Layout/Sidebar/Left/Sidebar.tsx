@@ -1,20 +1,15 @@
 import { Bookmark, ChartNoAxesCombined, House, Image, LogOut, UserRound, Users } from "lucide-react";
-import Avatar from "../Avatar";
-import Logo from "../Logo";
 import bestiesLogoImg from "../../../assets/besties-logo.png";
 import { NavLink, useNavigate } from "react-router-dom";
-import useAppContext from "../../../hooks/useAppContext";
-import { authApi } from "../../../lib/axios";
 import { mutate } from "swr";
 import { Tooltip } from "antd";
+import useAppContext from "../../../../hooks/useAppContext";
+import Logo from "../../../ui/Logo";
+import Avatar from "../../../ui/Avatar";
+import { authApi } from "../../../../lib/axios";
+import type { LeftSidebar } from "../../../../types/sidebar.types";
 
-interface SidebarInterface {
-	isLeftSidebarOpen: boolean;
-	leftSidebarWidth: number;
-	leftSidebarOpenWidth: number;
-}
-
-const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: SidebarInterface) => {
+const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: LeftSidebar) => {
 	const navigate = useNavigate();
 	const { user, setUser } = useAppContext();
 	const userFullName = user?.name?.first + " " + (user?.name?.last ? user?.name?.last : "");

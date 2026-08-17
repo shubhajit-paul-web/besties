@@ -23,3 +23,11 @@ export type RefreshTokenRequest = Request & {
         refreshToken?: string;
     };
 };
+
+export type ForgotPasswordRequest = Request<
+    {},
+    {},
+    {
+        identifier: string;
+    }
+>;

@@ -3,11 +3,11 @@ import loginPageIllustration from "../assets/login-page-illustration.svg";
 import Button from "./shared/Button";
 import { useForm } from "react-hook-form";
 import InputField from "./shared/InputField";
-import { authApi } from "../lib/axios";
+import { authApi } from "../../../lib/axios";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
-import useAppContext from "../hooks/useAppContext";
+import useAppContext from "../../../hooks/useAppContext";
 
 interface FormData {
 	identifier: string;

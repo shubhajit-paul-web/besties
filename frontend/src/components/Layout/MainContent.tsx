@@ -1,32 +1,15 @@
 import { Tooltip } from "antd";
 import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
+import getPathName from "../../utils/getPathName";
+import type { MainContent } from "../../types/sidebar.types";
 
-interface MainContentInterface {
-	isLeftSidebarOpen: boolean;
-	setIsLeftSidebarOpen: (state: boolean) => void;
-	leftSidebarWidth: number;
-	rightSidebarWidth: number;
-	leftSidebarOpenWidth: number;
-}
-
-const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth, rightSidebarWidth, leftSidebarOpenWidth }: MainContentInterface) => {
+const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth, rightSidebarWidth, leftSidebarOpenWidth }: MainContent) => {
 	const { pathname } = useLocation();
 
 	const sectionDimension = {
 		width: isLeftSidebarOpen ? `calc(100% - ${leftSidebarWidth + rightSidebarWidth}px)` : `calc(100% - ${leftSidebarOpenWidth + +rightSidebarWidth}px)`,
 		marginLeft: isLeftSidebarOpen ? `${leftSidebarWidth}px` : `${leftSidebarOpenWidth}px`,
-	};
-
-	const getPathName = () => {
-		if (pathname === "/app" || pathname === "/app/") {
-			return "Home";
-		}
-
-		let path = pathname.replace("/app/", "");
-		path = path.replace("-", " ");
-
-		return path;
 	};
 
 	return (
@@ -40,7 +23,7 @@ const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth
 						</button>
 					</Tooltip>
 
-					<div className="capitalize text-lg font-medium">{getPathName()}</div>
+					<div className="capitalize text-lg font-medium">{getPathName(pathname)}</div>
 				</div>
 
 				<Outlet />

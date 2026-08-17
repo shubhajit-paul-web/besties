@@ -1,4 +1,4 @@
-const verificationTemplate = (OTP: number, expiryInMinutes: number) => {
+const registrationOtpTemplate = (OTP: number, expiryInMinutes: number) => {
     return `
         <div style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,Helvetica,sans-serif;color:#333333;">
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f4f4f7;padding:40px 20px;">
@@ -105,4 +105,38 @@ const verificationTemplate = (OTP: number, expiryInMinutes: number) => {
     `;
 };
 
-export default verificationTemplate;
+const forgotPasswordOtpTemplate = (OTP: number, expiryInMinutes: number) => {
+    return `
+        <body style="margin:0; padding:0; background-color:#f5f5f5; font-family:Arial, Helvetica, sans-serif; color:#333333;"> <div style="max-width:500px; margin:40px auto; background:#ffffff; padding:32px; border-radius:8px;">
+
+            <h2 style="margin:0 0 16px; color:#111111;">Reset Your Password</h2>
+
+            <p style="margin:0 0 20px; font-size:15px; line-height:1.6;">
+            We received a request to reset your password. Use the OTP below to continue:
+            </p>
+
+            <div style="margin:24px 0; padding:16px; background:#f3f4f6; text-align:center; border-radius:6px;">
+            <span style="font-size:28px; font-weight:bold; letter-spacing:6px; color:#111111;">
+                ${OTP}
+            </span>
+            </div>
+
+            <p style="margin:0 0 12px; font-size:14px; color:#555555;">
+            This OTP is valid for <strong>${expiryInMinutes} minutes</strong>.
+            </p>
+
+            <p style="margin:0; font-size:14px; color:#777777; line-height:1.5;">
+            If you didn't request a password reset, you can safely ignore this email.
+            </p>
+
+            <p style="margin:28px 0 0; font-size:14px; color:#555555;">
+            Regards,<br>
+            <strong>Besties Team</strong>
+            </p>
+
+            </div> 
+        </body>
+    `;
+};
+
+export default { registrationOtpTemplate, forgotPasswordOtpTemplate };

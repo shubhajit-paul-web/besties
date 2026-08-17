@@ -8,7 +8,7 @@ import { InitiateRegistration } from "../types/auth/auth.types.js";
 import redis from "../config/redis.js";
 import generateOtp from "../utils/generateOtp.js";
 import emailService from "./email.service.js";
-import verificationTemplate from "../templates/email/verification.js";
+import emailTemplates from "../templates/email/verification.js";
 import { RefreshAuthType } from "../types/auth/auth.request.js";
 import { sha256 } from "../utils/crypto.js";
 
@@ -40,28 +40,28 @@ const initiateRegistration = async (userData: InitiateRegistration) => {
         mobileNumber,
     });
 
-    const key = `auth:register:otp:email:${email}`;
+    const otpKey = `auth:register:otp:email:${email}`;
+    const cooldownKey = `cooldown:auth:register:otp:email:${email}`;
 
-    const existingOtp = await redis.get(key);
+    const cooldownTTL = await redis.ttl(cooldownKey);
 
-    if (existingOtp) {
-        const ttl = await redis.ttl(key);
-
+    if (cooldownTTL > 0) {
         throw new ApiError(StatusCodes.CONFLICT, "An OTP has already been sent.", true, {
             meta: {
-                retryAfter: ttl,
+                retryAfter: cooldownTTL,
             },
         });
     }
 
     const OTP = generateOtp();
 
-    await redis.set(key, OTP, "EX", 5 * 60); // valid for 5 minutes
+    await redis.set(otpKey, OTP, "EX", 5 * 60); // valid for 5 minutes
+    await redis.set(cooldownKey, OTP, "EX", 60); // valid for 1 minute
 
     await emailService.sendEmail({
         subject: "Verify your email",
         to: email,
-        html: verificationTemplate(OTP, 5),
+        html: emailTemplates.registrationOtpTemplate(OTP, 5),
     });
 };
 
@@ -74,9 +74,10 @@ const verifyRegistrationOtp = async (userData: VerifyRegistrationOtpInput) => {
         mobileNumber,
     });
 
-    const key = `auth:register:otp:email:${email}`;
+    const otpKey = `auth:register:otp:email:${email}`;
+    const cooldownKey = `cooldown:auth:register:otp:email:${email}`;
 
-    const expectedOtp = await redis.get(key);
+    const expectedOtp = await redis.get(otpKey);
 
     if (!expectedOtp) {
         throw new ApiError(
@@ -92,7 +93,8 @@ const verifyRegistrationOtp = async (userData: VerifyRegistrationOtpInput) => {
         );
     }
 
-    await redis.del(key);
+    await redis.del(otpKey);
+    await redis.del(cooldownKey);
 
     const { name, gender, dob, password } = userData;
 
@@ -152,10 +154,81 @@ const refreshTokens = async (user: RefreshAuthType) => {
     return tokens;
 };
 
+const forgotPassword = async (identifier: string) => {
+    const user = await userRepository.findUserByIdentifier(identifier, "email");
+
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Account doesn't exists.");
+    }
+
+    const { email } = user;
+
+    const cooldownKey = `auth:forgot-password:otp:email:${email}`;
+
+    const cooldownTTL = await redis.ttl(cooldownKey);
+
+    if (cooldownTTL > 0) {
+        throw new ApiError(StatusCodes.CONFLICT, "An OTP has already been sent.", true, {
+            meta: {
+                retryAfter: cooldownTTL,
+            },
+        });
+    }
+
+    const otpKey = `auth:forgot-password:otp:email:${email}`;
+
+    const OTP = generateOtp();
+
+    await redis.set(otpKey, OTP, "EX", 5 * 60); // valid for 5 minutes
+    await redis.set(cooldownKey, OTP, "EX", 60); // valid for 1 minute
+
+    await emailService.sendEmail({
+        subject: "Reset Your Password – OTP Verification",
+        to: email,
+        html: emailTemplates.forgotPasswordOtpTemplate(OTP, 5),
+    });
+};
+
+const resetPassword = async (identifier: string, newPassword: string, submittedOtp: string) => {
+    const user = await userRepository.findUserByIdentifier(identifier, "email");
+
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Account doesn't exists.");
+    }
+
+    const { email } = user;
+
+    const otpKey = `auth:forgot-password:otp:email:${email}`;
+    const cooldownKey = `auth:forgot-password:otp:email:${email}`;
+
+    const expectedOtp = await redis.get(otpKey);
+
+    if (!expectedOtp) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "The OTP has expired. Please request a new one.",
+        );
+    }
+
+    if (expectedOtp !== submittedOtp) {
+        throw new ApiError(
+            StatusCodes.BAD_REQUEST,
+            "The OTP you entered is incorrect. Please try again.",
+        );
+    }
+
+    await redis.del(otpKey);
+    await redis.del(cooldownKey);
+
+    // await userRepository;
+};
+
 export default {
     initiateRegistration,
     verifyRegistrationOtp,
     loginUser,
     logout,
     refreshTokens,
+    forgotPassword,
+    resetPassword,
 };

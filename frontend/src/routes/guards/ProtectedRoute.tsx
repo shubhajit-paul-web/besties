@@ -1,9 +1,9 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect } from "react";
-import useAppContext from "../hooks/useAppContext";
-import useCurrentUser from "../hooks/useCurrentUser";
+import useAppContext from "../../hooks/useAppContext";
+import useCurrentUser from "../../hooks/useCurrentUser";
 
-const AuthGuard = () => {
+const PublicRoute = () => {
 	const { setUser } = useAppContext();
 	const { data, error, isLoading } = useCurrentUser();
 
@@ -28,4 +28,4 @@ const AuthGuard = () => {
 	return <Outlet />;
 };
 
-export default AuthGuard;
+export default PublicRoute;

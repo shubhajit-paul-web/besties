@@ -1,21 +1,17 @@
-import { Mic, PhoneOff, Volume2 } from "lucide-react"
-import MeetingInfo from "../shared/VideoCallManager/MeetingInfo"
-import UserCard from "../shared/AudioCallManager/UserCard"
+import { Mic, PhoneOff, Volume2 } from "lucide-react";
+import MeetingInfo from "../../videoCall/components/MeetingInfo";
+import UserCard from "../components/UserCard";
 
-const AudioCallManager = () => {
+const AudioCall = () => {
 	return (
 		<div>
 			<div className="mb-3">
+				{/* TODO: remove the MeetingInfo component we don't this */}
 				<MeetingInfo meetingId="WAHB4546790DS" sessionLength="00:12:45" />
 			</div>
 
 			<div className="grid grid-cols-2 gap-5 bg-slate-100 p-5 rounded-3xl">
-				<UserCard
-					type="self"
-					isSpeaking={true}
-					username="Shubhajit Paul"
-					profileImage="/public/profile-img.jpeg"
-				/>
+				<UserCard type="self" isSpeaking={true} username="Shubhajit Paul" profileImage="/public/profile-img.jpeg" />
 				<UserCard
 					type="other"
 					isSpeaking={false}
@@ -43,7 +39,7 @@ const AudioCallManager = () => {
 				</div> */}
 			</div>
 		</div>
-	)
-}
+	);
+};
 
-export default AudioCallManager
+export default AudioCall;

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import Avatar from "../Avatar";
-import Card from "./Card";
+import Avatar from "../../../ui/Avatar";
+import Card from "../../../ui/Card";
 import { MessageSquareMore, Phone, Video } from "lucide-react";
 
 const MyFriends = () => {

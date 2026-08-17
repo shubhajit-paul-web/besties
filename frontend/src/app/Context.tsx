@@ -1,5 +1,5 @@
 import { createContext, type Dispatch, type SetStateAction } from "react";
-import type { UserType } from "./types/user.types";
+import type { UserType } from "../types/user.types";
 
 interface ContextType {
 	user: UserType | null;

@@ -1,18 +1,14 @@
 import { Link } from "react-router-dom";
 import loginPageIllustration from "../assets/login-page-illustration.svg";
-import Button from "./shared/Button";
+import Button from "../../../components/ui/Button/Button";
 import { useForm } from "react-hook-form";
-import InputField from "./shared/InputField";
+import InputField from "../../../components/ui/InputField";
 import { authApi } from "../../../lib/axios";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
 import { useState } from "react";
 import useAppContext from "../../../hooks/useAppContext";
-
-interface FormData {
-	identifier: string;
-	password: string;
-}
+import type { FormData } from "../types/login.types";
 
 const Login = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);

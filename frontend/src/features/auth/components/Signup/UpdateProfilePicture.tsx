@@ -2,13 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, CloudUpload, Info, Lock, Trash2 } from "lucide-react";
-import Button from "../Button";
-import { HttpInterceptor } from "../../../lib/axios";
+import Button from "../../../../components/ui/Button/Button";
+import { HttpInterceptor } from "../../../../lib/axios";
 import { toast, type ToastOptions } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { AxiosResponse } from "axios";
 import axios from "axios";
-import useAppContext from "../../../hooks/useAppContext";
+import useAppContext from "../../../../hooks/useAppContext";
 import { mutate } from "swr";
 
 type ProfilePicture = {

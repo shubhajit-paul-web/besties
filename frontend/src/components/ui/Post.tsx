@@ -1,40 +1,11 @@
 import { useState } from "react";
 import Avatar from "./Avatar";
 import { Bookmark, EarthIcon, Ellipsis, Heart, LinkIcon, MessageCircle, MessageSquareWarning, Pencil, Pin, Settings, Share, Trash } from "lucide-react";
-import IconButton from "./IconButton";
-import Button from "./Button";
+import IconButton from "./Button/IconButton";
+import Button from "./Button/Button";
 import utils from "../../utils/index";
 import defaultAvatarImage from "../../assets/default-user-avatar.png";
-
-interface AuthorInterface {
-	id: string;
-	name: string;
-	avatarUrl: string;
-}
-
-interface PostMetricsInterface {
-	likes: number;
-	comments: number;
-	shares: number;
-}
-
-interface PostInterface {
-	id: string;
-	author: AuthorInterface;
-	createdAt: string;
-	caption?: string | undefined;
-	mediaUrl?: string | undefined;
-	metrics: PostMetricsInterface;
-
-	// User-specific state (contextual to the logged-in viewer)
-	isLiked: boolean;
-	isSaved: boolean;
-	isOwner: boolean;
-}
-
-interface PostComponentProps {
-	post: PostInterface;
-}
+import type { PostComponentProps } from "../../types/post.types";
 
 const Post = ({ post }: PostComponentProps) => {
 	const [showPostActions, setShowPostActions] = useState(false);

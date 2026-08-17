@@ -1,4 +1,10 @@
-export type UserType = {
+export interface Author {
+	id: string;
+	name: string;
+	avatarUrl: string;
+}
+
+export interface UserType {
 	_id: string;
 	username: string;
 	name: {
@@ -13,29 +19,4 @@ export type UserType = {
 	mobileNumber?: string;
 	createdAt: Date;
 	updatedAt: Date;
-};
-
-export type SignupFormData = {
-	username: string;
-	firstName: string;
-	lastName: string;
-	dob: string;
-	gender: "female" | "male" | "custom";
-	email: string;
-	mobileNumber?: string;
-	password: string;
-};
-
-export type SignupFormPayload = {
-	username: string;
-	name: {
-		first: string;
-		last?: string;
-	};
-	dob: string;
-	gender: "female" | "male" | "custom";
-	email: string;
-	mobileNumber?: string;
-	password: string;
-	otp?: string;
-};
+}

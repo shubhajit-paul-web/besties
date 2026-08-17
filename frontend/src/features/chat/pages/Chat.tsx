@@ -1,5 +1,5 @@
 import { Paperclip, Send } from "lucide-react";
-import Button from "../shared/Button";
+import Button from "../../../components/ui/Button/Button";
 import ChatMessage from "../components/ChatMessage";
 
 const ChatManager = () => {

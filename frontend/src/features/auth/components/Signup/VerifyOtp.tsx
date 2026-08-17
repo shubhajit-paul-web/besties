@@ -1,17 +1,12 @@
 import { useForm } from "react-hook-form";
-import Button from "../Button";
-import InputField from "../InputField";
-import type { SignupFormPayload } from "../../../types/user.types";
-import { authApi } from "../../../lib/axios";
+import Button from "../../../../components/ui/Button/Button";
+import InputField from "../../../../components/ui/InputField";
+import { authApi } from "../../../../lib/axios";
 import { toast } from "react-toastify";
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useState } from "react";
 import { AxiosError } from "axios";
 import { CheckCircle2 } from "lucide-react";
-
-type VerifyOtpProps = {
-	setStep: Dispatch<SetStateAction<number>>;
-	submittedFormData?: SignupFormPayload;
-};
+import type { VerifyOtpProps } from "../../types/registration.types";
 
 const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
 	const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import UpdateProfilePicture from "./shared/Signup/UpdateProfilePicture";
-import InitiateRegistration from "./shared/Signup/InitiateRegistration";
-import VerifyOtp from "./shared/Signup/VerifyOtp";
-import type { SignupFormPayload } from "../../../types/user.types";
+import UpdateProfilePicture from "../components/Signup/UpdateProfilePicture";
+import InitiateRegistration from "../components/Signup/InitiateRegistration";
+import VerifyOtp from "../components/Signup/VerifyOtp";
+import type { SignupFormPayload } from "../types/registration.types";
 
 const Signup = () => {
 	const [step, setStep] = useState(1);

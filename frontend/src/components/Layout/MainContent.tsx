@@ -2,9 +2,9 @@ import { Tooltip } from "antd";
 import { PanelLeftOpen, PanelRightOpen } from "lucide-react";
 import { Outlet, useLocation } from "react-router-dom";
 import getPathName from "../../utils/getPathName";
-import type { MainContent } from "../../types/sidebar.types";
+import type { MainContentProps } from "../../types/sidebar.types";
 
-const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth, rightSidebarWidth, leftSidebarOpenWidth }: MainContent) => {
+const MainContent = ({ isLeftSidebarOpen, setIsLeftSidebarOpen, leftSidebarWidth, rightSidebarWidth, leftSidebarOpenWidth }: MainContentProps) => {
 	const { pathname } = useLocation();
 
 	const sectionDimension = {

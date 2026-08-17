@@ -1,5 +1,5 @@
-import Post from "../shared/Post";
-import useAppContext from "../../hooks/useAppContext";
+import Post from "../../../components/ui/Post";
+import useAppContext from "../../../hooks/useAppContext";
 
 const Home = () => {
 	const { user } = useAppContext();

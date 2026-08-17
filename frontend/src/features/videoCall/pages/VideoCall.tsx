@@ -1,7 +1,7 @@
-import { Maximize2, Mic, MonitorUp, PhoneOff, Video, Volume2 } from "lucide-react"
-import MeetingInfo from "../shared/VideoCallManager/MeetingInfo"
+import { Maximize2, Mic, MonitorUp, PhoneOff, Video, Volume2 } from "lucide-react";
+import MeetingInfo from "../components/MeetingInfo";
 
-const VideoCallManager = () => {
+const VideoCall = () => {
 	return (
 		<div>
 			{/* Meeting info */}
@@ -49,7 +49,7 @@ const VideoCallManager = () => {
 				</button>
 			</div>
 		</div>
-	)
-}
+	);
+};
 
-export default VideoCallManager
+export default VideoCall;

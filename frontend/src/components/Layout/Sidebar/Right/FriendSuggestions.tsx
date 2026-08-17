@@ -1,6 +1,6 @@
 import { UserRoundPlus } from "lucide-react";
 import Avatar from "../../../ui/Avatar";
-import Button from "../../../ui/Button";
+import Button from "../../../ui/Button/Button";
 import Card from "../../../ui/Card";
 import useSWR from "swr";
 import fetcher from "../../../../utils/fetcher";

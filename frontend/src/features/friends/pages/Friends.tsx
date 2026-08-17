@@ -1,8 +1,8 @@
 import { MessageSquareMore, UserRoundX } from "lucide-react";
-import Button from "../shared/Button";
-import ProfileCard from "../shared/Friends/ProfileCard";
-import ProfileCardsWrapper from "../shared/Friends/ProfileCardsWrapper";
-import FriendRequests from "../shared/Friends/FriendRequests";
+import Button from "../../../components/ui/Button/Button";
+import ProfileCard from "../components/ProfileCard";
+import ProfileCardsWrapper from "../components/ProfileCardsWrapper";
+import FriendRequests from "../components/FriendRequests";
 
 const Friends = () => {
 	return (

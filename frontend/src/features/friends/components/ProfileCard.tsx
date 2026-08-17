@@ -1,12 +1,6 @@
-import type { ReactNode } from "react";
+import type { ProfileCardProps } from "../types/friend.types";
 
-interface CardInterface {
-	children: ReactNode;
-	image: string;
-	name: string;
-}
-
-const ProfileCard = ({ children, name, image }: CardInterface) => {
+const ProfileCard = ({ children, name, image }: ProfileCardProps) => {
 	return (
 		<div className="bg-white border border-slate-300/75 overflow-hidden rounded-xl">
 			<img className="w-full aspect-square" src={image} alt="Profile image" />

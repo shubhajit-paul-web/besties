@@ -1,12 +1,6 @@
-import type { ReactNode } from "react";
+import type { ProfileCardsWrapperProps } from "../types/friend.types";
 
-interface ProfileCardsWrapperInterface {
-	children?: ReactNode;
-	title: string;
-	totalProfilesCount?: number;
-}
-
-const ProfileCardsWrapper = ({ children, title, totalProfilesCount }: ProfileCardsWrapperInterface) => {
+const ProfileCardsWrapper = ({ children, title, totalProfilesCount }: ProfileCardsWrapperProps) => {
 	return (
 		<div>
 			<h1 className="text-xl font-medium flex items-center gap-2.5">

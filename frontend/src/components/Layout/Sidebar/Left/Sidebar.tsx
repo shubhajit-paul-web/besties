@@ -7,9 +7,9 @@ import useAppContext from "../../../../hooks/useAppContext";
 import Logo from "../../../ui/Logo";
 import Avatar from "../../../ui/Avatar";
 import { authApi } from "../../../../lib/axios";
-import type { LeftSidebar } from "../../../../types/sidebar.types";
+import type { LeftSidebarProps } from "../../../../types/sidebar.types";
 
-const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: LeftSidebar) => {
+const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: LeftSidebarProps) => {
 	const navigate = useNavigate();
 	const { user, setUser } = useAppContext();
 	const userFullName = user?.name?.first + " " + (user?.name?.last ? user?.name?.last : "");

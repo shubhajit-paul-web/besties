@@ -1,11 +1,5 @@
-import Avatar from "../Avatar"
-
-interface ChatMessageInterface {
-	author: string
-	avatar: string
-	text: string
-	isOwnMessage: boolean
-}
+import Avatar from "../../../components/ui/Avatar";
+import type { ChatMessageInterface } from "../types/chat.types";
 
 const ChatMessage = ({ author, avatar, text, isOwnMessage }: ChatMessageInterface) => {
 	return (
@@ -19,7 +13,7 @@ const ChatMessage = ({ author, avatar, text, isOwnMessage }: ChatMessageInterfac
 				<p className="opacity-85">{text}</p>
 			</div>
 		</div>
-	)
-}
+	);
+};
 
-export default ChatMessage
+export default ChatMessage;

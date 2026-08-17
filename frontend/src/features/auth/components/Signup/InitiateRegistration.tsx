@@ -1,19 +1,15 @@
-import { useState, type Dispatch, type SetStateAction } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Info, Eye, EyeOff, ChevronDown } from "lucide-react";
-import InputField from "../InputField";
-import Button from "../Button";
+import InputField from "../../../../components/ui/InputField";
+import Button from "../../../../components/ui/Button/Button";
 import bestiesLogo from "../../../assets/besties-logo.png";
-import { authApi } from "../../../lib/axios";
+import { authApi } from "../../../../lib/axios";
 import { AxiosError } from "axios";
 import { toast } from "react-toastify";
-import type { SignupFormData, SignupFormPayload } from "../../../types/user.types";
-
-type InitiateRegistrationProps = {
-	setStep: Dispatch<SetStateAction<number>>;
-	setSubmittedFormData: Dispatch<SetStateAction<SignupFormPayload | undefined>>;
-};
+import type { SignupFormData } from "../../../../types/user.types";
+import type { InitiateRegistrationProps } from "../../types/registration.types";
 
 const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistrationProps) => {
 	const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +38,7 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 		console.log(formData);
 
 		try {
-			const res = await authApi.post("/auth/register", formData);
+			const res = await authApi.post("/auth/register/initiate", formData);
 
 			if (res.status === 201) {
 				toast.success("OTP sent successfully.", {

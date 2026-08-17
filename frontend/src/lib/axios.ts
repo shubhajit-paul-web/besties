@@ -1,6 +1,7 @@
 import axios, { AxiosError } from "axios";
+import env from "../config/env";
 
-axios.defaults.baseURL = "http://localhost:8080";
+axios.defaults.baseURL = env.API_URL;
 
 export const authApi = axios.create({
 	withCredentials: true,

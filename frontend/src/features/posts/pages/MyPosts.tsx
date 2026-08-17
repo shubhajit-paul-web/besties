@@ -1,4 +1,4 @@
-import Post from "../shared/Post";
+import Post from "../../../components/ui/Post";
 
 const MyPosts = () => {
 	return (

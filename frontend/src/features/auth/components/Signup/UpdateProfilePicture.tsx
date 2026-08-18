@@ -3,27 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Camera, CloudUpload, Info, Lock, Trash2 } from "lucide-react";
 import Button from "../../../../components/ui/Button/Button";
-import { HttpInterceptor } from "../../../../lib/axios";
-import { toast, type ToastOptions } from "react-toastify";
+import type { ProfilePictureFormData } from "../../types/user.types";
+import useUpdateProfilePicture from "../../hooks/useUpdateProfilePicture";
 import { useNavigate } from "react-router-dom";
-import type { AxiosResponse } from "axios";
-import axios from "axios";
-import useAppContext from "../../../../hooks/useAppContext";
-import { mutate } from "swr";
-
-type ProfilePicture = {
-	profilePicture?: FileList;
-};
-
-type PresignedPostResponse = {
-	url: string;
-	fields: Record<string, string>;
-};
 
 const UpdateProfilePicture = () => {
 	const navigate = useNavigate();
-	const { setUser } = useAppContext();
-	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [previewUrl, setPreviewUrl] = useState<string>("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const {
@@ -33,7 +18,7 @@ const UpdateProfilePicture = () => {
 		setValue,
 		formState: { errors },
 		trigger,
-	} = useForm<ProfilePicture>({});
+	} = useForm<ProfilePictureFormData>({});
 
 	const watchedProfilePicture = watch("profilePicture");
 
@@ -77,88 +62,8 @@ const UpdateProfilePicture = () => {
 		}
 	};
 
-	// Update avatar
-	const updateAvatar = (data: ProfilePicture) => {
-		setIsSubmitting(true);
-
-		const file = data.profilePicture?.[0];
-		const formData = new FormData();
-
-		const toastPosition: ToastOptions = {
-			position: "top-center",
-		};
-
-		// Step 1 - Generate signed upload url
-		HttpInterceptor.post("/users/me/avatar/upload-url", {
-			type: file?.type,
-		})
-			.then(async (res: AxiosResponse<PresignedPostResponse>) => {
-				const { fields, url } = res.data;
-
-				Object.entries(fields).forEach(([key, value]) => {
-					formData.append(key, value);
-				});
-
-				if (file) {
-					formData.append("Content-Type", file.type);
-					formData.append("file", file);
-				}
-
-				try {
-					// Step 2 - Upload the file to s3
-					const response = await HttpInterceptor.post(url, formData, {
-						headers: {
-							"Content-Type": "multipart/form-data",
-						},
-					});
-
-					// Step 3 - Update the avatar in the DB
-					if (response.status === 204) {
-						try {
-							await HttpInterceptor.put("users/me/avatar", {
-								path: fields.key,
-							});
-
-							toast.success("Profile picture updated successfully.", toastPosition);
-
-							setTimeout(() => {
-								setUser(null);
-								mutate("/users/me");
-
-								navigate("/app");
-							}, 1500);
-						} catch (err) {
-							toast.error("Failed to upload file.", toastPosition);
-
-							console.error(err);
-						}
-					}
-				} catch (err) {
-					if (axios.isAxiosError(err)) {
-						switch (err.response?.status) {
-							case 403:
-								toast.error("Upload rejected. Please check the file type or size.", toastPosition);
-								break;
-
-							case 413:
-								toast.error("File is too large.", toastPosition);
-								break;
-
-							default:
-								toast.error("Failed to upload file.", toastPosition);
-						}
-					}
-				}
-			})
-			.catch((err) => {
-				toast.error("Failed to upload file.", toastPosition);
-
-				console.error(err);
-			})
-			.finally(() => {
-				setIsSubmitting(false);
-			});
-	};
+	// Upload and Update the profile picture
+	const { isSubmitting, handleUpdateProfilePicture } = useUpdateProfilePicture();
 
 	return (
 		<div className="h-screen flex justify-center items-center">
@@ -167,7 +72,7 @@ const UpdateProfilePicture = () => {
 					<h1 className="font-semibold text-2xl text-zinc-800">Add a profile photo</h1>
 					<p className="text-zinc-600">Help your friends recognize you (optional)</p>
 				</div>
-				<form onSubmit={handleSubmit(updateAvatar)}>
+				<form onSubmit={handleSubmit(handleUpdateProfilePicture)}>
 					<div
 						className={`flex flex-col justify-center text-center items-center gap-4 py-15 px-20 bg-slate-50 rounded-2xl border border-red-300 transition-colors ${errors.profilePicture ? "border-red-300" : "border-zinc-200"}`}>
 						<div

@@ -21,7 +21,7 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 	const currentDate = moment().format("YYYY-MM-DD");
 
 	// Register user
-	const { handleInitiateRegistration, isLoading } = useInitiateRegistration({ setStep, setSubmittedFormData });
+	const { isSubmitting, handleInitiateRegistration } = useInitiateRegistration({ setStep, setSubmittedFormData });
 
 	// Common select styles to match InputField
 	const selectBaseStyles = "w-full py-3.5 px-4 rounded-xl border bg-white focus:outline-none appearance-none cursor-pointer transition-all duration-200 text-slate-700";
@@ -161,8 +161,8 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 							borderRadius="xl"
 							centerContent
 							className="h-full min-h-13.75 px-12 text-base font-bold tracking-wide transition-all active:scale-[0.99] disabled:opacity-70"
-							disabled={isLoading}>
-							{isLoading ? (
+							disabled={isSubmitting}>
+							{isSubmitting ? (
 								<div className="flex items-center gap-2 justify-center">
 									<div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
 									<span>Wait...</span>

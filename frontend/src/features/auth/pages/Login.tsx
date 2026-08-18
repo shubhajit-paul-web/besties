@@ -3,60 +3,18 @@ import loginPageIllustration from "../../../assets/images/login-page-illustratio
 import Button from "../../../components/ui/Button/Button";
 import { useForm } from "react-hook-form";
 import InputField from "../../../components/ui/InputField";
-import { authApi } from "../../../lib/axios";
-import { AxiosError } from "axios";
-import { toast } from "react-toastify";
-import { useState } from "react";
-import useAppContext from "../../../hooks/useAppContext";
-import type { FormData } from "../types/login.types";
+import type { LoginFormPayload } from "../types/login.types";
+import useLoginUser from "../hooks/useLoginUser";
 
 const Login = () => {
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const { setUser } = useAppContext();
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
-	} = useForm<FormData>();
+	} = useForm<LoginFormPayload>();
 
-	const onSubmit = async (data: FormData) => {
-		setIsSubmitting(true);
-		const { identifier, password } = data;
-
-		try {
-			const res = await authApi.post("/auth/login", {
-				identifier,
-				password,
-			});
-
-			if (res.status === 200) {
-				setUser(res.data?.data?.user);
-
-				toast.success(res.data?.message ?? "Login successful", {
-					position: "top-center",
-				});
-
-				setTimeout(() => {
-					location.href = "/app";
-				}, 1500);
-			}
-
-			toast.success(res.data?.message, {
-				position: "top-center",
-			});
-		} catch (err) {
-			if (err instanceof AxiosError) {
-				console.error(err);
-
-				toast.error(err.response?.data?.message ?? "Internal server error", {
-					position: "top-center",
-					style: { width: "365px" },
-				});
-			}
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+	// Login user
+	const { isSubmitting, handleLoginUser } = useLoginUser();
 
 	return (
 		<div className="bg-slate-100 h-screen flex justify-center items-center">
@@ -68,7 +26,7 @@ const Login = () => {
 				<div className="w-full">
 					<h1 className="font-medium text-xl text-slate-800 mb-8">Log in to Besties</h1>
 
-					<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+					<form onSubmit={handleSubmit(handleLoginUser)} className="space-y-4">
 						<InputField
 							type="text"
 							placeholder="Username or email"

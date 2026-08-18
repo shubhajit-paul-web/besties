@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 import axios from "axios";
 
 const useInitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistrationProps) => {
-	const [isLoading, setIsLoading] = useState(false);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleInitiateRegistration = async (data: InitiateRegistrationFormData) => {
-		setIsLoading(true);
+		setIsSubmitting(true);
 
 		const formData = {
 			...data,
@@ -63,11 +63,11 @@ const useInitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegi
 
 			console.error(err);
 		} finally {
-			setIsLoading(false);
+			setIsSubmitting(false);
 		}
 	};
 
-	return { handleInitiateRegistration, isLoading };
+	return { handleInitiateRegistration, isSubmitting };
 };
 
 export default useInitiateRegistration;

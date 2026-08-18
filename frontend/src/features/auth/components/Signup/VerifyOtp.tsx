@@ -1,69 +1,18 @@
 import { useForm } from "react-hook-form";
 import Button from "../../../../components/ui/Button/Button";
 import InputField from "../../../../components/ui/InputField";
-import { authApi } from "../../../../lib/axios";
-import { toast } from "react-toastify";
-import { useState } from "react";
-import { AxiosError } from "axios";
 import { CheckCircle2 } from "lucide-react";
 import type { VerifyOtpProps } from "../../types/registration.types";
+import useVerifyRegistrationOtp from "../../hooks/useVerifyRegistrationOtp";
 
 const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
-	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [isSuccess, setIsSuccess] = useState(false);
 	const {
 		register,
 		handleSubmit,
 		formState: { errors },
 	} = useForm<{ otp: string }>({});
 
-	const verifyRegistrationOtp = async ({ otp }: { otp: string }) => {
-		setIsSubmitting(true);
-
-		if (!submittedFormData) return;
-
-		try {
-			const res = await authApi.post("/auth/register/verify", {
-				...submittedFormData,
-				otp,
-			});
-
-			if (res.status === 201) {
-				toast.success("Signup successful.", {
-					position: "top-center",
-				});
-
-				setIsSuccess(true);
-
-				setTimeout(() => {
-					setStep(3);
-				}, 2000);
-			}
-		} catch (err) {
-			console.error(err);
-			if (err instanceof AxiosError) {
-				const data = err.response?.data;
-				const status = err.response?.status;
-
-				if (data?.errors) {
-					return toast.error(err.response?.data?.message ?? "Validation faild", {
-						position: "bottom-right",
-						style: { width: "250px" },
-					});
-				}
-
-				if (status === 400) {
-					return toast.error(data?.message ?? "Verification faild", {
-						position: "top-center",
-					});
-				}
-			}
-
-			console.error(err);
-		} finally {
-			setIsSubmitting(false);
-		}
-	};
+	const { isSuccess, isSubmitting, handleVerifyRegistrationOtp } = useVerifyRegistrationOtp({ setStep, submittedFormData });
 
 	if (isSuccess) {
 		return (
@@ -87,7 +36,7 @@ const VerifyOtp = ({ setStep, submittedFormData }: VerifyOtpProps) => {
 						To confirm your account, enter the 6-digit code that we've sent to <span className="font-semibold">{submittedFormData?.email ?? "example@gmail.com"}.</span>
 					</p>
 				</div>
-				<form onSubmit={handleSubmit(verifyRegistrationOtp)} className="space-y-6 mt-6">
+				<form onSubmit={handleSubmit(handleVerifyRegistrationOtp)} className="space-y-6 mt-6">
 					<InputField
 						type="text"
 						inputMode="numeric"

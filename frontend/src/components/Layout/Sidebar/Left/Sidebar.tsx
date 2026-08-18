@@ -1,18 +1,27 @@
 import { Bookmark, ChartNoAxesCombined, House, Image, LogOut, UserRound, Users } from "lucide-react";
 import bestiesLogoImg from "@/assets/images/besties-logo.png";
-import { NavLink, useNavigate } from "react-router-dom";
-import { mutate } from "swr";
+import { NavLink } from "react-router-dom";
 import { Tooltip } from "antd";
-import useAppContext from "../../../../hooks/useAppContext";
-import Logo from "../../../ui/Logo";
-import Avatar from "../../../ui/Avatar";
-import { authApi } from "../../../../lib/axios";
-import type { LeftSidebarProps } from "../../../../types/sidebar.types";
+import Logo from "@/components/ui/Logo";
+import Avatar from "@/components/ui/Avatar";
+import type { LeftSidebarProps } from "@/types/sidebar.types";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import ErrorMessage from "@/components/ui/ErrorMessage";
+import formatUserName from "@/utils/formatUserName";
+import useLogoutUser from "@/hooks/useLogoutUser";
 
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: LeftSidebarProps) => {
-	const navigate = useNavigate();
-	const { user, setUser } = useAppContext();
-	const userFullName = user?.name?.first + " " + (user?.name?.last ? user?.name?.last : "");
+	const { isLoading, error, user } = useCurrentUser();
+	const { handleLogout } = useLogoutUser();
+
+	if (isLoading) {
+		return;
+	}
+
+	if (error || !user) {
+		return <ErrorMessage />;
+	}
+
 	const menus = [
 		{
 			href: "/app",
@@ -45,19 +54,6 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 			icon: UserRound,
 		},
 	];
-
-	const logout = async () => {
-		try {
-			await authApi.post("/auth/logout");
-		} catch {
-			// empty because of special reason
-		} finally {
-			setUser(null);
-			mutate("/users/me");
-
-			navigate("/login", { replace: true });
-		}
-	};
 
 	const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
 		return `${isActive && `font-bold ${isLeftSidebarOpen || "bg-slate-200/60"}`} flex items-center gap-3 cursor-pointer hover:bg-slate-200/60 px-4 py-3 rounded-lg transition-all`;
@@ -102,11 +98,11 @@ const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth
 						<div className={`flex items-center pt-4 border-t border-t-slate-200 ${isLeftSidebarOpen ? "justify-between" : "justify-center"}`}>
 							{isLeftSidebarOpen ? (
 								<>
-									<Avatar image={user?.avatar || "/profile-img.jpeg"} title={userFullName} subtitle={<span className="opacity-70">Software Engineer</span>} />
+									<Avatar image={user?.avatar || "/profile-img.jpeg"} title={formatUserName(user.name)} subtitle={<span className="opacity-70">Software Engineer</span>} />
 
 									{/* Logout button */}
 									<Tooltip title="Logout">
-										<div onClick={logout} className="hover:text-red-500 cursor-pointer">
+										<div onClick={handleLogout} className="hover:text-red-500 cursor-pointer">
 											<LogOut size={18} />
 										</div>
 									</Tooltip>

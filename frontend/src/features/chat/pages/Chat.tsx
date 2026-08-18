@@ -15,14 +15,14 @@ const ChatManager = () => {
 								<>
 									<ChatMessage
 										author="Aanya Paul"
-										avatar="/public/profile-img.jpeg"
+										avatar="/profile-img.jpeg"
 										isOwnMessage={false}
 										text="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam qui distinctio recusandae quod labore vitae. Necessitatibus, expedita unde dolore repellat harum animi veniam, soluta rerum quae est, quidem perferendis deserunt?"
 									/>
 
 									<ChatMessage
 										author="Shubhajit Paul"
-										avatar="/public/profile-img.jpeg"
+										avatar="/profile-img.jpeg"
 										isOwnMessage={true}
 										text="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam qui distinctio recusandae quod labore vitae. Necessitatibus..."
 									/>

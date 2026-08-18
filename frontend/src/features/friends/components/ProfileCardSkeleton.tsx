@@ -1,8 +1,8 @@
 import { Skeleton } from "antd";
 
-const CandidateSkeleton = () => (
+const ProfileCardSkeleton = ({ profilesCount = 4 }: { profilesCount?: number }) => (
 	<div className="grid grid-cols-4 gap-4 w-full">
-		{Array(4)
+		{Array(profilesCount)
 			.fill(0)
 			.map((_, i) => (
 				<div key={i} className="w-full rounded-xl border border-slate-200 overflow-hidden">
@@ -20,4 +20,4 @@ const CandidateSkeleton = () => (
 	</div>
 );
 
-export default CandidateSkeleton;
+export default ProfileCardSkeleton;

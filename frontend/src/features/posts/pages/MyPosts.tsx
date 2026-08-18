@@ -12,7 +12,7 @@ const MyPosts = () => {
 							author: {
 								id: "user123456",
 								name: "Shubhajit Paul",
-								avatarUrl: "/public/profile-img.jpeg",
+								avatarUrl: "/profile-img.jpeg",
 							},
 							caption:
 								"Knowledge Debt may become the next Technical Debt. Technical debt builds up when we take shortcuts in code. Knowledge debt builds up when we take shortcuts in learning",

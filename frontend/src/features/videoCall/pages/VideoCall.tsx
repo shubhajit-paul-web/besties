@@ -14,7 +14,7 @@ const VideoCall = () => {
 				{/* Avatar */}
 				<div className="border-2 border-slate-700 rounded-full w-fit p-1 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
 					<div className="w-35 h-35 overflow-hidden rounded-full">
-						<img className="w-full h-full object-cover" src="/public/profile-img.jpeg" />
+						<img className="w-full h-full object-cover" src="/profile-img.jpeg" />
 					</div>
 				</div>
 

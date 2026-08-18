@@ -1,0 +1,52 @@
+.swiper {
+    width: 100%;
+    height: fit-content;
+    padding-bottom: 25px;
+}
+
+.swiper-slide {
+    text-align: center;
+    font-size: 18px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.swiper-slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* =========================
+   Friend Swiper
+========================= */
+
+.friend-swiper {
+    position: relative;
+}
+
+/* Scrollbar */
+.friend-swiper .swiper-scrollbar {
+    height: 8px !important;
+    background: #f1f5f9;
+    border-radius: 999px;
+    bottom: 0 !important;
+}
+
+.friend-swiper .swiper-scrollbar-drag {
+    background: #cbd5e1;
+    border-radius: 999px;
+    cursor: grab;
+    transition: background 0.2s ease;
+}
+
+.friend-swiper .swiper-scrollbar-drag:hover {
+    background: #94a3b8;
+}
+
+.friend-swiper .swiper-scrollbar-drag:active {
+    cursor: grabbing;
+}

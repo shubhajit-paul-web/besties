@@ -209,7 +209,7 @@ const Home = () => {
 						author: {
 							id: post.author.id,
 							name: post.author.name,
-							avatarUrl: post.author.avatarUrl || "/public/profile-img.jpeg",
+							avatarUrl: post.author.avatarUrl || "/profile-img.jpeg",
 						},
 						caption: post.caption,
 						mediaUrl: post.mediaUrl || "",

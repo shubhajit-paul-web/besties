@@ -11,7 +11,7 @@ const AudioCall = () => {
 			</div>
 
 			<div className="grid grid-cols-2 gap-5 bg-slate-100 p-5 rounded-3xl">
-				<UserCard type="self" isSpeaking={true} username="Shubhajit Paul" profileImage="/public/profile-img.jpeg" />
+				<UserCard type="self" isSpeaking={true} username="Shubhajit Paul" profileImage="/profile-img.jpeg" />
 				<UserCard
 					type="other"
 					isSpeaking={false}

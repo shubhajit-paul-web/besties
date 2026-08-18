@@ -8,7 +8,7 @@ const FriendSuggestions = () => {
 			{Array(4)
 				.fill(0)
 				.map(() => (
-					<ProfileCard name="Shubhajit Paul" image="/public/profile-img.jpeg">
+					<ProfileCard name="Shubhajit Paul" image="/profile-img.jpeg">
 						<div className="space-y-2">
 							<Button width="100%" centerContent variant="blueSoft">
 								Add friend

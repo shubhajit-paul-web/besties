@@ -27,7 +27,7 @@ const FriendRequests = () => {
 			<>
 				<ProfileCardsWrapper title="Friend requests" totalProfilesCount={0}></ProfileCardsWrapper>
 				<ProfileCardSkeleton />
-				<div className="w-full border-b-2 border-b-slate-300/70 my-12"></div>
+				<div className="my-8 w-full border-b-2 border-b-slate-300/70 sm:my-12"></div>
 			</>
 		);
 	}
@@ -39,7 +39,7 @@ const FriendRequests = () => {
 	const friendRequests: FriendRequest[] = data?.data?.requests;
 
 	if (!friendRequests || friendRequests?.length === 0 || !Array.isArray(friendRequests)) {
-		return;
+		return null;
 	}
 
 	return (
@@ -56,7 +56,13 @@ const FriendRequests = () => {
 					320: {
 						slidesPerView: 1.2,
 					},
+					480: {
+						slidesPerView: 1.35,
+					},
 					640: {
+						slidesPerView: 1.8,
+					},
+					768: {
 						slidesPerView: 2.2,
 					},
 					900: {
@@ -70,11 +76,11 @@ const FriendRequests = () => {
 					const sender = request?.sender;
 
 					if (!sender || typeof sender !== "object") {
-						return;
+						return null;
 					}
 
 					return (
-						<SwiperSlide>
+						<SwiperSlide key={request._id}>
 							<ProfileCard name={formatUserName(sender.name)} image={sender.avatar || "/profile-img.jpeg"}>
 								<div className="space-y-2">
 									<Button onClick={() => handleAcceptFriendRequest(request._id)} width="100%" centerContent>
@@ -90,7 +96,7 @@ const FriendRequests = () => {
 				})}
 			</Swiper>
 
-			<div className="w-full border-b-2 border-b-slate-300/70 my-12"></div>
+			<div className="my-8 w-full border-b-2 border-b-slate-300/70 sm:my-12"></div>
 		</>
 	);
 };

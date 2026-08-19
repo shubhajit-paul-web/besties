@@ -200,7 +200,7 @@ const Home = () => {
 	];
 
 	return (
-		<div className="bg-slate-50 p-5 rounded-2xl flex flex-col items-center gap-5">
+		<div className="bg-slate-50 rounded-2xl p-3 sm:p-4 md:p-5 flex flex-col items-center gap-4 md:gap-5">
 			{postsDummyData.map((post, index) => (
 				<Post
 					key={index}

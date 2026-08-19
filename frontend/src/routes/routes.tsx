@@ -26,7 +26,7 @@ const router = () => {
 				</Route>
 				<Route element={<ProtectedRoute />}>
 					<Route path="/app" element={<AppLayout />}>
-						<Route index element={<Home />} />
+						<Route path="home" element={<Home />} />
 						<Route path="my-posts" element={<MyPosts />} />
 						<Route path="friends" element={<Friends />} />
 						<Route path="saved" element={<Saved />} />

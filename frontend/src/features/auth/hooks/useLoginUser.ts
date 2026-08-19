@@ -18,7 +18,7 @@ const useLoginUser = () => {
 			});
 
 			setTimeout(() => {
-				location.href = "/app";
+				location.href = "/app/home";
 			}, 1500);
 		} catch (err) {
 			if (axios.isAxiosError(err)) {

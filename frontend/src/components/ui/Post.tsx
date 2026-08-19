@@ -24,7 +24,7 @@ const Post = ({ post }: PostComponentProps) => {
 	};
 
 	return (
-		<div className="w-150 bg-white border border-slate-200 rounded-xl">
+		<div className="w-full max-w-150 bg-white border border-slate-200 rounded-xl overflow-hidden">
 			{/* Post actions overlay */}
 			{showPostActions && <div className="w-screen h-screen bg-black/2 fixed top-0 left-0 z-10" onClick={() => setShowPostActions(false)}></div>}
 
@@ -58,7 +58,8 @@ const Post = ({ post }: PostComponentProps) => {
 						/>
 
 						{/* Post actions */}
-						<div className={`bg-white w-70 p-2 rounded-xl rounded-tr-none border border-slate-300 shadow-2xl absolute right-[50%] top-[80%] z-20 ${showPostActions ? "block" : "hidden"}`}>
+						<div
+							className={`bg-white w-64 sm:w-70 p-2 rounded-xl rounded-tr-none border border-slate-300 shadow-2xl absolute right-[50%] top-[80%] z-20 ${showPostActions ? "block" : "hidden"}`}>
 							{post.isOwner && (
 								<Button variant="transparent" icon={Pin} iconFill="#333" width="100%">
 									Pin post
@@ -106,7 +107,7 @@ const Post = ({ post }: PostComponentProps) => {
 			</div>
 
 			{post.mediaUrl && (
-				<div className="h-160 overflow-hidden bg-slate-900 relative flex justify-center items-center">
+				<div className="h-64 sm:h-96 md:h-128 lg:h-160 overflow-hidden bg-slate-900 relative flex justify-center items-center">
 					<img
 						className="absolute inset-0 h-full w-full object-cover blur-3xl scale-110 opacity-60 select-none pointer-none"
 						src={post.mediaUrl}

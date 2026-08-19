@@ -78,7 +78,8 @@ const getFriendSuggestions = async (userId: string) => {
         currentUserId: userId,
     });
 
-    const friendIds = getFriendIds(userId, friendships);
+    const friends = getFriendIds(userId, friendships);
+    const friendIds = friends.map((friend) => friend.friendId);
 
     const suggestions = await userRepository.findRandomUserSuggestions(userId, friendIds);
 
@@ -96,11 +97,33 @@ const getFriendsByStatus = async (userId: string, status: FriendDocument["status
         return [];
     }
 
-    const friendIds = getFriendIds(userId, friendships);
+    // Keep both IDs since the response needs the friendship ID as well
+    const friendRelations = getFriendIds(userId, friendships);
+    const friendIds = friendRelations.map(({ friendId }) => friendId);
 
-    const friendProfiles = await userRepository.findUsersByIds(friendIds);
+    // Fetch profiles together instead of querying for each friend
+    const profiles = await userRepository.findUsersByIds(friendIds);
 
-    return friendProfiles;
+    // Avoid repeatedly searching the profiles array below
+    const profilesById = new Map(profiles.map((profile) => [String(profile._id), profile]));
+
+    const friends = friendRelations
+        .map((friend) => {
+            const user = profilesById.get(String(friend.friendId));
+
+            // Friendship may exist even if the user profile was removed
+            if (!user) {
+                return null;
+            }
+
+            return {
+                friendshipId: friend.friendshipId,
+                user,
+            };
+        })
+        .filter(Boolean);
+
+    return friends;
 };
 
 const acceptFriendRequest = async (userId: string, friendshipId: string) => {

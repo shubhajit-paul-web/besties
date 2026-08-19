@@ -27,10 +27,10 @@ const MyFriends = () => {
 
 	return (
 		<ProfileCardsWrapper title="My Friends" totalProfilesCount={friends?.length}>
-			{friends.map((friend) => (
-				<ProfileCard name={formatUserName(friend.name)} image="/profile-img.jpeg">
+			{friends.map(({ friendshipId, user }) => (
+				<ProfileCard name={formatUserName(user.name)} image="/profile-img.jpeg">
 					<div className="space-y-2">
-						<Button onClick={() => handleRemoveFriend(friend._id)} width="100%" centerContent variant="lightPlus" icon={UserRoundX} iconSize={18}>
+						<Button onClick={() => handleRemoveFriend(friendshipId)} width="100%" centerContent variant="lightPlus" icon={UserRoundX} iconSize={18}>
 							Unfriend
 						</Button>
 						<Button width="100%" centerContent variant="primary" icon={MessageSquareMore} iconSize={18}>

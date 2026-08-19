@@ -183,13 +183,16 @@ const FriendApiDoc: OpenAPIV3.PathsObject = {
                                 data: {
                                     friends: [
                                         {
-                                            _id: "64d2c4d6a0f2ec59bc74f912",
-                                            username: "sameer_12",
-                                            name: {
-                                                first: "sameer",
-                                                last: "khan",
+                                            friendshipId: "6a78548ccf98a4f2a3e1f780",
+                                            user: {
+                                                _id: "64d2c4d6a0f2ec59bc74f912",
+                                                username: "sameer_12",
+                                                name: {
+                                                    first: "sameer",
+                                                    last: "khan",
+                                                },
+                                                avatar: "https://cdn.example.com/avatar.png",
                                             },
-                                            avatar: "https://cdn.example.com/avatar.png",
                                         },
                                     ],
                                 },

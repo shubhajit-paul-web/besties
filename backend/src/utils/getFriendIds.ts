@@ -5,14 +5,24 @@ type Friendship = FriendDocument & {
     _id: Types.ObjectId;
 };
 
-const getFriendIds = (currentUserId: string, friendships: Friendship[]): Types.ObjectId[] => {
-    return friendships.map((friendship) => {
-        if (String(friendship.sender) === currentUserId) {
-            return friendship.receiver;
+const getFriendIds = (currentUserId: string, friendships: Friendship[]) => {
+    const friends = friendships.map((friendship) => {
+        const { sender, receiver } = friendship;
+
+        if (String(sender) === currentUserId) {
+            return {
+                friendshipId: friendship._id,
+                friendId: receiver,
+            };
         }
 
-        return friendship.sender;
+        return {
+            friendshipId: friendship._id,
+            friendId: sender,
+        };
     });
+
+    return friends;
 };
 
 export default getFriendIds;

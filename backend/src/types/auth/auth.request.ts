@@ -31,3 +31,13 @@ export type ForgotPasswordRequest = Request<
         identifier: string;
     }
 >;
+
+export type ResetPasswordRequest = Request<
+    {},
+    {},
+    {
+        identifier: string;
+        newPassword: string;
+        otp: string;
+    }
+>;

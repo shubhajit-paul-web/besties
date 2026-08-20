@@ -135,6 +135,19 @@ const findUsersByIds = async (
         .lean();
 };
 
+const updatePasswordByUserId = async (userId: string | Types.ObjectId, password: string) => {
+    return UserModel.updateOne(
+        {
+            _id: userId,
+        },
+        {
+            $set: {
+                password,
+            },
+        },
+    );
+};
+
 export default {
     existsByUsername,
     existsByEmailOrMobile,
@@ -146,4 +159,5 @@ export default {
     removeRefreshToken,
     findRandomUserSuggestions,
     findUsersByIds,
+    updatePasswordByUserId,
 };

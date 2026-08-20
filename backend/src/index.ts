@@ -2,10 +2,12 @@ import redis from "./config/redis.js";
 import config from "./config/environment.js";
 import app from "./app.js";
 import connectDB from "./config/database.js";
+import http from "node:http";
 import logger from "./utils/logger.js";
 import getErrorMessage from "./utils/getErrorMessage.js";
 import mongoose from "mongoose";
 import transporter from "./config/email.js";
+import initializeSocket from "./socket/socket.js";
 
 export let shuttingDown = false;
 
@@ -95,7 +97,11 @@ void (async () => {
 
         logger.info("SMTP server connected");
 
-        const server = app.listen(config.PORT, () => {
+        const httpServer = http.createServer(app);
+
+        initializeSocket(httpServer);
+
+        const server = httpServer.listen(config.PORT, () => {
             logger.info("Server is running", {
                 PORT: config.PORT,
                 SERVER_URL: config.SERVER_URL,

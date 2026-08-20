@@ -4,6 +4,8 @@ import {
     initiateRegistrationSchema,
     verifyRegistrationOtpSchema,
     loginUserSchema,
+    forgotPasswordSchema,
+    resetPasswordSchema,
 } from "../validators/auth.validator.js";
 import authController from "../controllers/auth.controller.js";
 import validateRefreshToken from "../middlewares/refresh.middleware.js";
@@ -32,5 +34,11 @@ router.post("/logout", authController.logout);
 
 // (Private) POST /auth/refresh
 router.post("/refresh", validateRefreshToken, authController.refreshTokens);
+
+// (Public) POST /auth/forgot-password
+router.patch("/forgot-password", validate(forgotPasswordSchema), authController.forgotPassword);
+
+// (Public) PATCH /auth/reset-password
+router.patch("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
 
 export default router;

@@ -220,7 +220,7 @@ const resetPassword = async (identifier: string, newPassword: string, submittedO
     await redis.del(otpKey);
     await redis.del(cooldownKey);
 
-    // await userRepository;
+    await userRepository.updatePasswordByUserId(user._id, newPassword);
 };
 
 export default {

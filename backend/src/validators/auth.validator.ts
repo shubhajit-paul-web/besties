@@ -1,10 +1,29 @@
 import { z } from "zod";
 
-// OTP schema
+// Reuseable: OTP schema
 const otpSchema = z.object({
-    body: z.object({
-        otp: z.string("OTP is required").length(6, "OTP must be 6 digits"),
-    }),
+    otp: z.string("OTP is required").length(6, "OTP must be 6 digits"),
+});
+
+// Reuseable: Identifier schema
+const identifierSchema = z.object({
+    identifier: z
+        .string("Username or email is required")
+        .trim()
+        .min(1, "Username or email is required")
+        .toLowerCase(),
+});
+
+// Reuseable: Password schema
+const passwordSchema = z.object({
+    password: z
+        .string("Password is required")
+        .trim()
+        .min(1, "Password is required")
+        .min(8, "Password must be at least 8 characters long")
+        .regex(/[A-Z]/, "Must contain an uppercase letter")
+        .regex(/[0-9]/, "Must contain a number")
+        .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
 });
 
 // Initiate registration schema
@@ -56,20 +75,14 @@ export const initiateRegistrationSchema = z.object({
                 return /^(?:\+91|91|0)?[6-9]\d{9}$/.test(val);
             }, "Invalid Indian mobile number")
             .optional(),
-        password: z
-            .string("Password is required")
-            .trim()
-            .min(1, "Password is required")
-            .min(8, "Password must be at least 8 characters long")
-            .regex(/[A-Z]/, "Must contain an uppercase letter")
-            .regex(/[0-9]/, "Must contain a number")
-            .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
+
+        password: passwordSchema.shape.password,
     }),
 });
 
 // Verify registration schema
 export const verifyRegistrationOtpSchema = z.object({
-    body: initiateRegistrationSchema.shape.body.extend(otpSchema.shape.body.shape),
+    body: initiateRegistrationSchema.shape.body.extend(otpSchema.shape),
 });
 
 // Login schema
@@ -81,6 +94,20 @@ export const loginUserSchema = z.object({
             .min(1, "Username or email is required")
             .toLowerCase(),
         password: z.string("Password is required").trim().min(1, "Password is required"),
+    }),
+});
+
+// Forgot password schema
+export const forgotPasswordSchema = z.object({
+    body: identifierSchema,
+});
+
+// Reset password schema
+export const resetPasswordSchema = z.object({
+    body: z.object({
+        identifier: identifierSchema.shape.identifier,
+        newPassword: passwordSchema.shape.password,
+        otp: otpSchema.shape.otp,
     }),
 });
 

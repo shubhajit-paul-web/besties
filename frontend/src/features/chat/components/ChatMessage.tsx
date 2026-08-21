@@ -1,16 +1,15 @@
 import Avatar from "../../../components/ui/Avatar";
 import type { ChatMessageInterface } from "../types/chat.types";
 
-const ChatMessage = ({ author, avatar, text, isOwnMessage }: ChatMessageInterface) => {
+const ChatMessage = ({ avatar, text, isOwnMessage }: ChatMessageInterface) => {
 	return (
-		<div className={`flex items-start gap-3 ${isOwnMessage && "flex-row-reverse justify-start"}`}>
-			<Avatar image={avatar} />
-			<div className={`${isOwnMessage ? "bg-blue-400/90 text-white" : "bg-white"} p-4 pt-3 w-fit max-w-[60%] rounded-2xl ${isOwnMessage ? "rounded-tr-none" : "rounded-tl-none"}`}>
-				<div className={`${isOwnMessage ? "bg-white text-black" : "bg-slate-500 text-white"} font-medium mb-2 w-fit px-3 rounded-2xl text-sm`}>
-					{author}
-					{isOwnMessage && " (You)"}
-				</div>
-				<p className="opacity-85">{text}</p>
+		<div className={`flex items-end gap-3 ${isOwnMessage ? "flex-row-reverse" : ""}`}>
+			<Avatar image={avatar} imageSize={34} className="shrink-0" />
+			<div
+				className={`w-fit max-w-[min(75%,38rem)] px-4 py-3 text-sm leading-6 shadow-sm ${
+					isOwnMessage ? "rounded-2xl rounded-br-md bg-indigo-600 text-white" : "rounded-2xl rounded-bl-md border border-slate-200/80 bg-white text-slate-700"
+				}`}>
+				<p>{text}</p>
 			</div>
 		</div>
 	);

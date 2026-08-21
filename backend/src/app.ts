@@ -18,12 +18,7 @@ app.use(morgan(config.NODE_ENV === "dev" ? "dev" : "combined", { stream: httpLog
 app.use(express.json({ limit: "20kb" }));
 app.use(express.urlencoded({ extended: true, limit: "20kb" }));
 app.use(cookieParser());
-app.use(
-    cors({
-        origin: config.ALLOWED_ORIGIN,
-        credentials: true,
-    }),
-);
+app.use(cors(corsConfig));
 app.use(helmet());
 app.use(compression());
 
@@ -31,6 +26,7 @@ app.use(compression());
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
+import corsConfig from "./config/cors.js";
 
 // Route implementations
 app.use("/auth", authRoutes);

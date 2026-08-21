@@ -2,8 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import ApiError from "../utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import jwt from "jsonwebtoken";
-import config from "../config/environment.js";
-import type { AccessTokenPayload } from "../types/auth/auth.jwt.js";
+import verifyAccessToken from "../utils/verifyAccessToken.js";
 
 /**
  * Authenticates requests by validating the access token and attaching the decoded user.
@@ -21,10 +20,7 @@ const authenticate = (req: Request, _res: Response, next: NextFunction) => {
     }
 
     try {
-        const decoded = jwt.verify(
-            accessToken,
-            config.JWT.ACCESS_TOKEN_SECRET!,
-        ) as AccessTokenPayload;
+        const decoded = verifyAccessToken(accessToken);
 
         req.user = decoded;
         next();

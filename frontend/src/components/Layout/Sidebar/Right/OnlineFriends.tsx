@@ -2,10 +2,13 @@ import { Link } from "react-router-dom";
 import Avatar from "../../../ui/Avatar";
 import Card from "../../../ui/Card";
 import { MessageSquareMore, Phone, Video } from "lucide-react";
+import useOnlineFriends from "@/hooks/useOnlineFriends";
 
-const MyFriends = () => {
+const OnlineFriends = ({ height = "55%" }: { height?: string }) => {
+	useOnlineFriends();
+
 	return (
-		<Card title="My Friends" height="55%">
+		<Card title="Online Friends" height={height}>
 			<div
 				className="mt-3 space-y-1 overflow-y-auto"
 				style={{
@@ -56,4 +59,4 @@ const MyFriends = () => {
 	);
 };
 
-export default MyFriends;
+export default OnlineFriends;

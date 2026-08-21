@@ -3,7 +3,7 @@ const getPathName = (pathname: string) => {
 		return "Home";
 	}
 
-	let path = pathname.replace("/app/", "");
+	let path = pathname.replace(/^\/app\/|\/$/g, "");
 	path = path.replace("-", " ");
 
 	return path;

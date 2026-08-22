@@ -9,6 +9,7 @@ const ImageWithFallback = ({ src, fallback, ...props }: ImageWithFallbackProps) 
 				e.currentTarget.onerror = null;
 				e.currentTarget.src = fallback;
 			}}
+			loading="lazy"
 		/>
 	);
 };

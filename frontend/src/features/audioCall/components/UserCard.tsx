@@ -8,7 +8,7 @@ const UserCard = ({ type, isSpeaking, username, profileImage }: UserCardProps) =
 				{isSpeaking && <div className="w-28 aspect-square bg-green-500/80 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 animate-ping"></div>}
 
 				{/* Avatar */}
-				<img className="relative z-10 w-45 aspect-square object-cover rounded-full" src={profileImage} />
+				<img className="relative z-10 w-45 aspect-square object-cover rounded-full" src={profileImage} loading="lazy" />
 			</div>
 			<div className="flex flex-col items-center gap-3">
 				<div className="text-xl font-semibold text-slate-800 flex items-center gap-2">

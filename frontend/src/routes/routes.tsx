@@ -1,44 +1,50 @@
+/* eslint-disable react-refresh/only-export-components */
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import PublicRoute from "./guards/PublicRoute";
 import ProtectedRoute from "./guards/ProtectedRoute";
-import Login from "../features/auth/pages/Login";
-import Signup from "../features/auth/pages/Signup";
-import AppLayout from "@/components/Layout/AppLayout";
-import Home from "@/features/home/pages/Home";
-import Saved from "../features/saved/pages/Saved";
-import Dashboard from "../features/dashboard/pages/Dashboard";
-import MyPosts from "../features/posts/pages/MyPosts";
-import Friends from "../features/friends/pages/Friends";
-import VideoCall from "../features/videoCall/pages/VideoCall";
-import AudioCallManager from "../features/audioCall/pages/AudioCall";
-import ChatManager from "../features/chat/pages/Chat";
-import Profile from "../features/profile/pages/Profile";
-import NotFound from "../pages/NotFound";
 import { ToastContainer } from "react-toastify";
+import SuspenseLoader from "@/components/ui/SuspenseLoader";
+
+const Login = lazy(() => import("../features/auth/pages/Login"));
+const Signup = lazy(() => import("../features/auth/pages/Signup"));
+const AppLayout = lazy(() => import("@/components/Layout/AppLayout"));
+const Home = lazy(() => import("@/features/home/pages/Home"));
+const Saved = lazy(() => import("../features/saved/pages/Saved"));
+const Dashboard = lazy(() => import("../features/dashboard/pages/Dashboard"));
+const MyPosts = lazy(() => import("../features/posts/pages/MyPosts"));
+const Friends = lazy(() => import("../features/friends/pages/Friends"));
+const VideoCall = lazy(() => import("../features/videoCall/pages/VideoCall"));
+const AudioCall = lazy(() => import("../features/audioCall/pages/AudioCall"));
+const Chat = lazy(() => import("../features/chat/pages/Chat"));
+const Profile = lazy(() => import("../features/profile/pages/Profile"));
+const NotFound = lazy(() => import("../pages/NotFound"));
 
 const router = () => {
 	return (
 		<BrowserRouter>
-			<Routes>
-				<Route element={<PublicRoute />}>
-					<Route path="/login" element={<Login />} />
-					<Route path="/signup" element={<Signup />} />
-				</Route>
-				<Route element={<ProtectedRoute />}>
-					<Route path="/app" element={<AppLayout />}>
-						<Route path="home" element={<Home />} />
-						<Route path="my-posts" element={<MyPosts />} />
-						<Route path="friends" element={<Friends />} />
-						<Route path="saved" element={<Saved />} />
-						<Route path="dashboard" element={<Dashboard />} />
-						<Route path="video-call" element={<VideoCall />} />
-						<Route path="audio-call" element={<AudioCallManager />} />
-						<Route path="chat" element={<ChatManager />} />
-						<Route path="profile" element={<Profile />} />
+			<Suspense fallback={<SuspenseLoader />}>
+				<Routes>
+					<Route element={<PublicRoute />}>
+						<Route path="/login" element={<Login />} />
+						<Route path="/signup" element={<Signup />} />
 					</Route>
-				</Route>
-				<Route path="*" element={<NotFound />} />
-			</Routes>
+					<Route element={<ProtectedRoute />}>
+						<Route path="/app" element={<AppLayout />}>
+							<Route path="home" element={<Home />} />
+							<Route path="my-posts" element={<MyPosts />} />
+							<Route path="friends" element={<Friends />} />
+							<Route path="saved" element={<Saved />} />
+							<Route path="dashboard" element={<Dashboard />} />
+							<Route path="video-call" element={<VideoCall />} />
+							<Route path="audio-call" element={<AudioCall />} />
+							<Route path="chat/:id" element={<Chat />} />
+							<Route path="profile" element={<Profile />} />
+						</Route>
+					</Route>
+					<Route path="*" element={<NotFound />} />
+				</Routes>
+			</Suspense>
 			<ToastContainer />
 		</BrowserRouter>
 	);

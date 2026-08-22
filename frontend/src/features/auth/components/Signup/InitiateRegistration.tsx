@@ -34,7 +34,7 @@ const InitiateRegistration = ({ setStep, setSubmittedFormData }: InitiateRegistr
 				{/* Header */}
 				<div className="flex flex-col items-center text-center mb-15">
 					<div className="flex items-center gap-2 mb-3">
-						<img className="h-8 w-auto object-contain" src={bestiesLogo} alt="Besties Logo" />
+						<img className="h-8 w-auto object-contain" src={bestiesLogo} alt="Besties Logo" loading="lazy" />
 						<span className="font-bold text-2xl tracking-tight text-slate-800">Besties</span>
 					</div>
 					<h1 className="font-bold text-2xl md:text-3xl text-slate-800 leading-tight">Create your account</h1>

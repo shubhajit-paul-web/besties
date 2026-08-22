@@ -1,3 +1,4 @@
+import { lazy } from "react";
 import { LogOut } from "lucide-react";
 import bestiesLogoImg from "@/assets/images/besties-logo.png";
 import { NavLink } from "react-router-dom";
@@ -6,10 +7,10 @@ import Logo from "@/components/ui/Logo";
 import Avatar from "@/components/ui/Avatar";
 import type { LeftSidebarProps } from "@/types/sidebar.types";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import ErrorMessage from "@/components/ui/ErrorMessage";
 import formatUserName from "@/utils/formatUserName";
 import useLogoutUser from "@/hooks/useLogoutUser";
 import menus from "@/config/menus";
+const ErrorMessage = lazy(() => import("@/components/ui/ErrorMessage"));
 
 const LeftSidebar = ({ isLeftSidebarOpen, leftSidebarWidth, leftSidebarOpenWidth }: LeftSidebarProps) => {
 	const { isLoading, error, user } = useCurrentUser();

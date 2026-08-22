@@ -5,8 +5,6 @@ const onlineUsers = new Map();
 const registerPresenceHandlers = (io: Server, socket: Socket) => {
     const { user } = socket;
 
-    console.log(socket.id);
-
     onlineUsers.set(socket.id, {
         _id: user._id,
         username: user.username,
@@ -15,18 +13,20 @@ const registerPresenceHandlers = (io: Server, socket: Socket) => {
         name: user.name,
     });
 
-    socket.on("get-online-friends", () => {
-        const onlineFriendsRecords = Array.from(onlineUsers.values());
+    const onlineFriendsRecords = Array.from(onlineUsers.values());
 
-        socket.emit("online-friends", onlineFriendsRecords);
-    });
+    io.emit("get-online-friends", onlineFriendsRecords);
+
+    // socket.on("get-online-friends", () => {
+    //     io.emit("online-friends", onlineFriendsRecords);
+    // });
 
     socket.on("disconnect", () => {
         onlineUsers.delete(socket.id);
 
         const onlineFriendsRecords = Array.from(onlineUsers.values());
 
-        socket.emit("online-friends", onlineFriendsRecords);
+        io.emit("get-online-friends", onlineFriendsRecords);
     });
 };
 

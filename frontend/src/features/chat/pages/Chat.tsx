@@ -10,7 +10,7 @@ const ChatManager = () => {
 	};
 
 	return (
-		<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-100/80 shadow-sm">
+		<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
 			<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">
 				<ChatHeader name={friend.name} avatar={friend.avatar} />
 			</div>

@@ -20,3 +20,5 @@ export interface UserType {
 	createdAt: Date;
 	updatedAt: Date;
 }
+
+export type AccessTokenPayload = Pick<UserType, "_id" | "username" | "avatar" | "email" | "name">;

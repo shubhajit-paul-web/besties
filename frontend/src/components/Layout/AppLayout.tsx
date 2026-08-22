@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { lazy, useState } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import MainContent from "./MainContent";
 import RightSidebar from "./Sidebar/Right/Sidebar";
 import LeftSidebar from "./Sidebar/Left/Sidebar";
-import BottomNavigation from "./Sidebar/mobile/BottomNavigation";
-import { Navigate, useLocation } from "react-router-dom";
+const BottomNavigation = lazy(() => import("./Sidebar/mobile/BottomNavigation"));
 
 const AppLayout = () => {
 	const { pathname } = useLocation();

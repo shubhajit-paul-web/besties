@@ -1,16 +1,16 @@
 import { UserRoundPlus } from "lucide-react";
-import Avatar from "../../../ui/Avatar";
-import Button from "../../../ui/Button/Button";
-import Card from "../../../ui/Card";
+import Avatar from "@/components/ui/Avatar";
+import Button from "@/components/ui/Button/Button";
+import Card from "@/components/ui/Card";
 import useSWR from "swr";
-import fetcher from "../../../../utils/fetcher";
+import fetcher from "@/utils/fetcher";
 import { Skeleton } from "antd";
-import ErrorMessage from "../../../ui/ErrorMessage";
-import { useState } from "react";
+import { lazy, useState } from "react";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { HttpInterceptor } from "../../../../lib/axios";
-import type { UserType } from "../../../../types/user.types";
+import { HttpInterceptor } from "@/lib/axios";
+import type { UserType } from "@/types/user.types";
+const ErrorMessage = lazy(() => import("@/components/ui/ErrorMessage"));
 
 type Loading = {
 	state: boolean;
@@ -22,8 +22,8 @@ const SkeletonLoader = () => {
 		<div className="px-5 space-y-3">
 			{Array(4)
 				.fill(0)
-				.map(() => (
-					<div className="flex items-center gap-2.5">
+				.map((_, index) => (
+					<div key={index} className="flex items-center gap-2.5">
 						<Skeleton.Node active style={{ width: "60px", height: 60 }} />
 						<div className="space-y-2 pb-0.5">
 							<Skeleton.Node active style={{ width: "170px", height: 20 }} />

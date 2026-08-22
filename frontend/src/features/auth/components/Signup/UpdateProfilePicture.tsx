@@ -82,7 +82,7 @@ const UpdateProfilePicture = () => {
 							} transition-all duration-200 flex items-center justify-center cursor-pointer overflow-hidden relative group`}
 							title="Upload profile picture">
 							{previewUrl ? (
-								<img src={previewUrl} alt="Profile Preview" className="w-full h-full object-cover" />
+								<img src={previewUrl} alt="Profile Preview" className="w-full h-full object-cover" loading="lazy" />
 							) : (
 								// <img src={defaultAvatar} alt="Default Avatar" className="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform" />
 								<div className="bg-pink-200/70 w-full h-full text-pink-500 flex justify-center items-center">

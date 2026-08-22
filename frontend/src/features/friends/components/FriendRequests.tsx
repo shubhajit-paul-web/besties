@@ -1,9 +1,8 @@
+import { lazy } from "react";
 import fetcher from "@/utils/fetcher";
 import Button from "@/components/ui/Button/Button";
-import ProfileCard from "./ProfileCard";
 import ProfileCardsWrapper from "./ProfileCardsWrapper";
 import useSWR from "swr";
-import ErrorMessage from "@/components/ui/ErrorMessage";
 import type { FriendRequest } from "../types/friend.types";
 import ProfileCardSkeleton from "./ProfileCardSkeleton";
 import useAcceptFriendRequest from "../hooks/useAcceptFriendRequest";
@@ -11,6 +10,8 @@ import useRejectFriendRequest from "../hooks/useRejectFriendRequest";
 import formatUserName from "@/utils/formatUserName";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Scrollbar } from "swiper/modules";
+const ProfileCard = lazy(() => import("./ProfileCard"));
+const ErrorMessage = lazy(() => import("@/components/ui/ErrorMessage"));
 
 // Import Swiper styles
 import "swiper/css";

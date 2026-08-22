@@ -39,6 +39,7 @@ const Avatar = ({ image, imageShape = "full", title, subtitle, imageSize = 36, d
 						e.currentTarget.src = defaultAvatar;
 					}
 				}}
+				loading="lazy"
 			/>
 
 			{(title || subtitle) && (

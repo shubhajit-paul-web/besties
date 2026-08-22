@@ -1,24 +1,31 @@
 import socket from "@/lib/socket";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import useCurrentUser from "./useCurrentUser";
+import type { AccessTokenPayload } from "@/types/user.types";
 
 const useOnlineFriends = () => {
-	const handleOnlineFriends = (friends: string) => {
-		console.log(friends);
+	const { user: currentUser } = useCurrentUser();
+	const [onlineFriends, setOnlineFriends] = useState<AccessTokenPayload[]>([]);
+
+	const handleOnlineFriends = (friends: AccessTokenPayload[]) => {
+		setOnlineFriends(friends.filter((user) => user?._id !== currentUser?._id));
 	};
 
 	useEffect(() => {
+		console.log(currentUser);
+
 		socket.connect();
 
-		socket.emit("get-online-friends");
+		// socket.emit("get-online-friends");
 
-		socket.on("online-friends", handleOnlineFriends);
+		socket.on("get-online-friends", handleOnlineFriends);
 
 		return () => {
-			socket.off("online-friends", handleOnlineFriends);
+			socket.off("get-online-friends", handleOnlineFriends);
 		};
 	}, []);
 
-	return;
+	return onlineFriends;
 };
 
 export default useOnlineFriends;

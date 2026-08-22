@@ -19,7 +19,7 @@ const Login = () => {
 	return (
 		<div className="bg-slate-100 h-screen flex justify-center items-center">
 			<div className="bg-white w-280 p-20 rounded-3xl flex justify-between items-center gap-20">
-				<img className="w-2/5" src={loginPageIllustration} />
+				<img className="w-2/5" src={loginPageIllustration} loading="lazy" />
 
 				<div className="w-2 h-80 bg-slate-100"></div>
 

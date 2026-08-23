@@ -7,6 +7,7 @@ import userRepository from "../repositories/user.repository.js";
 import getFriendRelations from "../utils/getFriendRelations.js";
 import FriendModel, { type FriendDocument } from "../models/friend.model.js";
 import moment from "moment";
+import getFriendIds from "../utils/getFriendIds.js";
 
 const sendFriendRequest = async (senderId: string, receiverId: string) => {
     const isSelfRequest = senderId === receiverId;
@@ -78,8 +79,8 @@ const getFriendSuggestions = async (userId: string) => {
         currentUserId: userId,
     });
 
-    const friendRelations = getFriendRelations(userId, friendships);
-    const friendIds = friendRelations.map((friend) => friend.friendId);
+    // const friendRelations = getFriendRelations(userId, friendships);
+    const friendIds = getFriendIds(userId, friendships);
 
     const suggestions = await userRepository.findRandomUserSuggestions(userId, friendIds);
 

@@ -9,12 +9,16 @@ const authenticateSocket = (io: Server) => {
             const { accessToken } = cookie.parseCookie(rawCookie);
 
             if (!accessToken) {
-                throw new Error("Unauthorize");
+                return next(new Error("Unauthorize"));
             }
 
-            const decoded = verifyAccessToken(accessToken);
+            const user = verifyAccessToken(accessToken);
 
-            socket.user = decoded;
+            if (!user) {
+                return next(new Error("Invalid access token"));
+            }
+
+            socket.user = user;
             next();
         } catch {
             next(new Error("Unauthorize"));

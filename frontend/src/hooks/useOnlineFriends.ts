@@ -7,21 +7,17 @@ const useOnlineFriends = () => {
 	const { user: currentUser } = useCurrentUser();
 	const [onlineFriends, setOnlineFriends] = useState<AccessTokenPayload[]>([]);
 
-	const handleOnlineFriends = (friends: AccessTokenPayload[]) => {
+	const handleUpdatedOnlineFriends = (friends: AccessTokenPayload[]) => {
 		setOnlineFriends(friends.filter((user) => user?._id !== currentUser?._id));
 	};
 
 	useEffect(() => {
-		console.log(currentUser);
-
 		socket.connect();
 
-		// socket.emit("get-online-friends");
-
-		socket.on("get-online-friends", handleOnlineFriends);
+		socket.on("friends:online-updated", handleUpdatedOnlineFriends);
 
 		return () => {
-			socket.off("get-online-friends", handleOnlineFriends);
+			socket.off("friends:online-updated", handleUpdatedOnlineFriends);
 		};
 	}, []);
 

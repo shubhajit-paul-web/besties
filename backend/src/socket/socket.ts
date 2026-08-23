@@ -12,8 +12,9 @@ const initializeSocket = (httpServer: HTTPServer) => {
     // Authentication middleware
     authenticateSocket(io);
 
+    // Register event handlers
     io.on("connection", (socket) => {
-        registerPresenceHandlers(io, socket);
+        registerPresenceHandlers(socket, io);
     });
 
     return io;

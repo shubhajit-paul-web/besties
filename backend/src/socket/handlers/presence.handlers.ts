@@ -2,7 +2,7 @@ import type { Server, Socket } from "socket.io";
 
 const onlineUsers = new Map();
 
-const registerPresenceHandlers = (io: Server, socket: Socket) => {
+const registerPresenceHandlers = (socket: Socket, io: Server) => {
     const { user } = socket;
 
     onlineUsers.set(socket.id, {
@@ -13,20 +13,12 @@ const registerPresenceHandlers = (io: Server, socket: Socket) => {
         name: user.name,
     });
 
-    const onlineFriendsRecords = Array.from(onlineUsers.values());
-
-    io.emit("get-online-friends", onlineFriendsRecords);
-
-    // socket.on("get-online-friends", () => {
-    //     io.emit("online-friends", onlineFriendsRecords);
-    // });
+    io.emit("friends:online-updated", Array.from(onlineUsers.values()));
 
     socket.on("disconnect", () => {
         onlineUsers.delete(socket.id);
 
-        const onlineFriendsRecords = Array.from(onlineUsers.values());
-
-        io.emit("get-online-friends", onlineFriendsRecords);
+        io.emit("friends:online-updated", Array.from(onlineUsers.values()));
     });
 };
 

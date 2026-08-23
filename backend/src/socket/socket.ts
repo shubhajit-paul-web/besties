@@ -14,7 +14,7 @@ const initializeSocket = (httpServer: HTTPServer) => {
 
     // Register event handlers
     io.on("connection", async (socket) => {
-        await registerPresenceHandlers(socket);
+        await registerPresenceHandlers(io, socket);
     });
 
     return io;

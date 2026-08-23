@@ -43,7 +43,7 @@ const OnlineFriends = ({ height = "55%" }: { height?: string }) => {
 
 								{/* Actions */}
 								<div className="flex items-center gap-2 border border-slate-200/60 rounded-full py-1 px-1">
-									<Link to={`/app/chat/@${friend.username}`}>
+									<Link to={`/app/chat/${friend._id}`}>
 										<Tooltip title="Chat">
 											<button className="cursor-pointer hover:border-blue-500 transition-all text-blue-600 bg-blue-100/80 border border-blue-200 rounded-full p-1.5">
 												<MessageSquareMore size={14} />

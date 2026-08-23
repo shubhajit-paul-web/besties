@@ -4,7 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import friendRepository from "../repositories/friend.repository.js";
 import isDuplicateKeyError from "../utils/isDuplicateKeyError.js";
 import userRepository from "../repositories/user.repository.js";
-import getFriendIds from "../utils/getFriendIds.js";
+import getFriendRelations from "../utils/getFriendRelations.js";
 import FriendModel, { type FriendDocument } from "../models/friend.model.js";
 import moment from "moment";
 
@@ -78,8 +78,8 @@ const getFriendSuggestions = async (userId: string) => {
         currentUserId: userId,
     });
 
-    const friends = getFriendIds(userId, friendships);
-    const friendIds = friends.map((friend) => friend.friendId);
+    const friendRelations = getFriendRelations(userId, friendships);
+    const friendIds = friendRelations.map((friend) => friend.friendId);
 
     const suggestions = await userRepository.findRandomUserSuggestions(userId, friendIds);
 
@@ -98,7 +98,7 @@ const getFriendsByStatus = async (userId: string, status: FriendDocument["status
     }
 
     // Keep both IDs since the response needs the friendship ID as well
-    const friendRelations = getFriendIds(userId, friendships);
+    const friendRelations = getFriendRelations(userId, friendships);
     const friendIds = friendRelations.map(({ friendId }) => friendId);
 
     // Fetch profiles together instead of querying for each friend

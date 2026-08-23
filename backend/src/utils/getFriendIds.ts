@@ -6,23 +6,19 @@ type Friendship = FriendDocument & {
 };
 
 const getFriendIds = (currentUserId: string, friendships: Friendship[]) => {
-    const friends = friendships.map((friendship) => {
+    if (friendships.length === 0) {
+        return [];
+    }
+
+    return friendships.map((friendship) => {
         const { sender, receiver } = friendship;
 
         if (String(sender) === currentUserId) {
-            return {
-                friendshipId: friendship._id,
-                friendId: receiver,
-            };
+            return receiver;
         }
 
-        return {
-            friendshipId: friendship._id,
-            friendId: sender,
-        };
+        return sender;
     });
-
-    return friends;
 };
 
 export default getFriendIds;

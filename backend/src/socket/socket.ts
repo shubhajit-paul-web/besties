@@ -13,8 +13,8 @@ const initializeSocket = (httpServer: HTTPServer) => {
     authenticateSocket(io);
 
     // Register event handlers
-    io.on("connection", (socket) => {
-        registerPresenceHandlers(socket, io);
+    io.on("connection", async (socket) => {
+        await registerPresenceHandlers(socket);
     });
 
     return io;

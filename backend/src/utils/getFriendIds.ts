@@ -10,15 +10,20 @@ const getFriendIds = (currentUserId: string, friendships: Friendship[]) => {
         return [];
     }
 
-    return friendships.map((friendship) => {
-        const { sender, receiver } = friendship;
+    const friendIds = new Set<string>();
 
-        if (String(sender) === currentUserId) {
-            return receiver;
+    for (const { sender, receiver } of friendships) {
+        const senderId = String(sender);
+        const receiverId = String(receiver);
+
+        if (senderId === currentUserId) {
+            friendIds.add(receiverId);
+        } else if (receiverId === currentUserId) {
+            friendIds.add(senderId);
         }
+    }
 
-        return sender;
-    });
+    return Array.from(friendIds);
 };
 
 export default getFriendIds;

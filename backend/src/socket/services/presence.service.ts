@@ -1,20 +1,20 @@
 import type { AccessTokenPayload } from "../../types/auth/auth.jwt.js";
 import type { Server } from "socket.io";
 import friendRepository from "../../repositories/friend.repository.js";
-import getFriendIds from "../../utils/getFriendIds.js";
+import filterFriendIds from "../../utils/getFriendIds.js";
 
 const onlineUsers = new Map<string, AccessTokenPayload>();
 const userSockets = new Map<string, string>();
 
-// const getOnlineFriendUsers = (friendIds: Types.ObjectId[]) => {
-//     if (friendIds.length === 0) {
-//         return [];
-//     }
+const getOnlineFriendUsers = (friendIds: string[]) => {
+    if (friendIds.length === 0) {
+        return [];
+    }
 
-//     return friendIds.map((id) => onlineUsers.get(String(id))).filter(Boolean);
-// };
+    return friendIds.map((id) => onlineUsers.get(String(id))).filter((user) => user !== undefined);
+};
 
-const getOnlineFriendUsers = async (currentUserId: string) => {
+const getFriendIds = async (currentUserId: string) => {
     const friendships = await friendRepository.findFriendshipsByStatus({
         currentUserId,
         status: "accepted",
@@ -22,16 +22,12 @@ const getOnlineFriendUsers = async (currentUserId: string) => {
     });
 
     if (friendships.length === 0) {
-        return {
-            friendIds: [],
-            onlineFriends: [],
-        };
+        return [];
     }
 
-    const friendIds = getFriendIds(currentUserId, friendships);
-    const onlineFriends = friendIds.map((id) => onlineUsers.get(String(id))).filter(Boolean);
+    const friendIds = filterFriendIds(currentUserId, friendships);
 
-    return { friendIds, onlineFriends };
+    return friendIds;
 };
 
 const setOnline = (socketId: string, user: AccessTokenPayload) => {
@@ -52,17 +48,6 @@ const setOffline = (userId: string) => {
     userSockets.delete(userId);
 };
 
-// const emitOnlineFriends = async (io: Server, userId: string) => {
-//     const friendIds = await getFriendIdsForUser(userId);
-//     const socketId = userSockets.get(userId);
-
-//     if (socketId) {
-//         io.to(socketId).emit("friends:online-updated", getOnlineFriendUsers(friendIds));
-//     }
-
-//     return friendIds;
-// };
-
 const emitOnlineFriends = async (io: Server, userId: string) => {
     const socketId = userSockets.get(userId);
 
@@ -70,17 +55,43 @@ const emitOnlineFriends = async (io: Server, userId: string) => {
         return;
     }
 
-    const { friendIds, onlineFriends } = await getOnlineFriendUsers(userId);
+    const friendIds = await getFriendIds(userId);
+    const onlineFriends = getOnlineFriendUsers(friendIds);
 
     io.to(socketId).emit("friends:online-updated", onlineFriends);
 
-    for (const friendId of friendIds) {
+    if (onlineFriends.length === 0) {
+        return;
+    }
+
+    const onlineFriendIds = onlineFriends.map((friend) => friend?._id).filter(Boolean);
+
+    const friendshipsOfFriends =
+        await friendRepository.findAcceptedFriendshipsByUserIds(onlineFriendIds);
+
+    const friendshipMap = new Map<string, AccessTokenPayload[]>();
+
+    for (const friendId of onlineFriendIds) {
+        if (!friendId) continue;
+
+        const friendIdString = String(friendId);
+
+        const friendsOfFriendsIds = filterFriendIds(friendIdString, friendshipsOfFriends);
+        const onlineFriendsOfFriends = getOnlineFriendUsers(friendsOfFriendsIds);
+
+        friendshipMap.set(friendIdString, onlineFriendsOfFriends);
+    }
+
+    for (const friend of onlineFriends) {
+        const friendId = String(friend?._id);
         const friendSocketId = userSockets.get(String(friendId));
 
         if (friendSocketId) {
-            const { onlineFriends } = await getOnlineFriendUsers(String(friendId));
+            if (friendshipMap.has(friendId)) {
+                const onlineFriends = friendshipMap.get(friendId) ?? [];
 
-            io.to(friendSocketId).emit("friends:online-updated", onlineFriends);
+                io.to(friendSocketId).emit("friends:online-updated", onlineFriends);
+            }
         }
     }
 };

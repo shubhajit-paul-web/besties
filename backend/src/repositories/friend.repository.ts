@@ -144,6 +144,29 @@ const rejectFriendRequest = async (
     );
 };
 
+const findAcceptedFriendshipsByUserIds = async (
+    onlineFriendIds: Types.ObjectId[],
+    fields: string = "sender receiver -_id",
+) => {
+    return FriendModel.find({
+        $or: [
+            {
+                sender: {
+                    $in: onlineFriendIds,
+                },
+            },
+            {
+                receiver: {
+                    $in: onlineFriendIds,
+                },
+            },
+        ],
+        status: "accepted",
+    })
+        .select(fields)
+        .lean();
+};
+
 export default {
     create,
     findRelationshipBetweenUsers,
@@ -158,4 +181,5 @@ export default {
     findPendingRequestsByReceiver,
     deleteFriendship,
     rejectFriendRequest,
+    findAcceptedFriendshipsByUserIds,
 };

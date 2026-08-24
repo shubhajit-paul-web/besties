@@ -39,3 +39,9 @@ export const friendshipIdSchema = z.object({
         friendshipId: z.refine(mongoose.isValidObjectId, "Invalid friendship id"),
     }),
 });
+
+export const getUserProfileSchema = z.object({
+    params: z.object({
+        id: z.refine(mongoose.isValidObjectId, "Invalid user id"),
+    }),
+});

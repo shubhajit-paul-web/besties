@@ -30,8 +30,17 @@ const updateAvatar = asyncHandler(async (req: UpdateAvatarRequest, res) => {
     res.status(StatusCodes.OK).json(ApiResponse.success("Avatar updated successfully."));
 });
 
+const getUserProfile = asyncHandler(async (req, res) => {
+    const user = await userService.getUserProfile(req.params.id as string);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success("User profile fetched successfully", user));
+});
+
 export default {
     getCurrentUser,
     generateAvatarUploadUrl,
     updateAvatar,
+    getUserProfile,
 };

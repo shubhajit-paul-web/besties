@@ -22,7 +22,10 @@ const authenticate = (req: Request, _res: Response, next: NextFunction) => {
     try {
         const decoded = verifyAccessToken(accessToken);
 
-        req.user = decoded;
+        req.user = {
+            ...decoded,
+            _id: String(decoded._id),
+        };
         next();
     } catch (err) {
         if (err instanceof jwt.JsonWebTokenError) {

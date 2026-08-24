@@ -40,8 +40,19 @@ const updateAvatar = async (userId: string, path: string) => {
     }
 };
 
+const getUserProfile = async (userId: string) => {
+    const user = await userRepository.findUserById(userId, true, "-email -mobileNumber -updatedAt");
+
+    if (!user) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "User not found.");
+    }
+
+    return user;
+};
+
 export default {
     getCurrentUser,
     generateAvatarUploadUrl,
     updateAvatar,
+    getUserProfile,
 };

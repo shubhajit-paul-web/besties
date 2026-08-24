@@ -10,6 +10,7 @@ import config from "../config/environment.js";
 import type { UserDocument, UserMethods, UserModelType } from "./types/user.types.js";
 import { generateRandomToken, sha256 } from "../utils/crypto.js";
 import moment from "moment";
+import { AccessTokenPayload } from "../types/auth/auth.jwt.js";
 
 const userSchema = new Schema<UserDocument, UserModelType, UserMethods>(
     {
@@ -147,14 +148,14 @@ userSchema.methods.comparePassword = async function (plainTextPassword: string) 
 
 // Issue a new access token and refresh token pair for the user.
 userSchema.methods.generateAccessAndRefreshTokens = async function () {
-    const payload = {
+    const payload: AccessTokenPayload = {
         _id: this._id,
         username: this.username,
         email: this.email,
-        avatar: this.avatar ?? null,
+        avatar: this.avatar || null,
         name: {
             first: this.name.first,
-            last: this.name.last ?? null,
+            last: this.name.last || null,
         },
     };
 

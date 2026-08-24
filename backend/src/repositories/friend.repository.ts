@@ -145,7 +145,7 @@ const rejectFriendRequest = async (
 };
 
 const findAcceptedFriendshipsByUserIds = async (
-    onlineFriendIds: Types.ObjectId[],
+    onlineFriendIds: string[],
     fields: string = "sender receiver -_id",
 ) => {
     return FriendModel.find({

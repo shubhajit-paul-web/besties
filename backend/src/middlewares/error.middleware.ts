@@ -22,8 +22,6 @@ type ErrorPayload = {
 };
 
 function globalErrorHandler(err: ErrorRequest, req: Request, res: Response, _next: NextFunction) {
-    console.log(err);
-
     const statusCode = err?.statusCode ?? StatusCodes.INTERNAL_SERVER_ERROR;
     const isOperational = Boolean(err?.isOperational);
 

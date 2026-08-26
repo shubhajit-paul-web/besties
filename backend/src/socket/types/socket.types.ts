@@ -4,3 +4,9 @@ export type PresenceUser = Pick<
     AccessTokenPayload,
     "_id" | "username" | "email" | "avatar" | "name"
 >;
+
+export type MessagePayload = {
+    from: string;
+    to: string;
+    message: string;
+};

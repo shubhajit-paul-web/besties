@@ -1,3 +1,4 @@
+import { useEffect, useState, type SubmitEvent } from "react";
 import { Paperclip, Send } from "lucide-react";
 import Button from "../../../components/ui/Button/Button";
 import ChatHeader from "../components/ChatHeader";
@@ -5,59 +6,79 @@ import ChatMessage from "../components/ChatMessage";
 import useSWR from "swr";
 import { useParams } from "react-router-dom";
 import fetcher from "@/utils/fetcher";
-import formatUserName from "@/utils/formatUserName";
 import socket from "@/lib/socket";
+import { Empty } from "antd";
+
+type ChatMessage = {
+	isSender: boolean;
+	message: string | null;
+};
 
 const ChatManager = () => {
 	const { id: friendId } = useParams();
-
 	const { data, isLoading } = useSWR(`/users/${friendId}`, fetcher);
-
-	if (isLoading) {
-		return null; // change the loading state UI later
-	}
+	const [chatMessages, setChatMessage] = useState<ChatMessage[]>([]);
 
 	const friend = data?.data;
 
-	socket.on("message", (data) => {
+	const handleIncomingMessage = (data: ChatMessage) => {
 		console.log("received:", data);
-	});
+
+		setChatMessage((currentMessages) => [
+			...currentMessages,
+			{
+				isSender: false,
+				message: data?.message || null,
+			},
+		]);
+	};
+
+	useEffect(() => {
+		socket.on("message", handleIncomingMessage);
+
+		return () => {
+			socket.off("message", handleIncomingMessage);
+		};
+	}, []);
 
 	const handleSendMessage = (e: SubmitEvent) => {
 		e.preventDefault();
 
+		const form = e.target;
+		const message = form.message?.value;
+
 		socket.emit("message", {
 			from: "shubhajit",
 			to: friendId,
-			message: "this is a small message.",
+			message,
 		});
+
+		setChatMessage((currentMessages) => [
+			...currentMessages,
+			{
+				isSender: true,
+				message: message,
+			},
+		]);
+
+		form.reset();
 	};
 
 	return (
 		<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
 			<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">
-				<ChatHeader name={formatUserName(friend.name)} avatar={friend.avatar} />
+				<ChatHeader isLoading={isLoading} name={friend?.name} avatar={friend?.avatar} />
 			</div>
 			{/* Chat messages */}
 			<div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5">
-				<div className="flex min-w-0 flex-col gap-7">
-					{Array.from({ length: 10 }, (_, index) => {
-						return (
-							<div key={index} className="contents">
-								<ChatMessage
-									avatar={friend.avatar || "/profile-img.jpeg"}
-									isOwnMessage={false}
-									text="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam qui distinctio recusandae quod labore vitae. Necessitatibus, expedita unde dolore repellat harum animi veniam, soluta rerum quae est, quidem perferendis deserunt?"
-								/>
-
-								<ChatMessage
-									avatar="/profile-img.jpeg"
-									isOwnMessage={true}
-									text="Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magnam qui distinctio recusandae quod labore vitae. Necessitatibus..."
-								/>
-							</div>
-						);
-					})}
+				<div className="flex min-w-0 h-full flex-col gap-7">
+					{chatMessages.length === 0 ? (
+						<div className="h-full flex justify-center items-center">
+							<Empty description="No messages yet. Start the conversation." />
+						</div>
+					) : (
+						chatMessages.map((chat) => <ChatMessage avatar="/profile-img.jpeg" isOwnMessage={chat.isSender} text={chat.message} />)
+					)}
 				</div>
 			</div>
 			{/* Chat controls and input box */}
@@ -68,6 +89,8 @@ const ChatManager = () => {
 						type="text"
 						placeholder="Type your message here..."
 						autoComplete="off"
+						name="message"
+						autoFocus
 					/>
 					<Button type="submit" variant="indigo" icon={Send} iconSize={18} className="shrink-0 rounded-xl px-3 py-3 sm:px-4" aria-label="Send message">
 						<span className="hidden sm:inline">Send</span>

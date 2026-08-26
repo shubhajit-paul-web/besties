@@ -1,10 +1,5 @@
 import type { Server, Socket } from "socket.io";
-
-type MessagePayload = {
-    from: string;
-    to: string;
-    message: string;
-};
+import type { MessagePayload } from "../types/socket.types.js";
 
 const registerChatHandlers = async (io: Server, socket: Socket) => {
     const roomId = `user:${String(socket.user._id)}`;

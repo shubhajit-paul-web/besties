@@ -23,7 +23,7 @@ const OnlineFriends = ({ height = "55%" }: { height?: string }) => {
 				}}>
 				{friends.length === 0 ? (
 					<div className="h-full flex justify-center items-center">
-						<Empty description="No one is online" />
+						<Empty description="No friends are online right now" />
 					</div>
 				) : (
 					<>

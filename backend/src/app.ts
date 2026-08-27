@@ -6,11 +6,12 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import compression from "compression";
 import helmet from "helmet";
-import globalErrorHandler from "./middlewares/error.middleware.js";
+import corsConfig from "./config/cors.js";
 import ApiError from "./utils/apiError.js";
 import { StatusCodes } from "http-status-codes";
 import swaggerUi from "swagger-ui-express";
 import swaggerUiConfig from "./config/swagger.js";
+import globalErrorHandler from "./middlewares/error.middleware.js";
 
 const app = express();
 
@@ -26,12 +27,13 @@ app.use(compression());
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
-import corsConfig from "./config/cors.js";
+import messageRoutes from "./routes/message.routes.js";
 
 // Route implementations
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/friends", friendRoutes);
+app.use("/messages", messageRoutes);
 app.use(
     "/api-docs",
     swaggerUi.serve,

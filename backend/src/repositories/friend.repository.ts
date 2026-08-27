@@ -167,6 +167,20 @@ const findAcceptedFriendshipsByUserIds = async (
         .lean();
 };
 
+const existsFriendship = async (
+    senderId: string,
+    receiverId: string,
+    status: FriendDocument["status"],
+) => {
+    return FriendModel.exists({
+        $or: [
+            { sender: senderId, receiver: receiverId },
+            { sender: receiverId, receiver: senderId },
+        ],
+        status,
+    }).lean();
+};
+
 export default {
     create,
     findRelationshipBetweenUsers,
@@ -182,4 +196,5 @@ export default {
     deleteFriendship,
     rejectFriendRequest,
     findAcceptedFriendshipsByUserIds,
+    existsFriendship,
 };

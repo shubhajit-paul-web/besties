@@ -6,7 +6,8 @@ export type PresenceUser = Pick<
 >;
 
 export type MessagePayload = {
-    from: string;
-    to: string;
-    message: string;
+    receiver: string;
+    content: string;
 };
+
+export type MessageAck = (response: { success: boolean; message?: string }) => void;

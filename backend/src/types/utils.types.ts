@@ -5,3 +5,8 @@ export type RequestValidationSchema = z.ZodObject<{
     params?: z.ZodType;
     query?: z.ZodType;
 }>;
+
+// Converts all properties of a type to string
+export type Stringify<T> = {
+    [K in keyof T]: string;
+};

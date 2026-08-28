@@ -8,7 +8,7 @@ interface ChatHeaderProps {
 		first: string;
 		last?: string;
 	};
-	avatar: string;
+	avatar?: string;
 	status?: string;
 }
 

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { Paperclip, Send } from "lucide-react";
 import Button from "../../../components/ui/Button/Button";
 import ChatHeader from "../components/ChatHeader";
@@ -8,22 +9,33 @@ import fetcher from "@/utils/fetcher";
 import { Empty } from "antd";
 import useChatMessages from "../hooks/useChatMessages";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import createConversationKey from "../utils/createConversationKey";
+import getConversationMessages from "../utils/getConversationMessages";
 
 const ChatManager = () => {
 	const { id: friendId } = useParams();
-	const { user: currentUser, isLoading: isLoadingCurrentUser } = useCurrentUser();
-	const { data: friendInfo, isLoading: isLoadingFriendInfo } = useSWR(`/users/${friendId}`, fetcher);
-	const { data: existingMessages, isLoading: isLoadingExistingMessages } = useSWR(`/messages/${friendId}`, fetcher, { shouldRetryOnError: false });
+	const messagesEndRef = useRef<HTMLDivElement | null>(null);
+	const { user: currentUser } = useCurrentUser();
+	const { data: friendInfo, isLoading: isLoadingFriendInfo } = useSWR(`/users/${friendId}`, fetcher, { revalidateOnFocus: false });
+	const { data: existingMessages, isLoading: isLoadingExistingMessages } = useSWR(`/messages/${friendId}`, fetcher, { shouldRetryOnError: false, revalidateOnFocus: false });
 
 	const friend = friendInfo?.data;
 
 	const { realtimeMessages, handleSendMessage } = useChatMessages(currentUser?._id as string, friendId as string);
 
-	if (isLoadingExistingMessages || isLoadingCurrentUser) {
+	useEffect(() => {
+		messagesEndRef.current?.scrollIntoView({
+			behavior: "smooth",
+		});
+	}, [isLoadingExistingMessages, friendId, realtimeMessages]);
+
+	if (isLoadingExistingMessages) {
 		return null;
 	}
 
-	const allChatMessages = [...existingMessages.data, ...realtimeMessages];
+	const conversationKey = createConversationKey(currentUser?._id as string, friendId as string);
+
+	const allChatMessages = getConversationMessages(existingMessages.data, realtimeMessages, conversationKey);
 
 	return (
 		<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
@@ -32,14 +44,29 @@ const ChatManager = () => {
 			</div>
 			{/* Chat messages */}
 			<div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5">
-				<div className="flex min-w-0 h-full flex-col gap-7">
+				<div className="flex min-w-0 min-h-full flex-col gap-7">
 					{allChatMessages.length === 0 ? (
-						<div className="h-full flex justify-center items-center">
+						<div className="m-auto">
 							<Empty description="No messages yet. Start the conversation." />
 						</div>
 					) : (
-						allChatMessages.map((chat) => <ChatMessage avatar="/profile-img.jpeg" isSender={chat.sender === currentUser?._id} text={chat.content} sentAt={chat.createdAt} />)
+						allChatMessages.map((chat, index) => {
+							if (chat.sender === friendId || chat.receiver === friendId) {
+								return (
+									<ChatMessage
+										key={chat._id ?? index + chat.createdAt}
+										avatar="/profile-img.jpeg"
+										isSender={chat.sender === currentUser?._id}
+										text={chat.content}
+										sentAt={chat.createdAt}
+									/>
+								);
+							}
+						})
 					)}
+
+					{/* Invisible element at the bottom for auto scroll to bottom */}
+					<div ref={messagesEndRef} />
 				</div>
 			</div>
 			{/* Chat controls and input box */}
@@ -52,7 +79,6 @@ const ChatManager = () => {
 						autoComplete="off"
 						name="message"
 						autoFocus
-						required
 					/>
 					<Button type="submit" variant="indigo" icon={Send} iconSize={18} className="shrink-0 rounded-xl px-3 py-3 sm:px-4" aria-label="Send message">
 						<span className="hidden sm:inline">Send</span>

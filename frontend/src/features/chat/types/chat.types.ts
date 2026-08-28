@@ -1,4 +1,4 @@
-export interface ChatMessageInterface {
+export interface ChatMessageProps {
 	avatar: string;
 	text: string;
 	isSender: boolean;
@@ -6,10 +6,12 @@ export interface ChatMessageInterface {
 }
 
 export type ChatMessage = {
-	// isSender: boolean;
+	_id: string;
 	sender: string;
+	receiver?: string;
 	content: string;
 	createdAt: string;
+	conversationKey: string;
 };
 
 export type AckResponse = {

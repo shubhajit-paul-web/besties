@@ -2,37 +2,40 @@ import socket from "@/lib/socket";
 import { useEffect, useState, type SubmitEvent } from "react";
 import { toast } from "react-toastify";
 import type { AckResponse, ChatMessage } from "../types/chat.types";
+import createConversationKey from "../utils/createConversationKey";
+
+const handleMessageAck = (response: AckResponse) => {
+	if (!response.success) {
+		toast.error(response.message || "Faild to send message");
+	}
+};
 
 const useChatMessages = (currentUserId: string, friendId: string) => {
 	const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
-	// const { data: existingMessages, isLoading: isLoadingExistingMessages } = useSWR<ChatMessage[]>(`/messages/${friendId}`, fetcher, { shouldRetryOnError: false });
 
-	const handleIncomingMessage = (data: ChatMessage) => {
-		console.log("received:", data);
-
-		setRealtimeMessages((currentMessages) => [
-			...currentMessages,
-			{
-				sender: data?.sender,
-				content: data?.content,
-				createdAt: data?.createdAt,
-			},
-		]);
+	const handleIncomingMessage = (payload: ChatMessage) => {
+		setRealtimeMessages((currentMessages) => [...currentMessages, payload]);
 	};
 
 	useEffect(() => {
-		socket.on("message", handleIncomingMessage);
+		if (currentUserId) {
+			socket.on("message", handleIncomingMessage);
 
-		return () => {
-			socket.off("message", handleIncomingMessage);
-		};
-	}, []);
+			return () => {
+				socket.off("message", handleIncomingMessage);
+			};
+		}
+	}, [currentUserId]);
 
 	const handleSendMessage = (e: SubmitEvent) => {
 		e.preventDefault();
 
 		const form = e.target;
-		const content = form.message?.value;
+		const content = form.message?.value?.trim();
+
+		if (!content || content.length === 0) {
+			return;
+		}
 
 		socket.emit(
 			"message",
@@ -40,17 +43,18 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 				receiver: friendId,
 				content,
 			},
-			(response: AckResponse) => {
-				if (!response.success) {
-					toast.error(response.message || "Faild to send message");
-				}
-			},
+			handleMessageAck,
 		);
+
+		const conversationKey = createConversationKey(currentUserId, friendId);
 
 		setRealtimeMessages((currentMessages) => [
 			...currentMessages,
 			{
+				clientMessageId: crypto.randomUUID(),
+				conversationKey,
 				sender: currentUserId,
+				receiver: friendId,
 				content,
 				createdAt: new Date().toISOString(),
 			},
@@ -58,8 +62,6 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 
 		form.reset();
 	};
-
-	// const chatMessages = [...existingMessages, ...realtimeMessages];
 
 	return { realtimeMessages, handleSendMessage };
 };

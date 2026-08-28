@@ -13,9 +13,7 @@ const create = async ({ conversationKey, sender, receiver, content }: CreateMess
 const findMessagesByConversationKey = async (conversationKey: string) => {
     return MessageModel.find({
         conversationKey,
-    })
-        .select("-conversationKey -_id -__v")
-        .lean();
+    }).lean();
 };
 
 export default {

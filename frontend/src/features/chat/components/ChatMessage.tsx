@@ -1,8 +1,8 @@
 import Avatar from "../../../components/ui/Avatar";
-import type { ChatMessageInterface } from "../types/chat.types";
+import type { ChatMessageProps } from "../types/chat.types";
 import moment from "moment";
 
-const ChatMessage = ({ avatar, text, isSender, sentAt }: ChatMessageInterface) => {
+const ChatMessage = ({ avatar, text, isSender, sentAt }: ChatMessageProps) => {
 	sentAt = moment(sentAt).format("hh:mm A");
 
 	return (

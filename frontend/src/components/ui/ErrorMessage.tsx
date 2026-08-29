@@ -1,14 +1,14 @@
 import { AlertCircle, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
 
-interface ErrorMessageProps {
+type ErrorMessageProps = {
 	title?: string;
 	message?: string;
 	actionLabel?: string;
 	onRetry?: () => void;
 	icon?: ReactNode;
 	className?: string;
-}
+};
 
 const ErrorMessage = ({
 	title = "Something went wrong",

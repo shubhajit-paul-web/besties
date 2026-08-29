@@ -1,5 +1,5 @@
 import type { ImgHTMLAttributes } from "react";
 
-export interface ImageWithFallbackProps extends ImgHTMLAttributes<HTMLImageElement> {
+export type ImageWithFallbackProps = ImgHTMLAttributes<HTMLImageElement> & {
 	fallback: string;
-}
+};

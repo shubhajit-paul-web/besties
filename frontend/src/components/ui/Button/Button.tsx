@@ -43,7 +43,7 @@ const buttonBackgroundVariants = {
 	glass: "bg-white/70 hover:bg-white/90 active:bg-white border border-slate-200 text-slate-700 backdrop-blur-md",
 };
 
-interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 	children?: ReactNode;
 	icon?: LucideIcon;
 	iconSize?: number;
@@ -60,7 +60,7 @@ interface ButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
 	borderColor?: string;
 	loader?: boolean;
 	loaderText?: string;
-}
+};
 
 const Button = ({
 	children,
@@ -80,7 +80,7 @@ const Button = ({
 	loader = false,
 	loaderText = "Loading...",
 	...props
-}: ButtonInterface) => {
+}: ButtonProps) => {
 	const styles = `flex items-center gap-2 cursor-pointer rounded-${borderRadius} transition-colors leading-tight font-medium ${centerContent && "text-center justify-center"} ${direction === "reverse" && "flex-row-reverse"} ${borderColor && "border"} ${size === "normal" ? "py-2 px-4" : "text-xs py-0.5 px-3"} ${buttonBackgroundVariants[variant]} ${className}`;
 
 	if (loader) {

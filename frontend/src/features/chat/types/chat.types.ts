@@ -1,12 +1,12 @@
 import type { UserType } from "@/types/user.types";
 import type { ReactNode, SubmitEvent } from "react";
 
-export interface ChatMessageProps {
+export type ChatMessageProps = {
 	avatar: string;
 	text: string;
 	isSender: boolean;
 	sentAt: string;
-}
+};
 
 export type ChatMessage = {
 	_id: string;
@@ -29,4 +29,13 @@ export type ChatContainerProps = {
 	friend: FriendInfo;
 	handleSendMessage: (event: SubmitEvent<Element>) => void;
 	children: ReactNode;
+};
+
+export type AttachmentPreviewModalProps = {
+	open: boolean;
+	selectedFile: File | null;
+	previewUrl: string;
+	fileError: string | null;
+	onClose: () => void;
+	onUpload: () => void;
 };

@@ -1,8 +1,8 @@
-export interface ProfilePictureFormData {
+export type ProfilePictureFormData = {
 	profilePicture?: FileList;
-}
+};
 
-export interface PresignedPostResponse {
+export type PresignedPostResponse = {
 	url: string;
 	fields: Record<string, string>;
-}
+};

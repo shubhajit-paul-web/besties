@@ -2,13 +2,13 @@ import { ArrowRightIcon } from "lucide-react";
 import Button from "./Button/Button";
 import type { ReactNode } from "react";
 
-interface CardInterface {
+type CardProps = {
 	children: ReactNode;
 	title: string;
 	height: string;
-}
+};
 
-const Card = ({ children, title, height }: CardInterface) => {
+const Card = ({ children, title, height }: CardProps) => {
 	return (
 		<div className="pb-5 bg-white rounded-xl border border-slate-200/75 shadow-[0_4px_20px_rgba(0,0,0,.04)]" style={{ height: height }}>
 			<div className="flex justify-between items-center py-3 px-5">

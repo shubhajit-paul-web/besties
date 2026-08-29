@@ -1,13 +1,13 @@
-export interface LeftSidebarProps {
+export type LeftSidebarProps = {
 	isLeftSidebarOpen: boolean;
 	leftSidebarWidth: number;
 	leftSidebarOpenWidth: number;
-}
+};
 
-export interface MainContentProps {
+export type MainContentProps = {
 	isLeftSidebarOpen: boolean;
 	setIsLeftSidebarOpen: (state: boolean) => void;
 	leftSidebarWidth: number;
 	rightSidebarWidth: number;
 	leftSidebarOpenWidth: number;
-}
+};

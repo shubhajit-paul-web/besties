@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 
-export interface InitiateRegistrationFormData {
+export type InitiateRegistrationFormData = {
 	username: string;
 	firstName: string;
 	lastName: string;
@@ -9,9 +9,9 @@ export interface InitiateRegistrationFormData {
 	email: string;
 	mobileNumber?: string;
 	password: string;
-}
+};
 
-export interface InitiateRegistrationFormPayload {
+export type InitiateRegistrationFormPayload = {
 	username: string;
 	name: {
 		first: string;
@@ -23,14 +23,14 @@ export interface InitiateRegistrationFormPayload {
 	mobileNumber?: string;
 	password: string;
 	otp?: string;
-}
+};
 
-export interface InitiateRegistrationProps {
+export type InitiateRegistrationProps = {
 	setStep: Dispatch<SetStateAction<number>>;
 	setSubmittedFormData: Dispatch<SetStateAction<InitiateRegistrationFormPayload | undefined>>;
-}
+};
 
-export interface VerifyOtpProps {
+export type VerifyOtpProps = {
 	setStep: Dispatch<SetStateAction<number>>;
 	submittedFormData?: InitiateRegistrationFormPayload;
-}
+};

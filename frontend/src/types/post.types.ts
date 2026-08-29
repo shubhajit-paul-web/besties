@@ -1,12 +1,12 @@
 import type { Author } from "./user.types";
 
-export interface PostMetrics {
+export type PostMetrics = {
 	likes: number;
 	comments: number;
 	shares: number;
-}
+};
 
-export interface Post {
+export type Post = {
 	id: string;
 	author: Author;
 	createdAt: string;
@@ -18,8 +18,8 @@ export interface Post {
 	isLiked: boolean;
 	isSaved: boolean;
 	isOwner: boolean;
-}
+};
 
-export interface PostComponentProps {
+export type PostComponentProps = {
 	post: Post;
-}
+};

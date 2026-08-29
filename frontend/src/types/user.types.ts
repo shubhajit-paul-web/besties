@@ -1,10 +1,10 @@
-export interface Author {
+export type Author = {
 	id: string;
 	name: string;
 	avatarUrl: string;
-}
+};
 
-export interface UserType {
+export type UserType = {
 	_id: string;
 	username: string;
 	name: {
@@ -19,6 +19,6 @@ export interface UserType {
 	mobileNumber?: string;
 	createdAt: Date;
 	updatedAt: Date;
-}
+};
 
 export type AccessTokenPayload = Pick<UserType, "_id" | "username" | "avatar" | "email" | "name">;

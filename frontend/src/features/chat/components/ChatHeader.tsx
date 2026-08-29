@@ -2,7 +2,7 @@ import Avatar from "@/components/ui/Avatar";
 import ChatHeaderSkeleton from "./ChatHeaderSkeleton";
 import formatUserName from "@/utils/formatUserName";
 
-interface ChatHeaderProps {
+type ChatHeaderProps = {
 	isLoading: boolean;
 	name: {
 		first: string;
@@ -10,7 +10,7 @@ interface ChatHeaderProps {
 	};
 	avatar?: string;
 	status?: string;
-}
+};
 
 const ChatHeader = ({ isLoading, name, avatar, status = "Active now" }: ChatHeaderProps) => {
 	if (isLoading) {

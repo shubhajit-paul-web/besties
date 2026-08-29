@@ -1,16 +1,40 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import ChatHeader from "./ChatHeader";
+import AttachmentPreviewModal from "./AttachmentPreviewModal";
 import Button from "@/components/ui/Button/Button";
-import { FileText, Image as ImageIcon, Paperclip, Send, Upload, X } from "lucide-react";
+import { Paperclip, Send, AlertCircle } from "lucide-react";
 import type { ChatContainerProps } from "../types/chat.types";
-import formatFileSize from "../utils/formatFileSize";
-import { Modal } from "antd";
+import { message } from "antd";
+
+// File size validation constants
+const MAX_FILE_SIZE_MB = 100;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+// Validate file size and return error message if invalid
+const validateFileSize = (file: File): string | null => {
+	if (!file) return null;
+
+	if (file.size > MAX_FILE_SIZE_BYTES) {
+		const fileSizeInMB = (file.size / (1024 * 1024)).toFixed(2);
+		return `File size (${fileSizeInMB}MB) exceeds the maximum limit of ${MAX_FILE_SIZE_MB}MB. Please choose a smaller file.`;
+	}
+
+	return null;
+};
 
 const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, children }: ChatContainerProps) => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [previewUrl, setPreviewUrl] = useState("");
+	const [fileError, setFileError] = useState<string | null>(null);
+
+	// Clear file input value (resets the input element state)
+	const resetFileInput = () => {
+		if (fileInputRef.current) {
+			fileInputRef.current.value = "";
+		}
+	};
 
 	useEffect(() => {
 		// Release the temporary preview URL when it is no longer needed
@@ -21,8 +45,37 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 
 	const handleAttachmentChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
-		if (!file) return;
 
+		// Clear previous error state
+		setFileError(null);
+
+		if (!file) {
+			resetFileInput();
+			return;
+		}
+
+		// Validate file size
+		const error = validateFileSize(file);
+
+		if (error) {
+			setFileError(error);
+			resetFileInput();
+
+			// Show prominent error notification
+			message.error({
+				content: error,
+				duration: 6,
+				className: "!bg-red-50 !border-2 !border-red-500 !text-red-700 !font-semibold !text-base !py-4",
+				icon: <AlertCircle className="text-red-600" size={22} />,
+				style: {
+					boxShadow: "0 10px 25px rgba(239, 68, 68, 0.2)",
+				},
+			});
+
+			return;
+		}
+
+		// File is valid, proceed with preview
 		setSelectedFile(file);
 		setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
 		setModalOpen(true);
@@ -32,15 +85,15 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 		setModalOpen(false);
 		setSelectedFile(null);
 		setPreviewUrl("");
-
-		if (fileInputRef.current) {
-			fileInputRef.current.value = "";
-		}
+		setFileError(null);
+		resetFileInput();
 	};
 
 	const handleUpload = () => {
 		if (!selectedFile) return;
 
+		// Clear error state on successful upload
+		setFileError(null);
 		closeAttachmentModal();
 	};
 
@@ -54,46 +107,7 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 
 	return (
 		<>
-			<Modal
-				title="Preview attachment"
-				centered
-				open={modalOpen}
-				onCancel={closeAttachmentModal}
-				closable
-				footer={
-					<div className="flex justify-end gap-2">
-						<Button type="button" variant="light" icon={X} iconSize={16} onClick={closeAttachmentModal}>
-							Cancel
-						</Button>
-						<Button type="button" variant="indigo" icon={Upload} iconSize={16} onClick={handleUpload} disabled={!selectedFile}>
-							Upload
-						</Button>
-					</div>
-				}>
-				{selectedFile && (
-					<div className="space-y-4">
-						<div className="flex min-h-64 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-							{previewUrl ? (
-								<img src={previewUrl} alt={`Preview of ${selectedFile.name}`} className="max-h-80 w-full object-contain" />
-							) : (
-								<div className="flex flex-col items-center gap-3 text-slate-500">
-									<FileText size={48} strokeWidth={1.5} />
-									<span className="text-sm">Preview unavailable for this file type</span>
-								</div>
-							)}
-						</div>
-						<div className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3">
-							<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-								{previewUrl ? <ImageIcon size={20} /> : <FileText size={20} />}
-							</div>
-							<div className="min-w-0">
-								<p className="truncate text-sm font-medium text-slate-700">{selectedFile.name}</p>
-								<p className="mt-0.5 text-xs text-slate-400">{formatFileSize(selectedFile.size)}</p>
-							</div>
-						</div>
-					</div>
-				)}
-			</Modal>
+			<AttachmentPreviewModal open={modalOpen} selectedFile={selectedFile} previewUrl={previewUrl} fileError={fileError} onClose={closeAttachmentModal} onUpload={handleUpload} />
 
 			<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
 				<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">

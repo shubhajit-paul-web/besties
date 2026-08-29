@@ -40,15 +40,15 @@ const iconButtonVariants = {
 	fabPrimary: "bg-blue-600 hover:bg-blue-700 active:bg-blue-800 shadow-md text-white",
 };
 
-interface IconButtonInterface extends ButtonHTMLAttributes<HTMLButtonElement> {
+type IconButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 	variant?: keyof typeof iconButtonVariants;
 	icon: LucideIcon;
 	iconSize?: number;
 	iconFill?: string | false;
 	iconColor?: string | false;
-}
+};
 
-const IconButton = ({ variant = "default", icon: Icon, iconSize = 20, iconFill, iconColor, ...props }: IconButtonInterface) => {
+const IconButton = ({ variant = "default", icon: Icon, iconSize = 20, iconFill, iconColor, ...props }: IconButtonProps) => {
 	return (
 		<button className={`${iconButtonVariants[variant]} p-2 rounded-full transition-all`} {...props}>
 			<Icon size={iconSize} {...(iconFill && { fill: iconFill })} {...(iconColor && { color: iconColor })} />

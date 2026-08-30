@@ -10,4 +10,8 @@ export type MessagePayload = {
     content: string;
 };
 
-export type MessageAck = (response: { success: boolean; message?: string }) => void;
+export type MessageAck<T = unknown> = (response: {
+    success: boolean;
+    message?: string;
+    data?: T;
+}) => void;

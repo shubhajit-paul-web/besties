@@ -8,8 +8,10 @@ import formatUserName from "@/utils/formatUserName";
 import ProfileCardSkeleton from "./ProfileCardSkeleton";
 import useRemoveFriend from "../hooks/useRemoveFriend";
 import type { FriendListItem } from "../types/friend.types";
+import { useNavigate } from "react-router-dom";
 
 const MyFriends = () => {
+	const navigate = useNavigate();
 	const { data, isLoading } = useSWR("/friends", fetcher);
 	const { handleRemoveFriend } = useRemoveFriend();
 
@@ -36,7 +38,7 @@ const MyFriends = () => {
 						<Button onClick={() => handleRemoveFriend(friendshipId)} width="100%" centerContent variant="lightPlus" icon={UserRoundX} iconSize={18}>
 							Unfriend
 						</Button>
-						<Button width="100%" centerContent variant="primary" icon={MessageSquareMore} iconSize={18}>
+						<Button onClick={() => navigate(`/app/chat/${user._id}`)} width="100%" centerContent variant="primary" icon={MessageSquareMore} iconSize={18}>
 							Message
 						</Button>
 					</div>

@@ -1,11 +1,13 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import socket from "@/lib/socket";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import useCurrentUser from "./useCurrentUser";
 import type { AccessTokenPayload } from "@/types/user.types";
+import useOnlineFriendsContext from "./useOnlineFriendsContext";
 
 const useOnlineFriends = () => {
 	const { user: currentUser } = useCurrentUser();
-	const [onlineFriends, setOnlineFriends] = useState<AccessTokenPayload[]>([]);
+	const { onlineFriends, setOnlineFriends } = useOnlineFriendsContext();
 
 	const handleUpdatedOnlineFriends = (friends: AccessTokenPayload[]) => {
 		console.log(friends);

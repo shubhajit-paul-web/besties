@@ -1,6 +1,7 @@
 import Avatar from "@/components/ui/Avatar";
 import ChatHeaderSkeleton from "./ChatHeaderSkeleton";
 import formatUserName from "@/utils/formatUserName";
+import useOnlineFriendsContext from "@/hooks/useOnlineFriendsContext";
 
 type ChatHeaderProps = {
 	isLoading: boolean;
@@ -9,13 +10,17 @@ type ChatHeaderProps = {
 		last?: string;
 	};
 	avatar?: string;
-	status?: string;
+	friendId: string;
 };
 
-const ChatHeader = ({ isLoading, name, avatar, status = "Active now" }: ChatHeaderProps) => {
+const ChatHeader = ({ isLoading, name, avatar, friendId }: ChatHeaderProps) => {
+	const { onlineFriends } = useOnlineFriendsContext();
+
 	if (isLoading) {
 		return <ChatHeaderSkeleton />;
 	}
+
+	const isFriendOnline = onlineFriends.find((friend) => friend?._id === friendId);
 
 	return (
 		<header className="flex items-center gap-3 border-b border-slate-200/80 bg-white px-5 py-4">
@@ -26,8 +31,8 @@ const ChatHeader = ({ isLoading, name, avatar, status = "Active now" }: ChatHead
 			<div className="min-w-0">
 				<h1 className="truncate text-base font-semibold text-slate-900 capitalize">{formatUserName(name)}</h1>
 				<div className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-					<span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-					<span>{status}</span>
+					<span className={`h-1.5 w-1.5 rounded-full ${isFriendOnline ? "bg-emerald-500" : "bg-slate-400/60"}`} aria-hidden="true" />
+					<span>{isFriendOnline ? "Active now" : "Offline"}</span>
 				</div>
 			</div>
 		</header>

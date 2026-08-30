@@ -3,16 +3,11 @@ import Avatar from "../../../ui/Avatar";
 import Card from "../../../ui/Card";
 import { MessageSquareMore, Phone, Video } from "lucide-react";
 import useOnlineFriends from "@/hooks/useOnlineFriends";
-import { useEffect } from "react";
 import { Empty, Tooltip } from "antd";
 import formatUserName from "@/utils/formatUserName";
 
 const OnlineFriends = ({ height = "55%" }: { height?: string }) => {
 	const friends = useOnlineFriends();
-
-	useEffect(() => {
-		console.log(friends);
-	}, [friends]);
 
 	return (
 		<Card title="Online Friends" height={height}>

@@ -111,7 +111,7 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 
 			<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
 				<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">
-					<ChatHeader isLoading={isLoadingFriendInfo} name={friend?.name} avatar={friend?.avatar} />
+					<ChatHeader isLoading={isLoadingFriendInfo} name={friend?.name} avatar={friend?.avatar} friendId={friend?._id} />
 				</div>
 				{/* Scrollable message history */}
 				<div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5">

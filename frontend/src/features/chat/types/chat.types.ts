@@ -1,10 +1,21 @@
 import type { UserType } from "@/types/user.types";
 import type { ReactNode, SubmitEvent } from "react";
 
+export type AttachmentType = "image" | "video" | "audio" | "document" | "file";
+
+export type AttachmentData = {
+	path: string;
+	type: string;
+	filename?: string;
+	size?: number;
+	mimeType?: string;
+};
+
 export type ChatMessageProps = {
 	avatar: string;
 	text: string;
 	isSender: boolean;
+	attachment?: AttachmentData;
 	sentAt: string;
 };
 
@@ -38,4 +49,11 @@ export type AttachmentPreviewModalProps = {
 	fileError: string | null;
 	onClose: () => void;
 	onUpload: () => void;
+};
+
+export type AttachmentPreviewProps = {
+	attachment: AttachmentData;
+	caption?: string;
+	isSender: boolean;
+	onImageClick?: () => void;
 };

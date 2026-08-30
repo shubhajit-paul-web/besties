@@ -58,6 +58,47 @@ const ChatManager = () => {
 				})
 			)}
 
+			<ChatMessage
+				key="545450"
+				avatar="/profile-img.jpeg"
+				isSender={true}
+				text={"Landscape image"}
+				sentAt={"2026-08-29T21:45:39.289Z"}
+				attachment={{ path: "https://static.vecteezy.com/vite/assets/photo-masthead-375-BoK_p8LG.webp", type: "image/png" }}
+			/>
+			<ChatMessage
+				key="545450"
+				avatar="/profile-img.jpeg"
+				isSender={false}
+				text={"Landscape image"}
+				sentAt={"2026-08-29T21:45:39.289Z"}
+				attachment={{ path: "https://tinypng.com/images/social/website.jpg", type: "image/png" }}
+			/>
+			<ChatMessage
+				key="5454504"
+				avatar="/profile-img.jpeg"
+				isSender={false}
+				text={"Landscape image"}
+				sentAt={"2026-08-29T21:45:39.289Z"}
+				attachment={{ path: "https://videos.pexels.com/video-files/38385092/16300954_2560_1440_30fps.mp4", type: "video/mp4" }}
+			/>
+			<ChatMessage
+				key="5454504"
+				avatar="/profile-img.jpeg"
+				isSender={false}
+				text={"Landscape image"}
+				sentAt={"2026-08-29T21:45:39.289Z"}
+				attachment={{ path: "https://videos.pexels.com/video-files/38385092/16300954_2560_1440_30fps.mp4", type: "documents/mp4" }}
+			/>
+			<ChatMessage
+				key="5454504"
+				avatar="/profile-img.jpeg"
+				isSender={true}
+				text={"Landscape image"}
+				sentAt={"2026-08-29T21:45:39.289Z"}
+				attachment={{ path: "https://videos.pexels.com/video-files/38385092/16300954_2560_1440_30fps.mp4", type: "audio/mp4" }}
+			/>
+
 			{/* Invisible element at the bottom for auto scroll to bottom */}
 			<div ref={messagesEndRef} />
 		</ChatContainer>

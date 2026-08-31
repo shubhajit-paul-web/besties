@@ -14,7 +14,7 @@ const AttachmentPreview = ({ attachment, caption, isSender, onImageClick }: Atta
 	const [isLoading, setIsLoading] = useState(true);
 	const [hasError, setHasError] = useState(false);
 
-	const attachmentType = useMemo(() => getAttachmentType(attachment.filename, attachment.mimeType, attachment.type), [attachment.filename, attachment.mimeType, attachment.type]);
+	const attachmentType = useMemo(() => getAttachmentType(attachment.fileName, attachment.mimeType, attachment.contentType), [attachment.fileName, attachment.mimeType, attachment.contentType]);
 
 	const IconComponent = useMemo(() => getFileIcon(attachmentType), [attachmentType]);
 
@@ -115,7 +115,7 @@ const AttachmentPreview = ({ attachment, caption, isSender, onImageClick }: Atta
 						<Music size={20} className={isSender ? "text-white" : "text-slate-600"} />
 					</div>
 					<div className="flex-1 min-w-0">
-						<p className={`text-sm font-medium truncate ${isSender ? "text-white" : "text-slate-700"}`}>{attachment.filename || "Audio file"}</p>
+						<p className={`text-sm font-medium truncate ${isSender ? "text-white" : "text-slate-700"}`}>{attachment.fileName || "Audio file"}</p>
 						{attachment.size && <p className={`text-xs ${isSender ? "text-indigo-100" : "text-slate-500"}`}>{formatFileSize(attachment.size)}</p>}
 					</div>
 				</div>
@@ -136,7 +136,7 @@ const AttachmentPreview = ({ attachment, caption, isSender, onImageClick }: Atta
 			{/* File download card */}
 			<a
 				href={attachment.path}
-				download={attachment.filename}
+				download={attachment.fileName}
 				className={`rounded-lg p-3 flex items-center gap-3 w-fit max-w-xs transition-all duration-200 active:scale-95 ${isSender ? "bg-white/15 border border-white/20" : "bg-slate-100"}`}>
 				{/* Icon container */}
 				<div className={`p-2 rounded-lg shrink-0 ${isSender ? "bg-white/20" : "bg-slate-200"}`}>
@@ -145,7 +145,7 @@ const AttachmentPreview = ({ attachment, caption, isSender, onImageClick }: Atta
 
 				{/* File info */}
 				<div className="flex-1 min-w-0">
-					<p className={`text-sm font-medium truncate ${isSender ? "text-white" : "text-slate-700"}`}>{attachment.filename || `${attachmentType} file`}</p>
+					<p className={`text-sm font-medium truncate ${isSender ? "text-white" : "text-slate-700"}`}>{attachment.fileName || `${attachmentType} file`}</p>
 					{attachment.size && <p className={`text-xs ${isSender ? "text-indigo-100" : "text-slate-500"}`}>{formatFileSize(attachment.size)}</p>}
 				</div>
 

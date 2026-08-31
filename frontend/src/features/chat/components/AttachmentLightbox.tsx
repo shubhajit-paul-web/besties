@@ -1,13 +1,7 @@
 import { useMemo, createElement } from "react";
 import { X, Music } from "lucide-react";
-import type { AttachmentData } from "../types/chat.types";
+import type { AttachmentLightboxProps } from "../types/chat.types";
 import { getAttachmentType, getFileIcon } from "../utils/attachmentUtils";
-
-interface AttachmentLightboxProps {
-	open: boolean;
-	attachment: AttachmentData | null;
-	onClose: () => void;
-}
 
 /**
  * AttachmentLightbox Component
@@ -19,7 +13,7 @@ interface AttachmentLightboxProps {
  */
 const AttachmentLightbox = ({ open, attachment, onClose }: AttachmentLightboxProps) => {
 	// Calculate before early return to avoid conditional hook calls
-	const attachmentType = useMemo(() => (attachment ? getAttachmentType(attachment.filename, attachment.mimeType, attachment.type) : null), [attachment]);
+	const attachmentType = useMemo(() => (attachment ? getAttachmentType(attachment.fileName, attachment.mimeType, attachment.contentType) : null), [attachment]);
 
 	const IconComponent = useMemo(() => (attachmentType ? getFileIcon(attachmentType) : null), [attachmentType]);
 
@@ -65,7 +59,7 @@ const AttachmentLightbox = ({ open, attachment, onClose }: AttachmentLightboxPro
 						</div>
 
 						{/* File name */}
-						<h3 className="text-center font-semibold text-slate-800 mb-2 truncate text-lg">{attachment.filename || "Audio file"}</h3>
+						<h3 className="text-center font-semibold text-slate-800 mb-2 truncate text-lg">{attachment.fileName || "Audio file"}</h3>
 
 						{/* Audio player */}
 						<audio src={attachment.path} controls autoPlay className="w-full mt-6" />
@@ -83,7 +77,7 @@ const AttachmentLightbox = ({ open, attachment, onClose }: AttachmentLightboxPro
 						</div>
 
 						{/* File name */}
-						<h3 className="font-semibold text-slate-800 mb-2 truncate text-lg">{attachment.filename || "File"}</h3>
+						<h3 className="font-semibold text-slate-800 mb-2 truncate text-lg">{attachment.fileName || "File"}</h3>
 
 						{/* Info text */}
 						<p className="text-sm text-slate-500 mb-6">Preview not available for this file type</p>
@@ -91,7 +85,7 @@ const AttachmentLightbox = ({ open, attachment, onClose }: AttachmentLightboxPro
 						{/* Download button */}
 						<a
 							href={attachment.path}
-							download={attachment.filename}
+							download={attachment.fileName}
 							className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium shadow-md hover:shadow-lg">
 							{IconComponent && createElement(IconComponent, { size: 20 })}
 							Download

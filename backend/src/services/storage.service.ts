@@ -46,7 +46,7 @@ const downloadFile = async (path: string) => {
         });
 
         const url = await getSignedUrl(s3, command, {
-            expiresIn: 60, // 60 seconds
+            expiresIn: 15 * 60, // 15 minutes
         });
 
         return url;

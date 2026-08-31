@@ -35,6 +35,8 @@ const registerChatHandlers = async (io: Server, socket: Socket) => {
                 sender: currentUserId,
             });
 
+            console.log(message);
+
             io.to(`user:${receiver}`).emit("message", message);
 
             return sendAck(ack, { success: true });

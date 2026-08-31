@@ -7,11 +7,13 @@ import type { ChatContainerProps } from "../types/chat.types";
 import { message } from "antd";
 import useUploadFile from "../hooks/useUploadFile";
 
-// File size validation constants
+// Maximum upload file size threshold (100MB)
 const MAX_FILE_SIZE_MB = 100;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-// Validate file size and return error message if invalid
+/**
+ * Validate selected file against permissible file size boundaries.
+ */
 const validateFileSize = (file: File): string | null => {
 	if (!file) return null;
 
@@ -23,28 +25,36 @@ const validateFileSize = (file: File): string | null => {
 	return null;
 };
 
-const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, children }: ChatContainerProps) => {
+/**
+ * ChatContainer Component
+ * 
+ * Main conversational interface container that coordinates:
+ * - Real-time message streaming viewport and auto-scroll behavior.
+ * - Text message submission.
+ * - File attachment staging, validation, S3 upload pipeline, and caption dispatching.
+ */
+const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, handleSendMessageWithFile, children }: ChatContainerProps) => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [previewUrl, setPreviewUrl] = useState("");
 	const [fileError, setFileError] = useState<string | null>(null);
 
-	const { handleUploadFileToS3 } = useUploadFile();
+	const { isUploading, uploadProgress, handleUploadFileToS3, resetUploadState } = useUploadFile();
 
-	// Clear file input value (resets the input element state)
+	// Release temporary object URLs upon change or unmount to prevent memory leaks
+	useEffect(() => {
+		return () => {
+			if (previewUrl) URL.revokeObjectURL(previewUrl);
+		};
+	}, [previewUrl]);
+
+	// Clear the native file input element value
 	const resetFileInput = () => {
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}
 	};
-
-	useEffect(() => {
-		// Release the temporary preview URL when it is no longer needed
-		return () => {
-			if (previewUrl) URL.revokeObjectURL(previewUrl);
-		};
-	}, [previewUrl]);
 
 	const handleAttachmentChange = (event: ChangeEvent<HTMLInputElement>) => {
 		const file = event.target.files?.[0];
@@ -64,7 +74,6 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 			setFileError(error);
 			resetFileInput();
 
-			// Show prominent error notification
 			message.error({
 				content: error,
 				duration: 6,
@@ -78,53 +87,87 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 			return;
 		}
 
-		// File is valid, proceed with preview
+		// Valid file selected -> generate local preview and open modal
 		setSelectedFile(file);
 		setPreviewUrl(file.type.startsWith("image/") ? URL.createObjectURL(file) : "");
 		setModalOpen(true);
 	};
 
 	const closeAttachmentModal = () => {
+		if (isUploading) return;
+
 		setModalOpen(false);
 		setSelectedFile(null);
-		setPreviewUrl("");
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+			setPreviewUrl("");
+		}
 		setFileError(null);
 		resetFileInput();
+		resetUploadState();
 	};
 
-	const handleUpload = () => {
-		if (!selectedFile) return;
+	/**
+	 * Upload attachment to S3 with live progress, then emit chat message with caption.
+	 */
+	const handleSendAttachment = async (caption: string) => {
+		if (!selectedFile || isUploading) return;
 
-		console.log(selectedFile);
+		const result = await handleUploadFileToS3(friend._id, selectedFile);
 
-		handleUploadFileToS3(friend._id, selectedFile);
+		if (result.success && result.filePath) {
+			if (handleSendMessageWithFile) {
+				handleSendMessageWithFile({
+					path: result.filePath,
+					fileName: selectedFile.name,
+					size: selectedFile.size,
+					contentType: selectedFile.type,
+					caption: caption.trim() || undefined,
+				});
+			}
 
-		// Clear error state on successful upload
-		setFileError(null);
-		closeAttachmentModal();
+			// Clean up modal state upon successful send
+			setModalOpen(false);
+			setSelectedFile(null);
+			if (previewUrl) {
+				URL.revokeObjectURL(previewUrl);
+				setPreviewUrl("");
+			}
+			setFileError(null);
+			resetFileInput();
+			resetUploadState();
+		}
 	};
 
 	const handleAttachmentClick = () => {
-		const fileInput = fileInputRef?.current;
-
-		if (!fileInput) return;
-
-		fileInput.click();
+		fileInputRef.current?.click();
 	};
 
 	return (
 		<>
-			<AttachmentPreviewModal open={modalOpen} selectedFile={selectedFile} previewUrl={previewUrl} fileError={fileError} onClose={closeAttachmentModal} onUpload={handleUpload} />
+			<AttachmentPreviewModal
+				open={modalOpen}
+				selectedFile={selectedFile}
+				previewUrl={previewUrl}
+				fileError={fileError}
+				isUploading={isUploading}
+				uploadProgress={uploadProgress}
+				onClose={closeAttachmentModal}
+				onSend={handleSendAttachment}
+			/>
 
 			<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
+				{/* Top chat partner header */}
 				<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">
 					<ChatHeader isLoading={isLoadingFriendInfo} name={friend?.name} avatar={friend?.avatar} friendId={friend?._id} />
 				</div>
-				{/* Scrollable message history */}
+
+				{/* Scrollable message stream */}
 				<div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5">
 					<div className="flex min-w-0 min-h-full flex-col gap-7">{children}</div>
 				</div>
-				{/* Message composer and file attachment controls */}
+
+				{/* Message composer and file attachment input */}
 				<div className="shrink-0 border-t border-slate-200/80 bg-white p-3 sm:p-4">
 					<form onSubmit={handleSendMessage} className="flex items-center gap-2 sm:gap-3">
 						<input
@@ -143,7 +186,7 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 							type="button"
 							aria-label="Attach a file"
 							title="Attach a file"
-							className="shrink-0 rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700">
+							className="shrink-0 cursor-pointer rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 active:bg-slate-200">
 							<Paperclip size={18} />
 						</button>
 

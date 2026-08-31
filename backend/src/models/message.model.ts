@@ -1,25 +1,28 @@
 import { InferSchemaType, Schema, Types, model } from "mongoose";
 
-const fileSchema = new Schema({
-    path: {
-        type: String,
-        trim: true,
-        required: true,
+const fileSchema = new Schema(
+    {
+        path: {
+            type: String,
+            trim: true,
+            required: true,
+        },
+        fileName: {
+            type: String,
+            trim: true,
+        },
+        contentType: {
+            type: String,
+            trim: true,
+            required: true,
+        },
+        size: {
+            type: Number,
+            required: true,
+        },
     },
-    fileName: {
-        type: String,
-        trim: true,
-    },
-    contentType: {
-        type: String,
-        trim: true,
-        required: true,
-    },
-    size: {
-        type: Number,
-        required: true,
-    },
-});
+    { versionKey: false },
+);
 
 const messageSchema = new Schema({
     conversationKey: {

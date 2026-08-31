@@ -41,7 +41,7 @@ const useUpdateProfilePicture = () => {
 
 				try {
 					// Step 2 - Upload the file to s3
-					const response = await uploadFileToS3(url, formData);
+					const response = await uploadFileToS3({ url, formData });
 
 					// Step 3 - Update the avatar in the DB
 					if (response.status === 204) {

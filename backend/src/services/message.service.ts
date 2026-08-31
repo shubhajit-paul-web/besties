@@ -20,7 +20,25 @@ const getMessagesByConversationKey = async (currentUserId: string, friendId: str
 
     const messages = await messageRepository.findMessagesByConversationKey(conversationKey);
 
-    return messages;
+    const customizedMessages = await Promise.all(
+        messages.map(async (message) => {
+            const file = message.file;
+
+            if (!file) {
+                return message;
+            }
+
+            return {
+                ...message,
+                file: {
+                    ...file,
+                    path: await storageService.downloadFile(file.path),
+                },
+            };
+        }),
+    );
+
+    return customizedMessages;
 };
 
 const generateFileUploadUrl = async (

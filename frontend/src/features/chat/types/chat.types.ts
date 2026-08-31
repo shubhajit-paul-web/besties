@@ -5,8 +5,8 @@ export type AttachmentType = "image" | "video" | "audio" | "document" | "file";
 
 export type AttachmentData = {
 	path: string;
-	type: string;
-	filename?: string;
+	contentType: string;
+	fileName?: string;
 	size?: number;
 	mimeType?: string;
 };
@@ -23,7 +23,7 @@ export type ChatHeaderProps = {
 
 export type ChatMessageProps = {
 	avatar: string;
-	text: string;
+	text: string | undefined;
 	isSender: boolean;
 	attachment?: AttachmentData;
 	sentAt: string;
@@ -31,11 +31,21 @@ export type ChatMessageProps = {
 
 export type ChatMessage = {
 	_id?: string;
+	clientMessageId?: string;
 	sender: string;
 	receiver?: string;
-	content: string;
+	content: string | undefined;
 	createdAt: string;
 	conversationKey?: string;
+	file?: AttachmentData;
+};
+
+export type ChatMessageWithFile = {
+	path: string;
+	size: number;
+	contentType: string;
+	fileName?: string | null;
+	caption?: string;
 };
 
 export type AckResponse = {
@@ -48,8 +58,15 @@ export type FriendInfo = Pick<UserType, "_id" | "name" | "avatar" | "username">;
 export type ChatContainerProps = {
 	isLoadingFriendInfo: boolean;
 	friend: FriendInfo;
-	handleSendMessage: (event: SubmitEvent<Element>) => void;
+	handleSendMessage?: (event: SubmitEvent<Element>) => void;
+	handleSendMessageWithFile?: (file: ChatMessageWithFile) => void;
 	children: ReactNode;
+};
+
+export type AttachmentLightboxProps = {
+	open: boolean;
+	attachment: AttachmentData | null;
+	onClose: () => void;
 };
 
 export type AttachmentPreviewModalProps = {
@@ -57,8 +74,10 @@ export type AttachmentPreviewModalProps = {
 	selectedFile: File | null;
 	previewUrl: string;
 	fileError: string | null;
+	isUploading: boolean;
+	uploadProgress: number;
 	onClose: () => void;
-	onUpload: () => void;
+	onSend: (caption: string) => void;
 };
 
 export type AttachmentPreviewProps = {

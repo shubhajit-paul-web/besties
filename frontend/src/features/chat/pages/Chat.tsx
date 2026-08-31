@@ -21,7 +21,7 @@ const ChatManager = () => {
 
 	const friend = friendInfo?.data as FriendInfo;
 
-	const { realtimeMessages, handleSendMessage } = useChatMessages(currentUser?._id as string, friendId as string);
+	const { realtimeMessages, handleSendMessage, handleSendMessageWithFile } = useChatMessages(currentUser?._id as string, friendId as string);
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({
@@ -32,7 +32,7 @@ const ChatManager = () => {
 	// Skeleton loader
 	if (isLoadingExistingMessages) {
 		return (
-			<ChatContainer friend={friend} handleSendMessage={handleSendMessage} isLoadingFriendInfo={isLoadingFriendInfo}>
+			<ChatContainer friend={friend} isLoadingFriendInfo={isLoadingFriendInfo}>
 				<ChatMessagesSkeleton />
 			</ChatContainer>
 		);
@@ -43,7 +43,7 @@ const ChatManager = () => {
 	const allChatMessages = getConversationMessages(existingMessages?.data, realtimeMessages, conversationKey);
 
 	return (
-		<ChatContainer isLoadingFriendInfo={isLoadingFriendInfo} friend={friend} handleSendMessage={handleSendMessage}>
+		<ChatContainer isLoadingFriendInfo={isLoadingFriendInfo} friend={friend} handleSendMessage={handleSendMessage} handleSendMessageWithFile={handleSendMessageWithFile}>
 			{allChatMessages?.length === 0 ? (
 				<div className="m-auto">
 					<Empty description="No messages yet. Start the conversation." />
@@ -52,7 +52,14 @@ const ChatManager = () => {
 				allChatMessages?.map((chat, index) => {
 					if (chat.sender === friendId || chat.receiver === friendId) {
 						return (
-							<ChatMessage key={chat._id ?? index + chat.createdAt} avatar="/profile-img.jpeg" isSender={chat.sender === currentUser?._id} text={chat.content} sentAt={chat.createdAt} />
+							<ChatMessage
+								key={chat._id ?? chat.clientMessageId ?? `${index}-${chat.createdAt}`}
+								avatar="/profile-img.jpeg"
+								isSender={chat.sender === currentUser?._id}
+								text={chat.content}
+								sentAt={chat.createdAt}
+								attachment={chat.file}
+							/>
 						);
 					}
 				})

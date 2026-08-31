@@ -1,8 +1,6 @@
 import Post from "../../../components/ui/Post";
-import useAppContext from "../../../hooks/useAppContext";
 
 const Home = () => {
-	const { user } = useAppContext();
 
 	const postsDummyData = [
 		{

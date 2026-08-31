@@ -23,7 +23,7 @@ const ChatMessage = ({ avatar, text, isSender, sentAt, attachment }: ChatMessage
 				</div>
 			</div>
 
-			{attachment && !attachment?.type?.startsWith("image/") && <AttachmentLightbox open={lightboxOpen} attachment={attachment} onClose={() => setLightboxOpen(false)} />}
+			{attachment && !attachment?.contentType?.startsWith("image/") && <AttachmentLightbox open={lightboxOpen} attachment={attachment} onClose={() => setLightboxOpen(false)} />}
 		</>
 	);
 };

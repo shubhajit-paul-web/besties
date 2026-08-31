@@ -112,6 +112,7 @@ const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => 
                 ["eq", "$acl", acl],
             ],
             Fields: {
+                "Content-Type": type,
                 "x-amz-meta-user-id": userId,
                 acl,
             },

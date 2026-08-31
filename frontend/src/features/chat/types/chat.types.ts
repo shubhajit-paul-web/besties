@@ -11,6 +11,16 @@ export type AttachmentData = {
 	mimeType?: string;
 };
 
+export type ChatHeaderProps = {
+	isLoading: boolean;
+	name: {
+		first: string;
+		last?: string;
+	};
+	avatar?: string;
+	friendId: string;
+};
+
 export type ChatMessageProps = {
 	avatar: string;
 	text: string;
@@ -20,12 +30,12 @@ export type ChatMessageProps = {
 };
 
 export type ChatMessage = {
-	_id: string;
+	_id?: string;
 	sender: string;
 	receiver?: string;
 	content: string;
 	createdAt: string;
-	conversationKey: string;
+	conversationKey?: string;
 };
 
 export type AckResponse = {

@@ -2,6 +2,9 @@ import { StatusCodes } from "http-status-codes";
 import friendRepository from "../repositories/friend.repository.js";
 import messageRepository from "../repositories/message.repository.js";
 import ApiError from "../utils/apiError.js";
+import { SupportedFileType } from "../types/storage/storage.service.js";
+import storageService from "./storage.service.js";
+import generateConversationKey from "../utils/generateConversationKey.js";
 
 const getMessagesByConversationKey = async (currentUserId: string, friendId: string) => {
     const isFriend = await friendRepository.existsFriendship(currentUserId, friendId, "accepted");
@@ -13,13 +16,33 @@ const getMessagesByConversationKey = async (currentUserId: string, friendId: str
         );
     }
 
-    const conversationKey = [currentUserId, friendId].sort().join(":");
+    const conversationKey = generateConversationKey(currentUserId, friendId);
 
     const messages = await messageRepository.findMessagesByConversationKey(conversationKey);
 
     return messages;
 };
 
+const generateFileUploadUrl = async (
+    userId: string,
+    friendId: string,
+    contentType: SupportedFileType,
+) => {
+    const conversationKey = generateConversationKey(userId, friendId);
+
+    const result = await storageService.createPresignedPostUpload({
+        userId,
+        path: `chat-files/${conversationKey}`,
+        type: contentType,
+        expires: 10 * 60, // 10 minutes
+        maxFileSize: 100 * 1024 * 1024, // 100 MB
+        acl: "private",
+    });
+
+    return result;
+};
+
 export default {
     getMessagesByConversationKey,
+    generateFileUploadUrl,
 };

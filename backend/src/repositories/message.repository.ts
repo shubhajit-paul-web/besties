@@ -1,13 +1,8 @@
-import { CreateMessageDto } from "../dto/message.dto.js";
+import type { CreateMessageDto } from "../dto/message.dto.js";
 import MessageModel from "../models/message.model.js";
 
-const create = async ({ conversationKey, sender, receiver, content }: CreateMessageDto) => {
-    return MessageModel.create({
-        conversationKey,
-        sender,
-        receiver,
-        content,
-    });
+const create = async (payload: CreateMessageDto) => {
+    return MessageModel.create(payload);
 };
 
 const findMessagesByConversationKey = async (conversationKey: string) => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import ChatMessage from "../components/ChatMessage";
 import useSWR from "swr";
 import { useParams } from "react-router-dom";
@@ -11,7 +11,6 @@ import getConversationMessages from "../utils/getConversationMessages";
 import ChatContainer from "../components/ChatContainer";
 import ChatMessagesSkeleton from "../components/ChatMessagesSkeleton";
 import type { FriendInfo } from "../types/chat.types";
-import socket from "@/lib/socket";
 
 const ChatManager = () => {
 	const { id: friendId } = useParams();

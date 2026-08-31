@@ -1,4 +1,5 @@
 import type { AccessTokenPayload } from "../../types/auth/auth.jwt.js";
+import type { MessageDocument } from "../../models/message.model.js";
 
 export type PresenceUser = Pick<
     AccessTokenPayload,
@@ -8,6 +9,7 @@ export type PresenceUser = Pick<
 export type MessagePayload = {
     receiver: string;
     content: string;
+    file?: MessageDocument["file"];
 };
 
 export type MessageAck<T = unknown> = (response: {

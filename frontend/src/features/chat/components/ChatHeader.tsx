@@ -2,16 +2,7 @@ import Avatar from "@/components/ui/Avatar";
 import ChatHeaderSkeleton from "./ChatHeaderSkeleton";
 import formatUserName from "@/utils/formatUserName";
 import useOnlineFriendsContext from "@/hooks/useOnlineFriendsContext";
-
-type ChatHeaderProps = {
-	isLoading: boolean;
-	name: {
-		first: string;
-		last?: string;
-	};
-	avatar?: string;
-	friendId: string;
-};
+import type { ChatHeaderProps } from "../types/chat.types";
 
 const ChatHeader = ({ isLoading, name, avatar, friendId }: ChatHeaderProps) => {
 	const { onlineFriends } = useOnlineFriendsContext();

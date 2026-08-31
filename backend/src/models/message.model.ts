@@ -6,9 +6,17 @@ const fileSchema = new Schema({
         trim: true,
         required: true,
     },
-    type: {
+    fileName: {
         type: String,
         trim: true,
+    },
+    contentType: {
+        type: String,
+        trim: true,
+        required: true,
+    },
+    size: {
+        type: Number,
         required: true,
     },
 });
@@ -30,9 +38,7 @@ const messageSchema = new Schema({
     },
     content: {
         type: String,
-        trim: true,
         maxLength: 1000,
-        required: true,
     },
     file: fileSchema,
     createdAt: {

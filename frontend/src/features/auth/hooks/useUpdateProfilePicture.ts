@@ -1,11 +1,13 @@
 import { useState } from "react";
-import type { PresignedPostResponse, ProfilePictureFormData } from "../types/user.types";
+import type { ProfilePictureFormData } from "../types/user.types";
 import { toast, type ToastOptions } from "react-toastify";
-import { generateSignedUrlForProfilePicApi, updateProfilePicUrl, uploadProfilePicToS3 } from "../apis/user.api";
+import { generateSignedUrlForProfilePicApi, updateProfilePicUrl } from "../apis/user.api";
 import type { AxiosResponse } from "axios";
 import { mutate } from "swr";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { uploadFileToS3 } from "@/apis/storage.api";
+import type { PresignedPostResponse } from "@/types/s3.types";
 
 const useUpdateProfilePicture = () => {
 	const navigate = useNavigate();
@@ -39,7 +41,7 @@ const useUpdateProfilePicture = () => {
 
 				try {
 					// Step 2 - Upload the file to s3
-					const response = await uploadProfilePicToS3(url, formData);
+					const response = await uploadFileToS3(url, formData);
 
 					// Step 3 - Update the avatar in the DB
 					if (response.status === 204) {

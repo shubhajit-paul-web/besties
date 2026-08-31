@@ -5,6 +5,7 @@ import Button from "@/components/ui/Button/Button";
 import { Paperclip, Send, AlertCircle } from "lucide-react";
 import type { ChatContainerProps } from "../types/chat.types";
 import { message } from "antd";
+import useUploadFile from "../hooks/useUploadFile";
 
 // File size validation constants
 const MAX_FILE_SIZE_MB = 100;
@@ -28,6 +29,8 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [previewUrl, setPreviewUrl] = useState("");
 	const [fileError, setFileError] = useState<string | null>(null);
+
+	const { handleUploadFileToS3 } = useUploadFile();
 
 	// Clear file input value (resets the input element state)
 	const resetFileInput = () => {
@@ -91,6 +94,10 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, childre
 
 	const handleUpload = () => {
 		if (!selectedFile) return;
+
+		console.log(selectedFile);
+
+		handleUploadFileToS3(friend._id, selectedFile);
 
 		// Clear error state on successful upload
 		setFileError(null);

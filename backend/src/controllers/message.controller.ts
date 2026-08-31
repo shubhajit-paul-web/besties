@@ -2,6 +2,7 @@ import { StatusCodes } from "http-status-codes";
 import messageService from "../services/message.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
+import { GenerateFileUploadUrlRequest } from "../types/message/message.request.js";
 
 const getMessages = asyncHandler(async (req, res) => {
     const currentUserId = req.user?._id as string;
@@ -14,6 +15,16 @@ const getMessages = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Messages fetched successfully", messages));
 });
 
+const generateFileUploadUrl = asyncHandler(async (req: GenerateFileUploadUrlRequest, res) => {
+    const currentUserId = req.user?._id as string;
+    const { friendId, contentType } = req.body;
+
+    const result = await messageService.generateFileUploadUrl(currentUserId, friendId, contentType);
+
+    return res.status(StatusCodes.OK).json(result);
+});
+
 export default {
     getMessages,
+    generateFileUploadUrl,
 };

@@ -2,7 +2,10 @@ import { StatusCodes } from "http-status-codes";
 import messageService from "../services/message.service.js";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
-import { GenerateFileUploadUrlRequest } from "../types/message/message.request.js";
+import {
+    GenerateFileDownloadUrlRequest,
+    GenerateFileUploadUrlRequest,
+} from "../types/message/message.request.js";
 
 const getMessages = asyncHandler(async (req, res) => {
     const currentUserId = req.user?._id as string;
@@ -24,7 +27,17 @@ const generateFileUploadUrl = asyncHandler(async (req: GenerateFileUploadUrlRequ
     return res.status(StatusCodes.OK).json(result);
 });
 
+const generateFileDownloadUrl = asyncHandler(async (req: GenerateFileDownloadUrlRequest, res) => {
+    const userId = req.user?._id as string;
+    const { path, messageId } = req.body;
+
+    const url = await messageService.generateFileDownloadUrl(userId, path, messageId);
+
+    return res.status(StatusCodes.OK).json({ url });
+});
+
 export default {
     getMessages,
     generateFileUploadUrl,
+    generateFileDownloadUrl,
 };

@@ -5,6 +5,7 @@ import messageRepository from "../../repositories/message.repository.js";
 import logger from "../../utils/logger.js";
 import generateConversationKey from "../../utils/generateConversationKey.js";
 import sendAck from "../utils/sendAck.js";
+import storageService from "../../services/storage.service.js";
 
 const registerChatHandlers = async (io: Server, socket: Socket) => {
     const currentUserId = String(socket.user._id);
@@ -35,7 +36,12 @@ const registerChatHandlers = async (io: Server, socket: Socket) => {
                 sender: currentUserId,
             });
 
-            console.log(message);
+            // Generate a signed url for file download if file path exists
+            if (message.file?.path) {
+                message.file.path = await storageService
+                    .downloadFile(message.file.path)
+                    .catch(() => "");
+            }
 
             io.to(`user:${receiver}`).emit("message", message);
 

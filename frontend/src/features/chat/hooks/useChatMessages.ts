@@ -3,6 +3,7 @@ import { useEffect, useState, type SubmitEvent } from "react";
 import { toast } from "react-toastify";
 import type { AckResponse, AttachmentData, ChatMessage, ChatMessageWithFile } from "../types/chat.types";
 import createConversationKey from "../utils/createConversationKey";
+import { generateSignedUrlForFileDownloadApi } from "../apis/chat.api";
 
 const handleMessageAck = (response: AckResponse) => {
 	if (!response.success) {
@@ -34,10 +35,10 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 	/**
 	 * Send an attachment message with optional caption over WebSocket and optimistically update local UI.
 	 */
-	const handleSendMessageWithFile = (fileData: ChatMessageWithFile) => {
+	const handleSendMessageWithFile = async (fileData: ChatMessageWithFile) => {
 		const conversationKey = createConversationKey(currentUserId, friendId);
 
-		const attachment: AttachmentData = {
+		const file: AttachmentData = {
 			path: fileData.path,
 			contentType: fileData.contentType,
 			fileName: fileData.fileName || undefined,
@@ -49,10 +50,12 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 			{
 				receiver: friendId,
 				content: fileData.caption,
-				file: attachment,
+				file,
 			},
 			handleMessageAck,
 		);
+
+		const downloadFileResponse = await generateSignedUrlForFileDownloadApi(file.path).catch(() => null);
 
 		setRealtimeMessages((currentMessages) => [
 			...currentMessages,
@@ -62,7 +65,10 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 				sender: currentUserId,
 				receiver: friendId,
 				content: fileData.caption,
-				attachment,
+				file: {
+					...file,
+					path: downloadFileResponse?.data?.url || null,
+				},
 				createdAt: new Date().toISOString(),
 			},
 		]);

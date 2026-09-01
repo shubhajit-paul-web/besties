@@ -6,3 +6,7 @@ export const generateSignedUrlForFileUploadApi = async (friendId: string, fileTy
 		contentType: fileType,
 	});
 };
+
+export const generateSignedUrlForFileDownloadApi = async (path: string) => {
+	return HttpInterceptor.post("/messages/file/download-url", { path });
+};

@@ -1,9 +1,10 @@
-import socket from "@/lib/socket";
 import { useEffect, useState, type SubmitEvent } from "react";
-import { toast } from "react-toastify";
-import type { AckResponse, AttachmentData, ChatMessage, ChatMessageWithFile } from "../types/chat.types";
-import createConversationKey from "../utils/createConversationKey";
+import socket from "@/lib/socket";
 import { generateSignedUrlForFileDownloadApi } from "../apis/chat.api";
+import { toast } from "react-toastify";
+import createConversationKey from "../utils/createConversationKey";
+import { v7 as uuidv7 } from "uuid";
+import type { AckResponse, AttachmentData, ChatMessage, ChatMessageWithFile } from "../types/chat.types";
 
 const handleMessageAck = (response: AckResponse) => {
 	if (!response.success) {
@@ -19,23 +20,25 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 	const [realtimeMessages, setRealtimeMessages] = useState<ChatMessage[]>([]);
 
 	useEffect(() => {
+		if (!currentUserId || !friendId) return;
+
 		const handleIncomingMessage = (payload: ChatMessage) => {
 			setRealtimeMessages((currentMessages) => [...currentMessages, payload]);
 		};
 
-		if (currentUserId) {
-			socket.on("message", handleIncomingMessage);
+		socket.on("message", handleIncomingMessage);
 
-			return () => {
-				socket.off("message", handleIncomingMessage);
-			};
-		}
-	}, [currentUserId]);
+		return () => {
+			socket.off("message", handleIncomingMessage);
+		};
+	}, [currentUserId, friendId]);
 
 	/**
 	 * Send an attachment message with optional caption over WebSocket and optimistically update local UI.
 	 */
 	const handleSendMessageWithFile = async (fileData: ChatMessageWithFile) => {
+		if (!currentUserId || !friendId) return;
+
 		const conversationKey = createConversationKey(currentUserId, friendId);
 
 		const file: AttachmentData = {
@@ -48,6 +51,7 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 		socket.emit(
 			"message",
 			{
+				clientMessageId: uuidv7(),
 				receiver: friendId,
 				content: fileData.caption,
 				file,
@@ -80,6 +84,8 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 	const handleSendMessage = (e: SubmitEvent) => {
 		e.preventDefault();
 
+		if (!currentUserId || !friendId) return;
+
 		const form = e.target as HTMLFormElement & {
 			message: HTMLInputElement;
 		};
@@ -89,25 +95,20 @@ const useChatMessages = (currentUserId: string, friendId: string) => {
 			return;
 		}
 
-		socket.emit(
-			"message",
-			{
-				receiver: friendId,
-				content,
-			},
-			handleMessageAck,
-		);
+		const socketPayload = {
+			clientMessageId: uuidv7(),
+			receiver: friendId,
+			content,
+		};
 
-		const conversationKey = createConversationKey(currentUserId, friendId);
+		socket.emit("message", socketPayload, handleMessageAck);
 
 		setRealtimeMessages((currentMessages) => [
 			...currentMessages,
 			{
-				clientMessageId: crypto.randomUUID(),
-				conversationKey,
+				...socketPayload,
 				sender: currentUserId,
-				receiver: friendId,
-				content,
+				conversationKey: createConversationKey(currentUserId, friendId),
 				createdAt: new Date().toISOString(),
 			},
 		]);

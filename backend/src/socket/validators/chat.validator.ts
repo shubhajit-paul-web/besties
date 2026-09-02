@@ -3,6 +3,7 @@ import { SUPPORTED_FILE_TYPES } from "../../constants/constants.js";
 
 export const sendMessageSchema = z
     .object({
+        clientMessageId: z.string().min(1, "Client message id is required"),
         receiver: z.string().trim().min(1),
         content: z.string().trim().max(1000).optional(),
         file: z

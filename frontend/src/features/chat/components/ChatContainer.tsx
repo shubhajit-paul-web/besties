@@ -27,13 +27,13 @@ const validateFileSize = (file: File): string | null => {
 
 /**
  * ChatContainer Component
- * 
+ *
  * Main conversational interface container that coordinates:
  * - Real-time message streaming viewport and auto-scroll behavior.
  * - Text message submission.
  * - File attachment staging, validation, S3 upload pipeline, and caption dispatching.
  */
-const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, handleSendMessageWithFile, children }: ChatContainerProps) => {
+const ChatContainer = ({ isLoadingFriendInfo, friend, messageContainerRef, handleSendMessage, handleSendMessageWithFile, children }: ChatContainerProps) => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -163,7 +163,7 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, handleSendMessage, handleS
 				</div>
 
 				{/* Scrollable message stream */}
-				<div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5">
+				<div ref={messageContainerRef} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5 scroll-smooth">
 					<div className="flex min-w-0 min-h-full flex-col gap-7">{children}</div>
 				</div>
 

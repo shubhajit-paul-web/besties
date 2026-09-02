@@ -29,6 +29,10 @@ const messageSchema = new Schema({
         type: String,
         required: true,
     },
+    clientMessageId: {
+        type: String,
+        required: true,
+    },
     sender: {
         type: Types.ObjectId,
         ref: "User",
@@ -54,6 +58,14 @@ messageSchema.index({
     conversationKey: 1,
     createdAt: -1,
 });
+
+messageSchema.index(
+    {
+        sender: 1,
+        clientMessageId: 1,
+    },
+    { unique: true },
+);
 
 export type MessageDocument = InferSchemaType<typeof messageSchema>;
 

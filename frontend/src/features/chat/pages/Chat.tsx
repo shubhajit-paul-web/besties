@@ -1,36 +1,59 @@
 import { useEffect, useRef } from "react";
-import ChatMessage from "../components/ChatMessage";
 import useSWR from "swr";
 import { useParams } from "react-router-dom";
-import fetcher from "@/utils/fetcher";
-import { Empty } from "antd";
-import useChatMessages from "../hooks/useChatMessages";
-import useCurrentUser from "@/hooks/useCurrentUser";
-import createConversationKey from "../utils/createConversationKey";
-import getConversationMessages from "../utils/getConversationMessages";
 import ChatContainer from "../components/ChatContainer";
 import ChatMessagesSkeleton from "../components/ChatMessagesSkeleton";
-import type { FriendInfo } from "../types/chat.types";
+import EmptyState from "@/components/ui/EmptyState";
+import useChatMessages from "../hooks/useChatMessages";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import fetcher from "@/utils/fetcher";
+import createConversationKey from "../utils/createConversationKey";
+import getConversationMessages from "../utils/getConversationMessages";
+import type { FriendInfo, MessagesResponse } from "../types/chat.types";
+import MessageList from "../components/MessageList";
 
 const ChatManager = () => {
-	const { id: friendId } = useParams();
-	const messagesEndRef = useRef<HTMLDivElement | null>(null);
+	const { id: friendId } = useParams<{ id: string }>();
+
+	const messageContainerRef = useRef<HTMLDivElement | null>(null);
+
 	const { user: currentUser } = useCurrentUser();
-	const { data: friendInfo, isLoading: isLoadingFriendInfo } = useSWR(`/users/${friendId}`, fetcher, { revalidateOnFocus: false });
-	const { data: existingMessages, isLoading: isLoadingExistingMessages } = useSWR(`/messages/${friendId}`, fetcher, { shouldRetryOnError: false, revalidateOnFocus: false });
+
+	const { data: friendInfo, isLoading: isLoadingFriendInfo } = useSWR(friendId ? `/users/${friendId}` : null, fetcher, { revalidateOnFocus: false });
+
+	/**
+	 * Fetch messages that already exist in the database.
+	 *
+	 * Realtime messages are handled separately by useChatMessages().
+	 */
+	const { data: persistedMessages, isLoading: isLoadingPersistedMessages } = useSWR<MessagesResponse>(friendId ? `/messages/${friendId}` : null, fetcher, {
+		shouldRetryOnError: false,
+		revalidateOnFocus: false,
+	});
 
 	const friend = friendInfo?.data as FriendInfo;
 
+	/**
+	 * Handles messages received/sent through the realtime connection.
+	 */
 	const { realtimeMessages, handleSendMessage, handleSendMessageWithFile } = useChatMessages(currentUser?._id as string, friendId as string);
 
+	/**
+	 * Scroll to the latest message whenever the conversation
+	 * messages change.
+	 */
 	useEffect(() => {
-		messagesEndRef.current?.scrollIntoView({
-			behavior: "smooth",
-		});
-	}, [isLoadingExistingMessages, friendId, realtimeMessages]);
+		if (isLoadingPersistedMessages) return;
 
-	// Skeleton loader
-	if (isLoadingExistingMessages) {
+		const container = messageContainerRef.current;
+		if (!container) return;
+
+		requestAnimationFrame(() => {
+			container.scrollTop = container.scrollHeight;
+		});
+	}, [isLoadingPersistedMessages, persistedMessages, realtimeMessages]);
+
+	if (isLoadingPersistedMessages || !currentUser?._id || !friendId) {
 		return (
 			<ChatContainer friend={friend} isLoadingFriendInfo={isLoadingFriendInfo}>
 				<ChatMessagesSkeleton />
@@ -38,35 +61,22 @@ const ChatManager = () => {
 		);
 	}
 
-	const conversationKey = createConversationKey(currentUser?._id as string, friendId as string);
+	const conversationKey = createConversationKey(currentUser._id, friendId);
 
-	const allChatMessages = getConversationMessages(existingMessages?.data, realtimeMessages, conversationKey);
+	/**
+	 * Combine database messages with realtime messages
+	 * for the currently active conversation.
+	 */
+	const allChatMessages = getConversationMessages(persistedMessages?.data ?? [], realtimeMessages, conversationKey);
 
 	return (
-		<ChatContainer isLoadingFriendInfo={isLoadingFriendInfo} friend={friend} handleSendMessage={handleSendMessage} handleSendMessageWithFile={handleSendMessageWithFile}>
-			{allChatMessages?.length === 0 ? (
-				<div className="m-auto">
-					<Empty description="No messages yet. Start the conversation." />
-				</div>
-			) : (
-				allChatMessages?.map((chat, index) => {
-					if (chat.sender === friendId || chat.receiver === friendId) {
-						return (
-							<ChatMessage
-								key={chat._id ?? chat.clientMessageId ?? `${index}-${chat.createdAt}`}
-								avatar="/profile-img.jpeg"
-								isSender={chat.sender === currentUser?._id}
-								text={chat.content}
-								sentAt={chat.createdAt}
-								attachment={chat.file}
-							/>
-						);
-					}
-				})
-			)}
-
-			{/* Invisible element at the bottom for auto scroll to bottom */}
-			<div ref={messagesEndRef} />
+		<ChatContainer
+			friend={friend}
+			messageContainerRef={messageContainerRef}
+			isLoadingFriendInfo={isLoadingFriendInfo}
+			handleSendMessage={handleSendMessage}
+			handleSendMessageWithFile={handleSendMessageWithFile}>
+			{allChatMessages?.length === 0 ? <EmptyState description="No messages yet. Start the conversation." /> : <MessageList messages={allChatMessages} currentUserId={currentUser._id} />}
 		</ChatContainer>
 	);
 };

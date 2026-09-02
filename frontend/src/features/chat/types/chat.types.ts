@@ -1,5 +1,5 @@
 import type { UserType } from "@/types/user.types";
-import type { ReactNode, SubmitEvent } from "react";
+import type { ReactNode, RefObject, SubmitEvent } from "react";
 
 export type AttachmentType = "image" | "video" | "audio" | "document" | "file";
 
@@ -31,7 +31,7 @@ export type ChatMessageProps = {
 
 export type ChatMessage = {
 	_id?: string;
-	clientMessageId?: string;
+	clientMessageId: string;
 	sender: string;
 	receiver?: string;
 	content: string | undefined;
@@ -58,9 +58,10 @@ export type FriendInfo = Pick<UserType, "_id" | "name" | "avatar" | "username">;
 export type ChatContainerProps = {
 	isLoadingFriendInfo: boolean;
 	friend: FriendInfo;
+	messageContainerRef?: RefObject<HTMLDivElement | null>;
+	children: ReactNode;
 	handleSendMessage?: (event: SubmitEvent<Element>) => void;
 	handleSendMessageWithFile?: (file: ChatMessageWithFile) => void;
-	children: ReactNode;
 };
 
 export type AttachmentLightboxProps = {
@@ -85,4 +86,13 @@ export type AttachmentPreviewProps = {
 	caption?: string;
 	isSender: boolean;
 	onImageClick?: () => void;
+};
+
+export type MessagesResponse = {
+	data: ChatMessage[];
+};
+
+export type MessageListProps = {
+	messages: ChatMessage[];
+	currentUserId: string;
 };

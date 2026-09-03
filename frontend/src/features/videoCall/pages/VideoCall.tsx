@@ -7,6 +7,10 @@ import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import { toast } from "react-toastify";
 
+const isMediaStreamEmpty = (stream: MediaStream) => {
+	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
+};
+
 const VideoCall = () => {
 	const { user: currentUser } = useCurrentUser();
 
@@ -58,7 +62,7 @@ const VideoCall = () => {
 
 				localVideoElement.srcObject = null;
 
-				if (localStream.getVideoTracks().length === 0 && localStream.getAudioTracks().length === 0) {
+				if (isMediaStreamEmpty(localStream)) {
 					localStreamRef.current = null;
 				}
 
@@ -113,15 +117,22 @@ const VideoCall = () => {
 
 				const cameraTrack = localStream.getVideoTracks()[0];
 
+				/* Camera and screen sharing both use a video track. We replace the camera track so the local stream only has one video source. */
 				if (cameraTrack) {
 					cameraTrack.stop();
 					localStream.removeTrack(cameraTrack);
 					setIsLocalVideoSharing(false);
 				}
 
+				/* The browser can stop screen sharing without going through this toggle (for example, when the user clicks "Stop sharing" in the browser UI). Keep our React state in sync with that. */
 				screenTrack.addEventListener("ended", () => {
 					videoElement.srcObject = null;
 					localStream.removeTrack(screenTrack);
+
+					if (isMediaStreamEmpty(localStream)) {
+						localStreamRef.current = null;
+					}
+
 					setIsScreenSharing(false);
 				});
 
@@ -144,7 +155,7 @@ const VideoCall = () => {
 				if (localStream.getVideoTracks().length === 0) {
 					videoElement.srcObject = null;
 				}
-				if (localStream.getVideoTracks().length === 0 && localStream.getAudioTracks().length === 0) {
+				if (isMediaStreamEmpty(localStream)) {
 					localStreamRef.current = null;
 				}
 
@@ -216,7 +227,7 @@ const VideoCall = () => {
 					localStream.removeTrack(audioTrack);
 				}
 
-				if (localStream.getAudioTracks().length === 0 && localStream.getVideoTracks().length === 0) {
+				if (isMediaStreamEmpty(localStream)) {
 					localStreamRef.current = null;
 				}
 

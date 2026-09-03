@@ -31,7 +31,6 @@ const AttachmentPreviewModal = ({ open, selectedFile, previewUrl, fileError, isU
 			open={open}
 			onCancel={isUploading ? undefined : onClose}
 			closable={!isUploading}
-			maskClosable={!isUploading}
 			keyboard={!isUploading}
 			destroyOnHidden
 			footer={

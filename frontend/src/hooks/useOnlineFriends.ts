@@ -10,8 +10,6 @@ const useOnlineFriends = () => {
 	const { onlineFriends, setOnlineFriends } = useOnlineFriendsContext();
 
 	const handleUpdatedOnlineFriends = (friends: AccessTokenPayload[]) => {
-		console.log(friends);
-
 		setOnlineFriends(friends.filter((user) => user?._id !== currentUser?._id));
 	};
 

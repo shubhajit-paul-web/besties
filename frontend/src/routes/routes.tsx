@@ -45,7 +45,7 @@ const router = () => {
 					<Route path="*" element={<NotFound />} />
 				</Routes>
 			</Suspense>
-			<ToastContainer />
+			<ToastContainer position="top-center" />
 		</BrowserRouter>
 	);
 };

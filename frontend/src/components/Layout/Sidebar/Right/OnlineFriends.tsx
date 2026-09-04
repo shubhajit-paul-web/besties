@@ -45,14 +45,14 @@ const OnlineFriends = ({ height = "55%" }: { height?: string }) => {
 											</button>
 										</Tooltip>
 									</Link>
-									<Link to="/app/audio-call">
+									<Link to={`/app/audio-call/${friend._id}`}>
 										<Tooltip title="Audio call">
 											<button className="cursor-pointer hover:border-green-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5">
 												<Phone size={14} />
 											</button>
 										</Tooltip>
 									</Link>
-									<Link to="/app/video-call">
+									<Link to={`/app/video-call/${friend._id}`}>
 										<Tooltip title="Video Call">
 											<button className="cursor-pointer hover:border-amber-500 transition-all text-gray-600 bg-gray-100 border border-gray-200 rounded-full p-1.5">
 												<Video size={14} />

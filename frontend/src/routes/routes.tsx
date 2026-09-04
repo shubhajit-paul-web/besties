@@ -14,11 +14,13 @@ const Saved = lazy(() => import("../features/saved/pages/Saved"));
 const Dashboard = lazy(() => import("../features/dashboard/pages/Dashboard"));
 const MyPosts = lazy(() => import("../features/posts/pages/MyPosts"));
 const Friends = lazy(() => import("../features/friends/pages/Friends"));
-const VideoCall = lazy(() => import("../features/videoCall/pages/VideoCall"));
+// const VideoCall = lazy(() => import("../features/videoCall/pages/VideoCall"));
 const AudioCall = lazy(() => import("../features/audioCall/pages/AudioCall"));
 const Chat = lazy(() => import("../features/chat/pages/Chat"));
 const Profile = lazy(() => import("../features/profile/pages/Profile"));
 const NotFound = lazy(() => import("../pages/NotFound"));
+
+import VideoCall from "@/features/videoCall/pages/VideoCall";
 
 const router = () => {
 	return (
@@ -36,9 +38,9 @@ const router = () => {
 							<Route path="friends" element={<Friends />} />
 							<Route path="saved" element={<Saved />} />
 							<Route path="dashboard" element={<Dashboard />} />
-							<Route path="video-call" element={<VideoCall />} />
-							<Route path="audio-call" element={<AudioCall />} />
-							<Route path="chat/:id" element={<Chat />} />
+							<Route path="video-call/:friendId" element={<VideoCall />} />
+							<Route path="audio-call/:friendId" element={<AudioCall />} />
+							<Route path="chat/:friendId" element={<Chat />} />
 							<Route path="profile" element={<Profile />} />
 						</Route>
 					</Route>

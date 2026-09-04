@@ -13,7 +13,7 @@ import type { FriendInfo, MessagesResponse } from "../types/chat.types";
 import MessageList from "../components/MessageList";
 
 const ChatManager = () => {
-	const { id: friendId } = useParams<{ id: string }>();
+	const { friendId } = useParams<{ friendId: string }>();
 
 	const messageContainerRef = useRef<HTMLDivElement | null>(null);
 

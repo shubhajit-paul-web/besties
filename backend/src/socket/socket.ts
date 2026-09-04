@@ -4,6 +4,7 @@ import corsConfig from "../config/cors.js";
 import authenticateSocket from "./middleware/auth.socket.js";
 import registerPresenceHandlers from "./handlers/presence.handlers.js";
 import registerChatHandlers from "./handlers/chat.handlers.js";
+import registerVideoCallHandlers from "./handlers/videoCall.handlers.js";
 
 const initializeSocket = (httpServer: HTTPServer) => {
     const io = new Server(httpServer, {
@@ -17,6 +18,7 @@ const initializeSocket = (httpServer: HTTPServer) => {
     io.on("connection", async (socket) => {
         await registerPresenceHandlers(io, socket);
         await registerChatHandlers(io, socket);
+        registerVideoCallHandlers(socket);
     });
 
     return io;

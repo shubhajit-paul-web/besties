@@ -1,11 +1,16 @@
-import { useRef, useState } from "react";
-import { Mic, MicOff, MonitorOff, MonitorUp, Phone, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Mic, MicOff, MonitorOff, MonitorUp, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import MeetingInfo from "../components/MeetingInfo";
 import VideoParticipant from "../components/VideoParticipant";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import { toast } from "react-toastify";
+import socket from "@/lib/socket";
+import { useParams } from "react-router-dom";
+import { Avatar, notification } from "antd";
+import type { CallStatus, OfferPayload } from "../types/videoCall.types";
+import useSWR from "swr";
+import fetcher from "@/utils/fetcher";
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
@@ -13,15 +18,25 @@ const isMediaStreamEmpty = (stream: MediaStream) => {
 
 const VideoCall = () => {
 	const { user: currentUser } = useCurrentUser();
+	const { friendId } = useParams();
+	const [notify, notifyUi] = notification.useNotification();
 
 	const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
 	const localVideoRef = useRef<HTMLVideoElement | null>(null);
 	const localStreamRef = useRef<MediaStream | null>(null);
 	const localAudioRef = useRef<HTMLAudioElement | null>(null);
+	const peerConnection = useRef<RTCPeerConnection | null>(null);
 
 	const [isLocalVideoSharing, setIsLocalVideoSharing] = useState(false);
 	const [isScreenSharing, setIsScreenSharing] = useState(false);
 	const [isAudioSharing, setIsAudioSharing] = useState(false);
+	const [callStatus, setCallStatus] = useState<CallStatus>("pending");
+	const [senderInfo, setSenderInfo] = useState<OfferPayload["from"] | null>(null);
+	// const [receiverInfo, setReceiverInfo] = useState<OfferPayload["from"] | null>(null);
+
+	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
+
+	const friendInfo = friendProfileRes?.data ?? {};
 
 	const toggleVideoSharing = async () => {
 		const localVideoElement = localVideoRef.current;
@@ -240,10 +255,159 @@ const VideoCall = () => {
 		}
 	};
 
+	const webRtcConnection = () => {
+		const pc = (peerConnection.current = new RTCPeerConnection({
+			iceServers: [
+				{
+					urls: "stun:stun.l.google.com:19302",
+				},
+			],
+		}));
+
+		pc.onicecandidate = (event) => {
+			console.log("New candidate:", event.candidate);
+		};
+
+		pc.onconnectionstatechange = () => {
+			console.log("Connection state:", pc.connectionState);
+		};
+
+		pc.ontrack = (event) => {
+			console.log("Streams:", event.streams);
+		};
+
+		const localStream = localStreamRef.current;
+
+		if (localStream) {
+			localStream.getTracks().forEach((track) => {
+				pc.addTrack(track, localStream);
+			});
+		}
+
+		peerConnection.current = pc;
+	};
+
+	const startCall = async () => {
+		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
+			await toggleVideoSharing();
+			// return showErrorToast("Turn on your camera or microphone to start the call.");
+		}
+
+		webRtcConnection();
+
+		const pc = peerConnection.current;
+		if (!pc) return;
+
+		const offer = await pc.createOffer();
+		await pc.setLocalDescription(offer);
+
+		setCallStatus("calling");
+
+		socket.emit("offer", {
+			to: friendId,
+			offer: pc.localDescription,
+		});
+	};
+
+	const onOffer = (payload: OfferPayload) => {
+		setCallStatus("incoming");
+		setSenderInfo(payload.from);
+
+		console.log("on offer:", payload);
+	};
+
+	useEffect(() => {
+		socket.on("offer", onOffer);
+
+		return () => {
+			socket.off("offer", onOffer);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (callStatus === "pending") return;
+
+		if (callStatus === "incoming") {
+			return notify.open({
+				title: "Incoming video call",
+				description: (
+					<div className="flex items-center gap-3 mt-1">
+						<Avatar size={44} src={senderInfo?.avatar ?? "/profile-img.jpeg"} />
+
+						<div className="min-w-0">
+							<div className="font-medium truncate">{senderInfo?.username}</div>
+
+							<div className="text-gray-500 text-sm">is calling you...</div>
+						</div>
+					</div>
+				),
+				duration: 30,
+				showProgress: true,
+				pauseOnHover: false,
+				placement: "topRight",
+				actions: [
+					<div className="flex justify-end gap-3">
+						<IconControlButton
+							activeIcon={PhoneOff}
+							inActiveIcon={PhoneOff}
+							style={{
+								backgroundColor: "#ff4d4f",
+							}}
+							// onClick={handleRejectCall}
+						/>
+
+						<IconControlButton
+							activeIcon={Video}
+							inActiveIcon={Video}
+							style={{
+								backgroundColor: "#16a34a",
+							}}
+							// onClick={handleAcceptCall}
+						/>
+					</div>,
+				],
+			});
+		}
+
+		if (callStatus === "calling") {
+			return notify.open({
+				// title: "Calling...",
+
+				description: (
+					<div className="flex items-center gap-3 mt-1">
+						<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
+
+						<div className="min-w-0">
+							<div className="font-medium truncate">{friendInfo?.username}</div>
+
+							<div className="text-gray-500 text-sm">Calling...</div>
+						</div>
+					</div>
+				),
+
+				duration: 30,
+				showProgress: true,
+				pauseOnHover: false,
+				placement: "topRight",
+				closable: false,
+
+				actions: (
+					<div className="flex justify-end">
+						<IconControlButton
+							activeIcon={PhoneOff}
+							inActiveIcon={PhoneOff}
+							// onClick={handleCancelCall}
+						/>
+					</div>
+				),
+			});
+		}
+	}, [callStatus]);
+
 	return (
 		<div>
 			{/* Meeting info */}
-			<MeetingInfo meetingId="AK454679S0DS" sessionLength="00:12:45" />
+			{/* <MeetingInfo meetingId="AK454679S0DS" sessionLength="00:12:45" /> */}
 
 			{/* Video */}
 			<div className="w-full">
@@ -262,15 +426,32 @@ const VideoCall = () => {
 
 			{/* Call Action Buttons */}
 			<div className="flex justify-center items-center gap-5 bg-slate-100/70 rounded-3xl p-5 border border-slate-200 w-fit m-auto">
-				<IconControlButton activeIcon={Mic} inActiveIcon={MicOff} isActive={isAudioSharing} onClick={toggleAudioSharing} />
-				<IconControlButton activeIcon={Video} inActiveIcon={VideoOff} isActive={isLocalVideoSharing} onClick={toggleVideoSharing} />
-				<IconControlButton activeIcon={MonitorUp} inActiveIcon={MonitorOff} isActive={isScreenSharing} onClick={toggleScreenSharing} />
-				<IconControlButton activeIcon={Volume2} inActiveIcon={VolumeOff} isActive={true} />
+				<IconControlButton activeIcon={Mic} inActiveIcon={MicOff} isActive={isAudioSharing} tooltipTitle="Microphone" onClick={toggleAudioSharing} />
+				<IconControlButton activeIcon={Video} inActiveIcon={VideoOff} isActive={isLocalVideoSharing} tooltipTitle="Camera" onClick={toggleVideoSharing} />
+				<IconControlButton activeIcon={MonitorUp} inActiveIcon={MonitorOff} isActive={isScreenSharing} tooltipTitle="Screen" onClick={toggleScreenSharing} />
+				<IconControlButton activeIcon={Volume2} inActiveIcon={VolumeOff} isActive={true} tooltipTitle="Voice" />
 
-				<button className="bg-red-500 text-white hover:bg-red-700 active:bg-red-800 transition-colors py-3.5 px-8 rounded-full cursor-pointer">
-					<Phone size={25} className="rotate-135" />
-				</button>
+				<div className="flex gap-5">
+					{/* Accept */}
+					<button
+						onClick={startCall}
+						type="button"
+						className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-green-600 text-white transition-colors hover:bg-green-700 active:bg-green-800 cursor-pointer">
+						<Phone size={20} />
+						Call
+					</button>
+
+					{/* End */}
+					<button
+						type="button"
+						className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-red-500 text-white transition-colors hover:bg-red-600 active:bg-red-700 cursor-pointer">
+						<PhoneOff size={20} />
+						End
+					</button>
+				</div>
 			</div>
+
+			{notifyUi}
 		</div>
 	);
 };

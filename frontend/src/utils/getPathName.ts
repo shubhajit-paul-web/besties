@@ -3,14 +3,14 @@ const getPathName = (pathname: string) => {
 	// 	return "Home";
 	// }
 
-	let path = pathname.replace(/^\/app\/|\/$/g, "");
-	path = path.replace("-", " ");
+	const path = pathname
+		.replace(/^\/app\/?/, "")
+		.replace(/\/$/, "")
+		.replace(/-/g, " ");
 
-	if (path.startsWith("chat/")) {
-		path = path.split("/")[0];
-	}
+	const [segment] = path.split("/");
 
-	return path;
+	return ["chat", "audio call", "video call"].includes(segment) ? segment : path;
 };
 
 export default getPathName;

@@ -8,9 +8,13 @@ import { toast } from "react-toastify";
 import socket from "@/lib/socket";
 import { useParams } from "react-router-dom";
 import { Avatar, notification } from "antd";
-import type { CallStatus, OfferPayload } from "../types/videoCall.types";
+import type { AnswerPayload, CallStatus, ICECandidatePayload, OfferPayload } from "../types/videoCall.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
+
+// Ringing audio for incoming and outgoing call
+import phoneRingingOutgoing from "@/assets/audio/phone-ringing.mp3";
+import phoneRingingIncoming from "@/assets/audio/incoming-call-ringtone.mp3";
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
@@ -25,18 +29,35 @@ const VideoCall = () => {
 	const localVideoRef = useRef<HTMLVideoElement | null>(null);
 	const localStreamRef = useRef<MediaStream | null>(null);
 	const localAudioRef = useRef<HTMLAudioElement | null>(null);
+	const pendingOfferPayloadRef = useRef<OfferPayload | null>(null);
 	const peerConnection = useRef<RTCPeerConnection | null>(null);
+	const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
+	const ringingAudio = useRef<HTMLAudioElement | null>(null);
 
 	const [isLocalVideoSharing, setIsLocalVideoSharing] = useState(false);
 	const [isScreenSharing, setIsScreenSharing] = useState(false);
 	const [isAudioSharing, setIsAudioSharing] = useState(false);
 	const [callStatus, setCallStatus] = useState<CallStatus>("pending");
 	const [senderInfo, setSenderInfo] = useState<OfferPayload["from"] | null>(null);
-	// const [receiverInfo, setReceiverInfo] = useState<OfferPayload["from"] | null>(null);
 
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
 
 	const friendInfo = friendProfileRes?.data ?? {};
+
+	const playRingtone = (src: string) => {
+		if (!ringingAudio.current) {
+			ringingAudio.current = new Audio();
+		}
+
+		const audio = ringingAudio.current;
+
+		audio.pause();
+		audio.src = src;
+		audio.currentTime = 0;
+		audio.load();
+		audio.play();
+		audio.loop = true;
+	};
 
 	const toggleVideoSharing = async () => {
 		const localVideoElement = localVideoRef.current;
@@ -135,8 +156,8 @@ const VideoCall = () => {
 				/* Camera and screen sharing both use a video track. We replace the camera track so the local stream only has one video source. */
 				if (cameraTrack) {
 					cameraTrack.stop();
-					localStream.removeTrack(cameraTrack);
-					setIsLocalVideoSharing(false);
+					// setIsLocalVideoSharing(false);
+					// localStream.removeTrack(cameraTrack);
 				}
 
 				/* The browser can stop screen sharing without going through this toggle (for example, when the user clicks "Stop sharing" in the browser UI). Keep our React state in sync with that. */
@@ -255,25 +276,45 @@ const VideoCall = () => {
 		}
 	};
 
+	// WebRTC connection initiator
 	const webRtcConnection = () => {
-		const pc = (peerConnection.current = new RTCPeerConnection({
+		const pc = new RTCPeerConnection({
 			iceServers: [
 				{
 					urls: "stun:stun.l.google.com:19302",
 				},
 			],
-		}));
+		});
 
 		pc.onicecandidate = (event) => {
-			console.log("New candidate:", event.candidate);
+			if (event.candidate) {
+				socket.emit("ice-candidate", {
+					to: friendId,
+					candidate: event.candidate,
+				});
+			}
+
+			// console.log("New candidate:", event.candidate);
 		};
 
 		pc.onconnectionstatechange = () => {
 			console.log("Connection state:", pc.connectionState);
+
+			if (pc.connectionState === "connected") {
+				ringingAudio.current?.pause();
+				notify.destroy("outgoing-call");
+			}
 		};
 
 		pc.ontrack = (event) => {
-			console.log("Streams:", event.streams);
+			console.log("On track fired");
+
+			const remoteVideoElement = remoteVideoRef.current;
+			if (!remoteVideoElement) return;
+
+			const remoteStream = event.streams[0];
+
+			remoteVideoElement.srcObject = remoteStream;
 		};
 
 		const localStream = localStreamRef.current;
@@ -287,48 +328,117 @@ const VideoCall = () => {
 		peerConnection.current = pc;
 	};
 
-	const startCall = async () => {
+	const cancelOutgoingCall = () => {
+		ringingAudio.current?.pause();
+		notify.destroy("outgoing-call");
+	};
+
+	const rejectIncomingCall = () => {
+		ringingAudio.current?.pause();
+		notify.destroy("outgoing-call");
+	};
+
+	const acceptIncomingCall = async () => {
+		ringingAudio.current?.pause();
+		notify.destroy("incoming-call");
+
+		const offerPayload = pendingOfferPayloadRef.current;
+		if (!offerPayload) return;
+
 		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
 			await toggleVideoSharing();
-			// return showErrorToast("Turn on your camera or microphone to start the call.");
 		}
+
+		if (!localStreamRef.current) return;
 
 		webRtcConnection();
 
 		const pc = peerConnection.current;
 		if (!pc) return;
 
-		const offer = await pc.createOffer();
-		await pc.setLocalDescription(offer);
+		try {
+			await pc.setRemoteDescription(offerPayload.offer);
 
-		setCallStatus("calling");
+			for (const candidate of pendingIceCandidatesRef.current) {
+				await pc.addIceCandidate(candidate);
+			}
 
-		socket.emit("offer", {
-			to: friendId,
-			offer: pc.localDescription,
-		});
+			pendingIceCandidatesRef.current = [];
+
+			const answer = await pc.createAnswer();
+			await pc.setLocalDescription(answer);
+
+			socket.emit("answer", {
+				to: offerPayload.from._id,
+				answer: pc.localDescription,
+			});
+		} catch (err: unknown) {
+			console.error(err);
+		}
 	};
 
-	const onOffer = (payload: OfferPayload) => {
-		setCallStatus("incoming");
-		setSenderInfo(payload.from);
+	const startCall = async () => {
+		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
+			await toggleVideoSharing();
+		}
 
-		console.log("on offer:", payload);
+		try {
+			webRtcConnection();
+
+			const pc = peerConnection.current;
+			if (!pc) return;
+
+			const offer = await pc.createOffer();
+			await pc.setLocalDescription(offer);
+
+			setCallStatus("calling");
+
+			notify.open({
+				// title: "Calling...",
+				key: "outgoing-call",
+				description: (
+					<div className="flex items-center gap-3 mt-1">
+						<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
+
+						<div className="min-w-0">
+							<div className="font-medium truncate">{friendInfo?.username}</div>
+
+							<div className="text-gray-500 text-sm">Calling...</div>
+						</div>
+					</div>
+				),
+				duration: 30,
+				showProgress: true,
+				pauseOnHover: false,
+				placement: "topRight",
+				closable: false,
+				actions: <IconControlButton activeIcon={PhoneOff} inActiveIcon={PhoneOff} onClick={cancelOutgoingCall} />,
+				onClose() {
+					ringingAudio.current?.pause();
+				},
+			});
+
+			playRingtone(phoneRingingOutgoing);
+
+			socket.emit("offer", {
+				to: friendId,
+				offer: pc.localDescription,
+			});
+		} catch (err: unknown) {
+			console.error(err);
+		}
 	};
 
-	useEffect(() => {
-		socket.on("offer", onOffer);
+	// WebSocket handlers
+	const onOffer = async (payload: OfferPayload) => {
+		try {
+			setCallStatus("incoming");
+			setSenderInfo(payload.from);
 
-		return () => {
-			socket.off("offer", onOffer);
-		};
-	}, []);
+			pendingOfferPayloadRef.current = payload;
 
-	useEffect(() => {
-		if (callStatus === "pending") return;
-
-		if (callStatus === "incoming") {
-			return notify.open({
+			notify.open({
+				key: "incoming-call",
 				title: "Incoming video call",
 				description: (
 					<div className="flex items-center gap-3 mt-1">
@@ -353,7 +463,7 @@ const VideoCall = () => {
 							style={{
 								backgroundColor: "#ff4d4f",
 							}}
-							// onClick={handleRejectCall}
+							onClick={rejectIncomingCall}
 						/>
 
 						<IconControlButton
@@ -362,46 +472,179 @@ const VideoCall = () => {
 							style={{
 								backgroundColor: "#16a34a",
 							}}
-							// onClick={handleAcceptCall}
+							onClick={acceptIncomingCall}
 						/>
 					</div>,
 				],
+				onClose() {
+					ringingAudio.current?.pause();
+					notify.destroy("incoming-call");
+				},
 			});
+
+			playRingtone(phoneRingingIncoming);
+
+			// await pc.setRemoteDescription(payload.offer);
+
+			// const answer = await pc.createAnswer();
+			// await pc.setLocalDescription(answer);
+
+			// socket.emit("answer", {
+			// 	to: payload.from._id,
+			// 	answer: pc.localDescription,
+			// });
+
+			// console.log("on offer:", payload.offer);
+		} catch (err: unknown) {
+			console.error(err);
+		}
+	};
+
+	const onAnswer = async (payload: AnswerPayload) => {
+		const pc = peerConnection.current;
+		if (!pc) return;
+
+		try {
+			await pc.setRemoteDescription(payload.answer);
+		} catch (err: unknown) {
+			console.error(err);
+		}
+	};
+
+	const onIceCandidate = async (payload: ICECandidatePayload) => {
+		const pc = peerConnection.current;
+
+		if (!pc || !pc.remoteDescription) {
+			pendingIceCandidatesRef.current.push(payload.candidate);
+			return;
 		}
 
-		if (callStatus === "calling") {
-			return notify.open({
-				// title: "Calling...",
-
-				description: (
-					<div className="flex items-center gap-3 mt-1">
-						<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
-
-						<div className="min-w-0">
-							<div className="font-medium truncate">{friendInfo?.username}</div>
-
-							<div className="text-gray-500 text-sm">Calling...</div>
-						</div>
-					</div>
-				),
-
-				duration: 30,
-				showProgress: true,
-				pauseOnHover: false,
-				placement: "topRight",
-				closable: false,
-
-				actions: (
-					<div className="flex justify-end">
-						<IconControlButton
-							activeIcon={PhoneOff}
-							inActiveIcon={PhoneOff}
-							// onClick={handleCancelCall}
-						/>
-					</div>
-				),
-			});
+		try {
+			await pc.addIceCandidate(payload.candidate);
+		} catch (err: unknown) {
+			console.error("Failed to add ICE candidate:", err);
 		}
+	};
+
+	useEffect(() => {
+		socket.on("offer", onOffer);
+		socket.on("answer", onAnswer);
+		socket.on("ice-candidate", onIceCandidate);
+
+		return () => {
+			socket.off("offer", onOffer);
+			socket.off("answer", onAnswer);
+			socket.off("ice-candidate", onIceCandidate);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (callStatus === "pending") return;
+
+		if (!ringingAudio.current) {
+			ringingAudio.current = new Audio();
+		}
+
+		// if (callStatus === "incoming") {
+		// 	const audio = ringingAudio.current;
+
+		// 	if (audio) {
+		// 		audio.src = phoneRingingIncoming;
+		// 		audio.currentTime = 0;
+		// 		audio.load();
+		// 		audio.play();
+		// 		audio.loop = true;
+		// 	}
+
+		// 	return notify.open({
+		// 		key: "incoming-call",
+		// 		title: "Incoming video call",
+		// 		description: (
+		// 			<div className="flex items-center gap-3 mt-1">
+		// 				<Avatar size={44} src={senderInfo?.avatar ?? "/profile-img.jpeg"} />
+
+		// 				<div className="min-w-0">
+		// 					<div className="font-medium truncate">{senderInfo?.username}</div>
+
+		// 					<div className="text-gray-500 text-sm">is calling you...</div>
+		// 				</div>
+		// 			</div>
+		// 		),
+		// 		duration: 30,
+		// 		showProgress: true,
+		// 		pauseOnHover: false,
+		// 		placement: "topRight",
+		// 		actions: [
+		// 			<div className="flex justify-end gap-3">
+		// 				<IconControlButton
+		// 					activeIcon={PhoneOff}
+		// 					inActiveIcon={PhoneOff}
+		// 					style={{
+		// 						backgroundColor: "#ff4d4f",
+		// 					}}
+		// 					// onClick={handleRejectCall}
+		// 				/>
+
+		// 				<IconControlButton
+		// 					activeIcon={Video}
+		// 					inActiveIcon={Video}
+		// 					style={{
+		// 						backgroundColor: "#16a34a",
+		// 					}}
+		// 					// onClick={handleAcceptCall}
+		// 				/>
+		// 			</div>,
+		// 		],
+		// 		onClose() {
+		// 			audio?.pause();
+		// 			notify.destroy("incoming-call");
+		// 		},
+		// 	});
+		// }
+
+		// if (callStatus === "calling") {
+		// 	const audio = ringingAudio.current;
+
+		// 	if (audio) {
+		// 		audio.src = phoneRingingOutgoing;
+		// 		audio.currentTime = 0;
+		// 		audio.load();
+		// 		audio.play();
+		// 		audio.loop = true;
+		// 	}
+
+		// 	return notify.open({
+		// 		// title: "Calling...",
+
+		// 		description: (
+		// 			<div className="flex items-center gap-3 mt-1">
+		// 				<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
+
+		// 				<div className="min-w-0">
+		// 					<div className="font-medium truncate">{friendInfo?.username}</div>
+
+		// 					<div className="text-gray-500 text-sm">Calling...</div>
+		// 				</div>
+		// 			</div>
+		// 		),
+
+		// 		duration: 30,
+		// 		showProgress: true,
+		// 		pauseOnHover: false,
+		// 		placement: "topRight",
+		// 		closable: false,
+
+		// 		actions: (
+		// 			<div className="flex justify-end">
+		// 				<IconControlButton
+		// 					activeIcon={PhoneOff}
+		// 					inActiveIcon={PhoneOff}
+		// 					// onClick={handleCancelCall}
+		// 				/>
+		// 			</div>
+		// 		),
+		// 	});
+		// }
 	}, [callStatus]);
 
 	return (
@@ -412,15 +655,15 @@ const VideoCall = () => {
 			{/* Video */}
 			<div className="w-full">
 				{/* Remote video */}
-				<VideoParticipant fullName="Harsh Dey">
+				<VideoParticipant fullName={formatUserName(friendInfo?.name)}>
 					<video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover absolute top-0 left-0" />
 				</VideoParticipant>
 
 				{/* Local video and audio */}
-				<VideoParticipant fullName={formatUserName(currentUser?.name)} style={{ width: "50%" }}>
+				<VideoParticipant fullName={`${formatUserName(currentUser?.name)} (You)`} style={{ width: "50%" }}>
 					<video ref={localVideoRef} autoPlay playsInline className="w-full h-full object-cover absolute top-0 left-0" />
 
-					<audio ref={localAudioRef} autoPlay playsInline />
+					<audio ref={localAudioRef} autoPlay playsInline muted />
 				</VideoParticipant>
 			</div>
 

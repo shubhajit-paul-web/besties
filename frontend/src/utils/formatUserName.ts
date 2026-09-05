@@ -1,6 +1,6 @@
 const formatUserName = (name: { first: string; last?: string } | undefined) => {
 	if (!name) {
-		return "Unknown";
+		return "Loading...";
 	}
 
 	return `${name.first} ${name?.last ?? ""}`.trim();

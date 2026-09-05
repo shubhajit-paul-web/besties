@@ -17,3 +17,18 @@ export type MessageAck<T = unknown> = (response: {
     message?: string;
     data?: T;
 }) => void;
+
+export type OfferPayload = {
+    to: string;
+    offer: RTCSessionDescriptionInit;
+};
+
+export type AnswerPayload = {
+    to: string;
+    answer: RTCSessionDescriptionInit;
+};
+
+export type ICECandidatePayload = {
+    to: string;
+    candidate: RTCIceCandidateInit;
+};

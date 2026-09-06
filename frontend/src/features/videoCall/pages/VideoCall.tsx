@@ -17,6 +17,7 @@ import fetcher from "@/utils/fetcher";
 import ringingOutgoingAudio from "@/assets/audio/phone-ringing.mp3";
 import ringingIncomingAudio from "@/assets/audio/incoming-call-ringtone.mp3";
 import formatCallDuration from "@/utils/formatCallDuration";
+import { showErrorToast } from "../utils/toast";
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
@@ -31,10 +32,11 @@ const VideoCall = () => {
 	const localVideoRef = useRef<HTMLVideoElement | null>(null);
 	const localStreamRef = useRef<MediaStream | null>(null);
 	const localAudioRef = useRef<HTMLAudioElement | null>(null);
-	const pendingOfferPayloadRef = useRef<OfferPayload | null>(null);
+	const offerPayloadRef = useRef<OfferPayload | null>(null);
 	const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 	const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
 	const ringingAudio = useRef<HTMLAudioElement | null>(null);
+	const callStatusRef = useRef<CallStatus>("pending");
 
 	const [isLocalVideoSharing, setIsLocalVideoSharing] = useState(false);
 	const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -46,6 +48,11 @@ const VideoCall = () => {
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
 
 	const friendInfo = friendProfileRes?.data ?? {};
+
+	const updateCallStatus = (status: CallStatus) => {
+		callStatusRef.current = status;
+		setCallStatus(status);
+	};
 
 	// Play incoming/outgoing call ringtone
 	const playRingtone = (type: "calling" | "incoming") => {
@@ -80,7 +87,8 @@ const VideoCall = () => {
 		if (!localVideoElement) return;
 
 		if (!navigator.mediaDevices?.getUserMedia) {
-			return toast.error("Camera access isn’t supported by your browser.");
+			toast.error("Camera access isn’t supported by your browser.");
+			return;
 		}
 
 		try {
@@ -120,6 +128,8 @@ const VideoCall = () => {
 
 				setIsLocalVideoSharing(false);
 			}
+
+			return true;
 		} catch (err) {
 			console.error("Failed to access camera:", err);
 
@@ -142,6 +152,8 @@ const VideoCall = () => {
 			}
 
 			toast.error(errorMessage);
+
+			return false;
 		}
 	};
 
@@ -309,19 +321,15 @@ const VideoCall = () => {
 					candidate: event.candidate,
 				});
 			}
-
-			// console.log("New candidate:", event.candidate);
 		};
 
 		pc.onconnectionstatechange = () => {
 			const connectionState = pc.connectionState;
 
-			console.log("Connection state:", connectionState);
-
 			if (connectionState === "connected") {
-				setCallStatus("connected");
+				updateCallStatus("connected");
 			} else if (connectionState === "closed" || connectionState === "disconnected") {
-				setCallStatus("ended");
+				updateCallStatus("ended");
 			}
 		};
 
@@ -348,38 +356,47 @@ const VideoCall = () => {
 	};
 
 	const cancelOutgoingCall = () => {
-		ringingAudio.current?.pause();
-		notify.destroy("outgoing-call");
+		if (callStatusRef.current === "calling") {
+			updateCallStatus("canceled");
+		}
 	};
 
 	const rejectIncomingCall = () => {
-		if (callStatus === "incoming") {
-			setCallStatus("rejected");
-		}
+		if (callStatusRef.current !== "incoming") return;
 
-		// ringingAudio.current?.pause();
-		// notify.destroy("outgoing-call");
+		updateCallStatus("rejected");
+
+		socket.emit("reject-incoming-call", {
+			to: offerPayloadRef.current?.from._id,
+		});
+
+		offerPayloadRef.current = null;
 	};
 
 	const acceptIncomingCall = async () => {
-		// ringingAudio.current?.pause();
-		// notify.destroy("incoming-call");
-
-		const offerPayload = pendingOfferPayloadRef.current;
+		const offerPayload = offerPayloadRef.current;
 		if (!offerPayload) return;
 
 		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
-			await toggleVideoSharing();
+			const mediaStarted = await toggleVideoSharing();
+
+			if (!mediaStarted) {
+				updateCallStatus("faild");
+				return;
+			}
 		}
 
 		if (!localStreamRef.current) return;
 
-		webRtcConnection();
-
-		const pc = peerConnectionRef.current;
-		if (!pc) return;
-
 		try {
+			webRtcConnection();
+
+			const pc = peerConnectionRef.current;
+
+			if (!pc) {
+				throw new Error("Failed to initialize peer connection");
+			}
+
 			await pc.setRemoteDescription(offerPayload.offer);
 
 			for (const candidate of pendingIceCandidatesRef.current) {
@@ -391,50 +408,78 @@ const VideoCall = () => {
 			const answer = await pc.createAnswer();
 			await pc.setLocalDescription(answer);
 
-			// setCallStatus("connected"); // status: incoming -> connected
+			if (!pc.localDescription) {
+				throw new Error("Failed to create local description");
+			}
 
 			socket.emit("answer", {
 				to: offerPayload.from._id,
 				answer: pc.localDescription,
 			});
-		} catch (err: unknown) {
-			removeNotification("incoming-call");
 
-			console.error(err);
+			offerPayloadRef.current = null;
+		} catch (err: unknown) {
+			console.error("Failed to accept incoming call:", err);
+
+			// removeNotification("incoming-call");
+
+			// clean up the partially created WebRTC connection
+			peerConnectionRef.current?.close();
+			peerConnectionRef.current = null;
+
+			updateCallStatus("faild");
+			showErrorToast("Unable to connect the call. Please try again.");
 		}
 	};
 
 	const startCall = async () => {
+		// Make sure at least one media type is available.
 		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
-			await toggleVideoSharing();
+			const mediaStarted = await toggleVideoSharing();
+
+			if (!mediaStarted) {
+				updateCallStatus("faild");
+				return;
+			}
 		}
 
 		try {
 			webRtcConnection();
 
 			const pc = peerConnectionRef.current;
-			if (!pc) return;
+
+			if (!pc) {
+				throw new Error("Failed to initialize peer connection");
+			}
 
 			const offer = await pc.createOffer();
 			await pc.setLocalDescription(offer);
 
-			setCallStatus("calling");
+			if (!pc.localDescription) {
+				throw new Error("Failed to create local description");
+			}
 
 			socket.emit("offer", {
 				to: friendId,
 				offer: pc.localDescription,
 			});
+
+			updateCallStatus("calling");
 		} catch (err: unknown) {
-			console.error(err);
+			console.error("Failed to start call:", err);
+
+			updateCallStatus("faild");
+
+			showErrorToast("Unable to start the call. Please try again.");
 		}
 	};
 
-	// WebSocket handlers
+	// Socket.io handlers
 	const onOfferListener = async (payload: OfferPayload) => {
 		try {
-			pendingOfferPayloadRef.current = payload;
+			offerPayloadRef.current = payload;
 			setSenderInfo(payload.from);
-			setCallStatus("incoming");
+			updateCallStatus("incoming");
 		} catch (err: unknown) {
 			console.error(err);
 		}
@@ -466,27 +511,46 @@ const VideoCall = () => {
 		}
 	};
 
+	const onRejectIncomingCallListener = ({ from }: { from: string }) => {
+		if (from !== friendId || callStatusRef.current !== "calling") {
+			return;
+		}
+
+		updateCallStatus("rejected");
+
+		localStreamRef.current?.getTracks().forEach((track) => {
+			track.stop();
+		});
+
+		localStreamRef.current = null;
+
+		// Reset all local media sharing states
+		setIsLocalVideoSharing(false);
+		setIsAudioSharing(false);
+		setIsScreenSharing(false);
+
+		// Cleanup peer connection
+		peerConnectionRef.current?.close();
+		peerConnectionRef.current = null;
+	};
+
 	// Socket.io listeners
 	useEffect(() => {
 		socket.on("offer", onOfferListener);
 		socket.on("answer", onAnswerListener);
 		socket.on("ice-candidate", onIceCandidateListener);
+		socket.on("reject-incoming-call", onRejectIncomingCallListener);
 
 		return () => {
 			socket.off("offer", onOfferListener);
 			socket.off("answer", onAnswerListener);
 			socket.off("ice-candidate", onIceCandidateListener);
+			socket.off("reject-incoming-call", onRejectIncomingCallListener);
 		};
 	}, []);
 
 	useEffect(() => {
 		if (callStatus === "pending") return;
-
-		let intervalId: number | null = null;
-
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
 
 		if (callStatus === "calling") {
 			playRingtone("calling");
@@ -515,9 +579,7 @@ const VideoCall = () => {
 					ringingAudio.current?.pause();
 				},
 			});
-		}
-
-		if (callStatus === "incoming") {
+		} else if (callStatus === "incoming") {
 			playRingtone("incoming");
 
 			notify.open({
@@ -564,26 +626,30 @@ const VideoCall = () => {
 					notify.destroy("incoming-call");
 				},
 			});
-		}
-
-		if (callStatus === "rejected") {
-			removeNotification("outgoing-call");
-		}
-
-		if (callStatus === "connected") {
+		} else if (callStatus === "rejected") {
 			removeNotification("outgoing-call");
 			removeNotification("incoming-call");
 
-			intervalId = setInterval(() => {
+			toast.info("Call declined", {
+				theme: "colored",
+			});
+		} else if (callStatus === "connected") {
+			removeNotification("outgoing-call");
+			removeNotification("incoming-call");
+
+			const intervalId = setInterval(() => {
 				setCallDuration((prevDuration) => prevDuration + 1);
 			}, 1000);
-		}
 
-		return () => {
-			if (intervalId) {
+			return () => {
 				clearInterval(intervalId);
-			}
-		};
+			};
+		} else if (callStatus === "canceled") {
+			removeNotification("outgoing-call");
+		} else if (callStatus === "faild") {
+			removeNotification("incoming-call");
+			removeNotification("outgoing-call");
+		}
 	}, [callStatus]);
 
 	// Cleanup

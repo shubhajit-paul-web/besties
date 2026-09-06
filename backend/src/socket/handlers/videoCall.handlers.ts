@@ -30,6 +30,12 @@ const registerVideoCallHandlers = (socket: Socket) => {
             candidate: payload.candidate,
         });
     });
+
+    socket.on("reject-incoming-call", ({ to }) => {
+        socket.to(`user:${to}`).emit("reject-incoming-call", {
+            from: sender._id,
+        });
+    });
 };
 
 export default registerVideoCallHandlers;

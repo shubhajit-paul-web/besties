@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from "react";
-import { Mic, MicOff, MonitorOff, MonitorUp, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
+import { Clock, Mic, MicOff, MonitorOff, MonitorUp, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import VideoParticipant from "../components/VideoParticipant";
 import formatUserName from "@/utils/formatUserName";
@@ -13,8 +14,9 @@ import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
 
 // Ringing audio for incoming and outgoing call
-import phoneRingingOutgoing from "@/assets/audio/phone-ringing.mp3";
-import phoneRingingIncoming from "@/assets/audio/incoming-call-ringtone.mp3";
+import ringingOutgoingAudio from "@/assets/audio/phone-ringing.mp3";
+import ringingIncomingAudio from "@/assets/audio/incoming-call-ringtone.mp3";
+import formatCallDuration from "@/utils/formatCallDuration";
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
@@ -30,7 +32,7 @@ const VideoCall = () => {
 	const localStreamRef = useRef<MediaStream | null>(null);
 	const localAudioRef = useRef<HTMLAudioElement | null>(null);
 	const pendingOfferPayloadRef = useRef<OfferPayload | null>(null);
-	const peerConnection = useRef<RTCPeerConnection | null>(null);
+	const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 	const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
 	const ringingAudio = useRef<HTMLAudioElement | null>(null);
 
@@ -38,27 +40,41 @@ const VideoCall = () => {
 	const [isScreenSharing, setIsScreenSharing] = useState(false);
 	const [isAudioSharing, setIsAudioSharing] = useState(false);
 	const [callStatus, setCallStatus] = useState<CallStatus>("pending");
+	const [callDuration, setCallDuration] = useState(0);
 	const [senderInfo, setSenderInfo] = useState<OfferPayload["from"] | null>(null);
 
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
 
 	const friendInfo = friendProfileRes?.data ?? {};
 
-	const playRingtone = (src: string) => {
+	// Play incoming/outgoing call ringtone
+	const playRingtone = (type: "calling" | "incoming") => {
 		if (!ringingAudio.current) {
 			ringingAudio.current = new Audio();
 		}
 
 		const audio = ringingAudio.current;
 
+		const audioMap = {
+			calling: ringingOutgoingAudio,
+			incoming: ringingIncomingAudio,
+		};
+
 		audio.pause();
-		audio.src = src;
+		audio.src = audioMap[type];
 		audio.currentTime = 0;
 		audio.load();
 		audio.play();
 		audio.loop = true;
 	};
 
+	// Pause ringing audio and destroy the notification UI
+	const removeNotification = (notificationKey: string) => {
+		ringingAudio.current?.pause();
+		notify.destroy(notificationKey);
+	};
+
+	// Media controls
 	const toggleVideoSharing = async () => {
 		const localVideoElement = localVideoRef.current;
 		if (!localVideoElement) return;
@@ -298,11 +314,14 @@ const VideoCall = () => {
 		};
 
 		pc.onconnectionstatechange = () => {
-			console.log("Connection state:", pc.connectionState);
+			const connectionState = pc.connectionState;
 
-			if (pc.connectionState === "connected") {
-				ringingAudio.current?.pause();
-				notify.destroy("outgoing-call");
+			console.log("Connection state:", connectionState);
+
+			if (connectionState === "connected") {
+				setCallStatus("connected");
+			} else if (connectionState === "closed" || connectionState === "disconnected") {
+				setCallStatus("ended");
 			}
 		};
 
@@ -325,7 +344,7 @@ const VideoCall = () => {
 			});
 		}
 
-		peerConnection.current = pc;
+		peerConnectionRef.current = pc;
 	};
 
 	const cancelOutgoingCall = () => {
@@ -334,13 +353,17 @@ const VideoCall = () => {
 	};
 
 	const rejectIncomingCall = () => {
-		ringingAudio.current?.pause();
-		notify.destroy("outgoing-call");
+		if (callStatus === "incoming") {
+			setCallStatus("rejected");
+		}
+
+		// ringingAudio.current?.pause();
+		// notify.destroy("outgoing-call");
 	};
 
 	const acceptIncomingCall = async () => {
-		ringingAudio.current?.pause();
-		notify.destroy("incoming-call");
+		// ringingAudio.current?.pause();
+		// notify.destroy("incoming-call");
 
 		const offerPayload = pendingOfferPayloadRef.current;
 		if (!offerPayload) return;
@@ -353,7 +376,7 @@ const VideoCall = () => {
 
 		webRtcConnection();
 
-		const pc = peerConnection.current;
+		const pc = peerConnectionRef.current;
 		if (!pc) return;
 
 		try {
@@ -368,11 +391,15 @@ const VideoCall = () => {
 			const answer = await pc.createAnswer();
 			await pc.setLocalDescription(answer);
 
+			// setCallStatus("connected"); // status: incoming -> connected
+
 			socket.emit("answer", {
 				to: offerPayload.from._id,
 				answer: pc.localDescription,
 			});
 		} catch (err: unknown) {
+			removeNotification("incoming-call");
+
 			console.error(err);
 		}
 	};
@@ -385,13 +412,84 @@ const VideoCall = () => {
 		try {
 			webRtcConnection();
 
-			const pc = peerConnection.current;
+			const pc = peerConnectionRef.current;
 			if (!pc) return;
 
 			const offer = await pc.createOffer();
 			await pc.setLocalDescription(offer);
 
 			setCallStatus("calling");
+
+			socket.emit("offer", {
+				to: friendId,
+				offer: pc.localDescription,
+			});
+		} catch (err: unknown) {
+			console.error(err);
+		}
+	};
+
+	// WebSocket handlers
+	const onOfferListener = async (payload: OfferPayload) => {
+		try {
+			pendingOfferPayloadRef.current = payload;
+			setSenderInfo(payload.from);
+			setCallStatus("incoming");
+		} catch (err: unknown) {
+			console.error(err);
+		}
+	};
+
+	const onAnswerListener = async (payload: AnswerPayload) => {
+		const pc = peerConnectionRef.current;
+		if (!pc) return;
+
+		try {
+			await pc.setRemoteDescription(payload.answer);
+		} catch (err: unknown) {
+			console.error(err);
+		}
+	};
+
+	const onIceCandidateListener = async (payload: ICECandidatePayload) => {
+		const pc = peerConnectionRef.current;
+
+		if (!pc || !pc.remoteDescription) {
+			pendingIceCandidatesRef.current.push(payload.candidate);
+			return;
+		}
+
+		try {
+			await pc.addIceCandidate(payload.candidate);
+		} catch (err: unknown) {
+			console.error("Failed to add ICE candidate:", err);
+		}
+	};
+
+	// Socket.io listeners
+	useEffect(() => {
+		socket.on("offer", onOfferListener);
+		socket.on("answer", onAnswerListener);
+		socket.on("ice-candidate", onIceCandidateListener);
+
+		return () => {
+			socket.off("offer", onOfferListener);
+			socket.off("answer", onAnswerListener);
+			socket.off("ice-candidate", onIceCandidateListener);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (callStatus === "pending") return;
+
+		let intervalId: number | null = null;
+
+		if (intervalId) {
+			clearInterval(intervalId);
+		}
+
+		if (callStatus === "calling") {
+			playRingtone("calling");
 
 			notify.open({
 				// title: "Calling...",
@@ -417,25 +515,10 @@ const VideoCall = () => {
 					ringingAudio.current?.pause();
 				},
 			});
-
-			playRingtone(phoneRingingOutgoing);
-
-			socket.emit("offer", {
-				to: friendId,
-				offer: pc.localDescription,
-			});
-		} catch (err: unknown) {
-			console.error(err);
 		}
-	};
 
-	// WebSocket handlers
-	const onOffer = async (payload: OfferPayload) => {
-		try {
-			setCallStatus("incoming");
-			setSenderInfo(payload.from);
-
-			pendingOfferPayloadRef.current = payload;
+		if (callStatus === "incoming") {
+			playRingtone("incoming");
 
 			notify.open({
 				key: "incoming-call",
@@ -481,171 +564,35 @@ const VideoCall = () => {
 					notify.destroy("incoming-call");
 				},
 			});
-
-			playRingtone(phoneRingingIncoming);
-
-			// await pc.setRemoteDescription(payload.offer);
-
-			// const answer = await pc.createAnswer();
-			// await pc.setLocalDescription(answer);
-
-			// socket.emit("answer", {
-			// 	to: payload.from._id,
-			// 	answer: pc.localDescription,
-			// });
-
-			// console.log("on offer:", payload.offer);
-		} catch (err: unknown) {
-			console.error(err);
-		}
-	};
-
-	const onAnswer = async (payload: AnswerPayload) => {
-		const pc = peerConnection.current;
-		if (!pc) return;
-
-		try {
-			await pc.setRemoteDescription(payload.answer);
-		} catch (err: unknown) {
-			console.error(err);
-		}
-	};
-
-	const onIceCandidate = async (payload: ICECandidatePayload) => {
-		const pc = peerConnection.current;
-
-		if (!pc || !pc.remoteDescription) {
-			pendingIceCandidatesRef.current.push(payload.candidate);
-			return;
 		}
 
-		try {
-			await pc.addIceCandidate(payload.candidate);
-		} catch (err: unknown) {
-			console.error("Failed to add ICE candidate:", err);
+		if (callStatus === "rejected") {
+			removeNotification("outgoing-call");
 		}
-	};
 
-	useEffect(() => {
-		socket.on("offer", onOffer);
-		socket.on("answer", onAnswer);
-		socket.on("ice-candidate", onIceCandidate);
+		if (callStatus === "connected") {
+			removeNotification("outgoing-call");
+			removeNotification("incoming-call");
+
+			intervalId = setInterval(() => {
+				setCallDuration((prevDuration) => prevDuration + 1);
+			}, 1000);
+		}
 
 		return () => {
-			socket.off("offer", onOffer);
-			socket.off("answer", onAnswer);
-			socket.off("ice-candidate", onIceCandidate);
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
+		};
+	}, [callStatus]);
+
+	// Cleanup
+	useEffect(() => {
+		return () => {
+			peerConnectionRef.current?.close();
+			peerConnectionRef.current = null;
 		};
 	}, []);
-
-	useEffect(() => {
-		if (callStatus === "pending") return;
-
-		if (!ringingAudio.current) {
-			ringingAudio.current = new Audio();
-		}
-
-		// if (callStatus === "incoming") {
-		// 	const audio = ringingAudio.current;
-
-		// 	if (audio) {
-		// 		audio.src = phoneRingingIncoming;
-		// 		audio.currentTime = 0;
-		// 		audio.load();
-		// 		audio.play();
-		// 		audio.loop = true;
-		// 	}
-
-		// 	return notify.open({
-		// 		key: "incoming-call",
-		// 		title: "Incoming video call",
-		// 		description: (
-		// 			<div className="flex items-center gap-3 mt-1">
-		// 				<Avatar size={44} src={senderInfo?.avatar ?? "/profile-img.jpeg"} />
-
-		// 				<div className="min-w-0">
-		// 					<div className="font-medium truncate">{senderInfo?.username}</div>
-
-		// 					<div className="text-gray-500 text-sm">is calling you...</div>
-		// 				</div>
-		// 			</div>
-		// 		),
-		// 		duration: 30,
-		// 		showProgress: true,
-		// 		pauseOnHover: false,
-		// 		placement: "topRight",
-		// 		actions: [
-		// 			<div className="flex justify-end gap-3">
-		// 				<IconControlButton
-		// 					activeIcon={PhoneOff}
-		// 					inActiveIcon={PhoneOff}
-		// 					style={{
-		// 						backgroundColor: "#ff4d4f",
-		// 					}}
-		// 					// onClick={handleRejectCall}
-		// 				/>
-
-		// 				<IconControlButton
-		// 					activeIcon={Video}
-		// 					inActiveIcon={Video}
-		// 					style={{
-		// 						backgroundColor: "#16a34a",
-		// 					}}
-		// 					// onClick={handleAcceptCall}
-		// 				/>
-		// 			</div>,
-		// 		],
-		// 		onClose() {
-		// 			audio?.pause();
-		// 			notify.destroy("incoming-call");
-		// 		},
-		// 	});
-		// }
-
-		// if (callStatus === "calling") {
-		// 	const audio = ringingAudio.current;
-
-		// 	if (audio) {
-		// 		audio.src = phoneRingingOutgoing;
-		// 		audio.currentTime = 0;
-		// 		audio.load();
-		// 		audio.play();
-		// 		audio.loop = true;
-		// 	}
-
-		// 	return notify.open({
-		// 		// title: "Calling...",
-
-		// 		description: (
-		// 			<div className="flex items-center gap-3 mt-1">
-		// 				<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
-
-		// 				<div className="min-w-0">
-		// 					<div className="font-medium truncate">{friendInfo?.username}</div>
-
-		// 					<div className="text-gray-500 text-sm">Calling...</div>
-		// 				</div>
-		// 			</div>
-		// 		),
-
-		// 		duration: 30,
-		// 		showProgress: true,
-		// 		pauseOnHover: false,
-		// 		placement: "topRight",
-		// 		closable: false,
-
-		// 		actions: (
-		// 			<div className="flex justify-end">
-		// 				<IconControlButton
-		// 					activeIcon={PhoneOff}
-		// 					inActiveIcon={PhoneOff}
-		// 					// onClick={handleCancelCall}
-		// 				/>
-		// 			</div>
-		// 		),
-		// 	});
-		// }
-	}, [callStatus]);
 
 	return (
 		<div>
@@ -675,22 +622,35 @@ const VideoCall = () => {
 				<IconControlButton activeIcon={Volume2} inActiveIcon={VolumeOff} isActive={true} tooltipTitle="Voice" />
 
 				<div className="flex gap-5">
+					{/* show call duration timer */}
+					{callStatus === "connected" && (
+						<div className="bg-white border border-zinc-200 text-zinc-600 flex justify-center items-center gap-1.5 my-auto px-3 py-1 rounded-full">
+							<Clock size={16} />
+							<label>{formatCallDuration(callDuration)}</label>
+						</div>
+					)}
+
 					{/* Accept */}
-					<button
-						onClick={startCall}
-						type="button"
-						className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-green-600 text-white transition-colors hover:bg-green-700 active:bg-green-800 cursor-pointer">
-						<Phone size={20} />
-						Call
-					</button>
+					{callStatus !== "connected" && (
+						<button
+							onClick={startCall}
+							type="button"
+							className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-green-600 text-white transition-colors hover:bg-green-700 active:bg-green-800 cursor-pointer"
+							disabled={callStatus === "calling"}>
+							<Phone size={20} />
+							{callStatus === "calling" ? "Calling..." : "Call"}
+						</button>
+					)}
 
 					{/* End */}
-					<button
-						type="button"
-						className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-red-500 text-white transition-colors hover:bg-red-600 active:bg-red-700 cursor-pointer">
-						<PhoneOff size={20} />
-						End
-					</button>
+					{callStatus === "connected" && (
+						<button
+							type="button"
+							className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-red-500 text-white transition-colors hover:bg-red-600 active:bg-red-700 cursor-pointer">
+							<PhoneOff size={20} />
+							End
+						</button>
+					)}
 				</div>
 			</div>
 

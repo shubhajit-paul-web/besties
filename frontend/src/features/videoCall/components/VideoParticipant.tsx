@@ -1,31 +1,40 @@
-import { useRef, useState, type ComponentProps, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Maximize2, Minimize2 } from "lucide-react";
+import type { VideoParticipantProps } from "../types/videoCall.types";
 
-interface VideoParticipantProps extends ComponentProps<"div"> {
-	fullName: string;
-	children: ReactNode;
-}
-
-const VideoParticipant = ({ fullName, children, ...props }: VideoParticipantProps) => {
+const VideoParticipant = ({ fullName, children, className, ...props }: VideoParticipantProps) => {
 	const [isFullscreen, setIsFullscreen] = useState(false);
 	const videoContainerRef = useRef<HTMLDivElement | null>(null);
+
+	useEffect(() => {
+		const syncFullscreenState = () => {
+			setIsFullscreen(document.fullscreenElement === videoContainerRef.current);
+		};
+
+		document.addEventListener("fullscreenchange", syncFullscreenState);
+		syncFullscreenState();
+
+		return () => document.removeEventListener("fullscreenchange", syncFullscreenState);
+	}, []);
 
 	const toggleFullscreen = async () => {
 		const videoContainerElement = videoContainerRef.current;
 
-		if (!videoContainerElement) return;
+		if (!videoContainerElement || !document.fullscreenEnabled) return;
 
-		if (document.fullscreenElement) {
-			await document.exitFullscreen();
-			setIsFullscreen(false);
-		} else {
-			await videoContainerElement.requestFullscreen();
-			setIsFullscreen(true);
+		try {
+			if (document.fullscreenElement === videoContainerElement) {
+				await document.exitFullscreen();
+			} else {
+				await videoContainerElement.requestFullscreen();
+			}
+		} catch {
+			setIsFullscreen(document.fullscreenElement === videoContainerElement);
 		}
 	};
 
 	return (
-		<div ref={videoContainerRef} className="bg-black w-full aspect-video relative rounded-2xl overflow-hidden mt-3 mb-5" {...props}>
+		<div ref={videoContainerRef} className={`overflow-hidden rounded-2xl bg-black ${className ?? ""}`} {...props}>
 			{children}
 
 			{/* <video ref={videoRef} className="w-full h-full absolute top-0 left-0"></video> */}
@@ -45,8 +54,17 @@ const VideoParticipant = ({ fullName, children, ...props }: VideoParticipantProp
 				{fullName}
 			</div>
 
-			<button onClick={toggleFullscreen} className="bg-slate-800/70 text-slate-100 absolute bottom-4 right-4 p-2 rounded-lg cursor-pointer hover:scale-110 transition-all">
-				{isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+			<button
+				type="button"
+				onClick={(event) => {
+					event.stopPropagation();
+					toggleFullscreen();
+				}}
+				aria-label={`${isFullscreen ? "Exit" : "View"} ${fullName}'s video ${isFullscreen ? "fullscreen" : "in fullscreen"}`}
+				aria-pressed={isFullscreen}
+				title={`${isFullscreen ? "Exit" : "View"} ${fullName}'s video fullscreen`}
+				className="absolute bottom-4 right-4 rounded-lg bg-slate-800/70 p-2 text-slate-100 transition-all hover:scale-110">
+				{isFullscreen ? <Minimize2 size={13} strokeWidth={2.2} /> : <Maximize2 size={13} strokeWidth={2.2} />}
 			</button>
 		</div>
 	);

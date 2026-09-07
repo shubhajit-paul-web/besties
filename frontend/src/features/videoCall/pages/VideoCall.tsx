@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Clock, Mic, MicOff, MonitorOff, MonitorUp, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import VideoParticipant from "../components/VideoParticipant";
+import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import { toast } from "react-toastify";
@@ -45,6 +45,7 @@ const VideoCall = () => {
 	const [callStatus, setCallStatus] = useState<CallStatus>("pending");
 	const [callDuration, setCallDuration] = useState(0);
 	const [senderInfo, setSenderInfo] = useState<OfferPayload["from"] | null>(null);
+	const [isLocalPinned, setIsLocalPinned] = useState(false);
 
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
 
@@ -736,25 +737,21 @@ const VideoCall = () => {
 			{/* Meeting info */}
 			{/* <MeetingInfo meetingId="AK454679S0DS" sessionLength="00:12:45" /> */}
 
-			{/* Video */}
-			<div className="w-full">
-				{/* Remote video */}
-				<VideoParticipant fullName={formatUserName(friendInfo?.name)}>
-					<video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover absolute top-0 left-0" />
-				</VideoParticipant>
-
-				{/* Local video and audio */}
-				<VideoParticipant fullName={`${formatUserName(currentUser?.name)} (You)`} style={{ width: "50%" }}>
-					<video ref={localVideoRef} autoPlay playsInline className="w-full h-full object-cover absolute top-0 left-0" />
-
-					<audio ref={localAudioRef} autoPlay playsInline muted />
-				</VideoParticipant>
-			</div>
+			{/* The arrangement is local-only swapping it never changes the media connection */}
+			<VideoStage
+				remoteVideoRef={remoteVideoRef}
+				localVideoRef={localVideoRef}
+				localAudioRef={localAudioRef}
+				remoteName={formatUserName(friendInfo?.name)}
+				localName={`${formatUserName(currentUser?.name)} (You)`}
+				isLocalPinned={isLocalPinned}
+				onSwap={() => setIsLocalPinned((isPinned) => !isPinned)}
+			/>
 
 			{/* <audio src={canceledCallRingtone} controls /> */}
 
 			{/* Call Action Buttons */}
-			<div className="flex justify-center items-center gap-5 bg-slate-100/70 rounded-3xl p-5 border border-slate-200 w-fit m-auto">
+			<div className="relative z-30 mx-auto mt-6 flex w-fit max-w-full flex-wrap items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-slate-100/70 p-4 sm:gap-5 sm:p-5">
 				<IconControlButton activeIcon={Mic} inActiveIcon={MicOff} isActive={isAudioSharing} tooltipTitle="Microphone" onClick={toggleAudioSharing} />
 				<IconControlButton activeIcon={Video} inActiveIcon={VideoOff} isActive={isLocalVideoSharing} tooltipTitle="Camera" onClick={toggleVideoSharing} />
 				<IconControlButton activeIcon={MonitorUp} inActiveIcon={MonitorOff} isActive={isScreenSharing} tooltipTitle="Screen" onClick={toggleScreenSharing} />

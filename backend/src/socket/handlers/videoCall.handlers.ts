@@ -31,8 +31,14 @@ const registerVideoCallHandlers = (socket: Socket) => {
         });
     });
 
-    socket.on("reject-incoming-call", ({ to }) => {
-        socket.to(`user:${to}`).emit("reject-incoming-call", {
+    socket.on("cancel-call", ({ to }) => {
+        socket.to(`user:${to}`).emit("cancel-call", {
+            from: sender._id,
+        });
+    });
+
+    socket.on("end-call", ({ to }) => {
+        socket.to(`user:${to}`).emit("end-call", {
             from: sender._id,
         });
     });

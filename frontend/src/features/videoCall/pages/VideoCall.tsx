@@ -12,12 +12,13 @@ import { Avatar, notification } from "antd";
 import type { AnswerPayload, CallStatus, ICECandidatePayload, OfferPayload } from "../types/videoCall.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
-
-// Ringing audio for incoming and outgoing call
-import ringingOutgoingAudio from "@/assets/audio/phone-ringing.mp3";
-import ringingIncomingAudio from "@/assets/audio/incoming-call-ringtone.mp3";
 import formatCallDuration from "@/utils/formatCallDuration";
 import { showErrorToast } from "../utils/toast";
+
+// Ringing audio for incoming and outgoing call
+import outgoingCallRingtone from "@/assets/audio/phone-ringing.mp3";
+import incomingCallRingtone from "@/assets/audio/incoming-call-ringtone.mp3";
+import canceledCallRingtone from "@/assets/audio/call-reject-ringtone.wav";
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
@@ -54,31 +55,83 @@ const VideoCall = () => {
 		setCallStatus(status);
 	};
 
-	// Play incoming/outgoing call ringtone
-	const playRingtone = (type: "calling" | "incoming") => {
+	// Stop call ringtone
+	const stopRingtone = () => {
+		const player = ringingAudio.current;
+		if (!player) return;
+
+		player.pause();
+		player.currentTime = 0;
+	};
+
+	// Play call ringtone
+	const playRingtone = async (type: "calling" | "incoming" | "canceled", loop: boolean = true) => {
 		if (!ringingAudio.current) {
 			ringingAudio.current = new Audio();
 		}
 
-		const audio = ringingAudio.current;
+		stopRingtone();
 
-		const audioMap = {
-			calling: ringingOutgoingAudio,
-			incoming: ringingIncomingAudio,
+		const ringtones = {
+			calling: outgoingCallRingtone,
+			incoming: incomingCallRingtone,
+			canceled: canceledCallRingtone,
 		};
 
-		audio.pause();
-		audio.src = audioMap[type];
-		audio.currentTime = 0;
-		audio.load();
-		audio.play();
-		audio.loop = true;
+		const player = ringingAudio.current;
+
+		player.src = ringtones[type];
+		player.loop = loop;
+		player.load();
+
+		try {
+			await player.play();
+		} catch (error) {
+			console.error("Failed to play ringtone:", error);
+		}
 	};
 
 	// Pause ringing audio and destroy the notification UI
-	const removeNotification = (notificationKey: string) => {
-		ringingAudio.current?.pause();
+	const removeNotification = (notificationKey: string, shouldStopRingtone: boolean = true) => {
+		if (shouldStopRingtone) {
+			stopRingtone();
+		}
+
 		notify.destroy(notificationKey);
+	};
+
+	// Clean up the call and reset all related resources
+	const cleanupCall = () => {
+		const pc = peerConnectionRef.current;
+		if (!pc) return;
+
+		// Stop local media tracks
+		const localStream = localStreamRef.current;
+
+		if (localStream) {
+			localStream.getTracks().forEach((track) => {
+				track.stop();
+			});
+
+			localStreamRef.current = null;
+		}
+
+		// Reset all local media sharing states
+		setIsLocalVideoSharing(false);
+		setIsAudioSharing(false);
+		setIsScreenSharing(false);
+
+		// Close peer connection
+		pc.close();
+		peerConnectionRef.current = null;
+
+		// Clear video elements
+		if (localVideoRef.current) {
+			localVideoRef.current.srcObject = null;
+		}
+		if (remoteVideoRef.current) {
+			remoteVideoRef.current.srcObject = null;
+		}
 	};
 
 	// Media controls
@@ -356,19 +409,26 @@ const VideoCall = () => {
 	};
 
 	const cancelOutgoingCall = () => {
-		if (callStatusRef.current === "calling") {
-			updateCallStatus("canceled");
-		}
+		if (callStatusRef.current !== "calling") return;
+
+		socket.emit("cancel-call", {
+			to: friendId,
+		});
+
+		updateCallStatus("canceled");
+
+		// Clean up the call and reset all related resources
+		cleanupCall();
 	};
 
 	const rejectIncomingCall = () => {
 		if (callStatusRef.current !== "incoming") return;
 
-		updateCallStatus("rejected");
-
-		socket.emit("reject-incoming-call", {
+		socket.emit("cancel-call", {
 			to: offerPayloadRef.current?.from._id,
 		});
+
+		updateCallStatus("rejected");
 
 		offerPayloadRef.current = null;
 	};
@@ -474,6 +534,17 @@ const VideoCall = () => {
 		}
 	};
 
+	const endCall = () => {
+		if (callStatusRef.current !== "connected") return;
+
+		socket.emit("end-call", {
+			to: friendId,
+		});
+
+		updateCallStatus("ended");
+		cleanupCall();
+	};
+
 	// Socket.io handlers
 	const onOfferListener = async (payload: OfferPayload) => {
 		try {
@@ -511,27 +582,31 @@ const VideoCall = () => {
 		}
 	};
 
-	const onRejectIncomingCallListener = ({ from }: { from: string }) => {
-		if (from !== friendId || callStatusRef.current !== "calling") {
-			return;
+	const onCancelCallListener = () => {
+		if (callStatusRef.current === "calling") {
+			toast.info("Call declined", {
+				theme: "colored",
+			});
+
+			playRingtone("canceled", false);
+
+			// change the call status after 1 seconds let the audio play
+			setTimeout(() => {
+				updateCallStatus("rejected");
+			}, 1000);
+
+			// Clean up the call and reset all related resources
+			cleanupCall();
+		} else if (callStatusRef.current === "incoming") {
+			updateCallStatus("rejected");
 		}
+	};
 
-		updateCallStatus("rejected");
-
-		localStreamRef.current?.getTracks().forEach((track) => {
-			track.stop();
-		});
-
-		localStreamRef.current = null;
-
-		// Reset all local media sharing states
-		setIsLocalVideoSharing(false);
-		setIsAudioSharing(false);
-		setIsScreenSharing(false);
-
-		// Cleanup peer connection
-		peerConnectionRef.current?.close();
-		peerConnectionRef.current = null;
+	const onEndCallListener = ({ from }: { from: string }) => {
+		if (from === friendId) {
+			cleanupCall();
+			updateCallStatus("ended");
+		}
 	};
 
 	// Socket.io listeners
@@ -539,13 +614,15 @@ const VideoCall = () => {
 		socket.on("offer", onOfferListener);
 		socket.on("answer", onAnswerListener);
 		socket.on("ice-candidate", onIceCandidateListener);
-		socket.on("reject-incoming-call", onRejectIncomingCallListener);
+		socket.on("cancel-call", onCancelCallListener);
+		socket.on("end-call", onEndCallListener);
 
 		return () => {
 			socket.off("offer", onOfferListener);
 			socket.off("answer", onAnswerListener);
 			socket.off("ice-candidate", onIceCandidateListener);
-			socket.off("reject-incoming-call", onRejectIncomingCallListener);
+			socket.off("cancel-call", onCancelCallListener);
+			socket.off("end-call", onEndCallListener);
 		};
 	}, []);
 
@@ -575,9 +652,7 @@ const VideoCall = () => {
 				placement: "topRight",
 				closable: false,
 				actions: <IconControlButton activeIcon={PhoneOff} inActiveIcon={PhoneOff} onClick={cancelOutgoingCall} />,
-				onClose() {
-					ringingAudio.current?.pause();
-				},
+				onClose: stopRingtone,
 			});
 		} else if (callStatus === "incoming") {
 			playRingtone("incoming");
@@ -621,35 +696,31 @@ const VideoCall = () => {
 						/>
 					</div>,
 				],
-				onClose() {
-					ringingAudio.current?.pause();
-					notify.destroy("incoming-call");
-				},
+				onClose: stopRingtone,
 			});
-		} else if (callStatus === "rejected") {
-			removeNotification("outgoing-call");
-			removeNotification("incoming-call");
-
-			toast.info("Call declined", {
-				theme: "colored",
-			});
+		} else if (callStatus === "rejected" || callStatus === "canceled") {
+			removeNotification("outgoing-call", false);
+			removeNotification("incoming-call", true);
 		} else if (callStatus === "connected") {
 			removeNotification("outgoing-call");
 			removeNotification("incoming-call");
-
-			const intervalId = setInterval(() => {
-				setCallDuration((prevDuration) => prevDuration + 1);
-			}, 1000);
-
-			return () => {
-				clearInterval(intervalId);
-			};
-		} else if (callStatus === "canceled") {
-			removeNotification("outgoing-call");
 		} else if (callStatus === "faild") {
 			removeNotification("incoming-call");
 			removeNotification("outgoing-call");
 		}
+	}, [callStatus]);
+
+	useEffect(() => {
+		if (callStatus !== "connected") return;
+
+		const intervalId = setInterval(() => {
+			setCallDuration((prevDuration) => prevDuration + 1);
+		}, 1000);
+
+		return () => {
+			setCallDuration(0);
+			clearInterval(intervalId);
+		};
 	}, [callStatus]);
 
 	// Cleanup
@@ -680,6 +751,8 @@ const VideoCall = () => {
 				</VideoParticipant>
 			</div>
 
+			{/* <audio src={canceledCallRingtone} controls /> */}
+
 			{/* Call Action Buttons */}
 			<div className="flex justify-center items-center gap-5 bg-slate-100/70 rounded-3xl p-5 border border-slate-200 w-fit m-auto">
 				<IconControlButton activeIcon={Mic} inActiveIcon={MicOff} isActive={isAudioSharing} tooltipTitle="Microphone" onClick={toggleAudioSharing} />
@@ -696,7 +769,7 @@ const VideoCall = () => {
 						</div>
 					)}
 
-					{/* Accept */}
+					{/* Call button */}
 					{callStatus !== "connected" && (
 						<button
 							onClick={startCall}
@@ -708,9 +781,10 @@ const VideoCall = () => {
 						</button>
 					)}
 
-					{/* End */}
+					{/* End button */}
 					{callStatus === "connected" && (
 						<button
+							onClick={endCall}
 							type="button"
 							className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-red-500 text-white transition-colors hover:bg-red-600 active:bg-red-700 cursor-pointer">
 							<PhoneOff size={20} />

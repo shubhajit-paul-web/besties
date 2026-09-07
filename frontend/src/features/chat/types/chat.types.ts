@@ -11,16 +11,6 @@ export type AttachmentData = {
 	mimeType?: string;
 };
 
-export type ChatHeaderProps = {
-	isLoading: boolean;
-	name: {
-		first: string;
-		last?: string;
-	};
-	avatar?: string;
-	friendId: string;
-};
-
 export type ChatMessageProps = {
 	avatar: string;
 	text: string | undefined;
@@ -56,7 +46,6 @@ export type AckResponse = {
 export type FriendInfo = Pick<UserType, "_id" | "name" | "avatar" | "username">;
 
 export type ChatContainerProps = {
-	isLoadingFriendInfo: boolean;
 	friend: FriendInfo;
 	messageContainerRef?: RefObject<HTMLDivElement | null>;
 	children: ReactNode;

@@ -16,6 +16,8 @@ const initializeSocket = (httpServer: HTTPServer) => {
 
     // Register event handlers on "connection" event
     io.on("connection", async (socket) => {
+        await socket.join(`user:${socket.user._id}`);
+
         await registerPresenceHandlers(io, socket);
         await registerChatHandlers(io, socket);
         registerVideoCallHandlers(socket);

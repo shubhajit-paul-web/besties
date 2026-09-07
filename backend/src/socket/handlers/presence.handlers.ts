@@ -5,7 +5,7 @@ const registerPresenceHandlers = async (io: Server, socket: Socket) => {
     const { user } = socket;
     const userId = String(user._id);
 
-    presenceService.setOnline(socket.id, user);
+    presenceService.setOnline(user);
 
     await presenceService.emitOnlineFriends(io, userId);
 

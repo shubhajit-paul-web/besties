@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import ChatHeader from "./ChatHeader";
 import AttachmentPreviewModal from "./AttachmentPreviewModal";
 import Button from "@/components/ui/Button/Button";
 import { Paperclip, Send, AlertCircle } from "lucide-react";
@@ -33,7 +32,7 @@ const validateFileSize = (file: File): string | null => {
  * - Text message submission.
  * - File attachment staging, validation, S3 upload pipeline, and caption dispatching.
  */
-const ChatContainer = ({ isLoadingFriendInfo, friend, messageContainerRef, handleSendMessage, handleSendMessageWithFile, children }: ChatContainerProps) => {
+const ChatContainer = ({ friend, messageContainerRef, handleSendMessage, handleSendMessageWithFile, children }: ChatContainerProps) => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -157,11 +156,6 @@ const ChatContainer = ({ isLoadingFriendInfo, friend, messageContainerRef, handl
 			/>
 
 			<div className="flex h-[calc(100vh-8.4rem)] min-h-136 min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-slate-50">
-				{/* Top chat partner header */}
-				<div className="sticky top-0 z-10 shrink-0 border-b border-slate-200/80 bg-white">
-					<ChatHeader isLoading={isLoadingFriendInfo} name={friend?.name} avatar={friend?.avatar} friendId={friend?._id} />
-				</div>
-
 				{/* Scrollable message stream */}
 				<div ref={messageContainerRef} className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain bg-slate-100/80 p-3 sm:p-5 scroll-smooth">
 					<div className="flex min-w-0 min-h-full flex-col gap-7">{children}</div>

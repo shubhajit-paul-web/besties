@@ -11,7 +11,6 @@ import filterFriendIds from "../../utils/getFriendIds.js";
 */
 
 const onlineUsers = new Map<string, PresenceUser>();
-const userSockets = new Map<string, string>();
 
 const getOnlineFriendUsers = (friendIds: string[]) => {
     if (friendIds.length === 0) {
@@ -37,7 +36,7 @@ const getAcceptedFriendIdsForUser = async (currentUserId: string) => {
     return filterFriendIds(currentUserId, friendships);
 };
 
-const setOnline = (socketId: string, user: AccessTokenPayload) => {
+const setOnline = (user: AccessTokenPayload) => {
     const normalizedUserId = String(user._id);
 
     onlineUsers.set(normalizedUserId, {
@@ -47,29 +46,21 @@ const setOnline = (socketId: string, user: AccessTokenPayload) => {
         avatar: user.avatar || null,
         name: user.name,
     });
-    userSockets.set(normalizedUserId, socketId);
 };
 
 const setOffline = (userId: string) => {
     onlineUsers.delete(userId);
-    userSockets.delete(userId);
 };
 
 const emitOnlineFriends = async (io: Server, userId: string) => {
     const normalizedUserId = String(userId);
-    const socketId = userSockets.get(normalizedUserId);
-
-    if (!socketId) return;
-
     const acceptedFriendIds = await getAcceptedFriendIdsForUser(normalizedUserId);
     const onlineFriends = getOnlineFriendUsers(acceptedFriendIds);
 
     // Notify the current user which friends are currently online
-    io.to(socketId).emit("friends:online-updated", onlineFriends);
+    io.to(`user:${normalizedUserId}`).emit("friends:online-updated", onlineFriends);
 
-    if (onlineFriends.length === 0) {
-        return;
-    }
+    if (onlineFriends.length === 0) return;
 
     const onlineFriendIds = new Set<string>();
 
@@ -96,14 +87,9 @@ const emitOnlineFriends = async (io: Server, userId: string) => {
     // When a friend is online, also tell them which of their own friends are online
     for (const onlineFriend of onlineFriends) {
         const friendId = String(onlineFriend._id);
-        const friendSocketId = userSockets.get(friendId);
-
-        if (!friendSocketId) {
-            continue;
-        }
 
         const presenceSnapshot = onlineFriendsByUser.get(friendId) ?? [];
-        io.to(friendSocketId).emit("friends:online-updated", presenceSnapshot);
+        io.to(`user:${friendId}`).emit("friends:online-updated", presenceSnapshot);
     }
 };
 

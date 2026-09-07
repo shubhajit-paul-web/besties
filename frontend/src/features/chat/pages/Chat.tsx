@@ -19,7 +19,7 @@ const ChatManager = () => {
 
 	const { user: currentUser } = useCurrentUser();
 
-	const { data: friendInfo, isLoading: isLoadingFriendInfo } = useSWR(friendId ? `/users/${friendId}` : null, fetcher, { revalidateOnFocus: false });
+	const { data: friendInfo } = useSWR(friendId ? `/users/${friendId}` : null, fetcher, { revalidateOnFocus: false });
 
 	/**
 	 * Fetch messages that already exist in the database.
@@ -55,7 +55,7 @@ const ChatManager = () => {
 
 	if (isLoadingPersistedMessages || !currentUser?._id || !friendId) {
 		return (
-			<ChatContainer friend={friend} isLoadingFriendInfo={isLoadingFriendInfo}>
+			<ChatContainer friend={friend}>
 				<ChatMessagesSkeleton />
 			</ChatContainer>
 		);
@@ -70,12 +70,7 @@ const ChatManager = () => {
 	const allChatMessages = getConversationMessages(persistedMessages?.data ?? [], realtimeMessages, conversationKey);
 
 	return (
-		<ChatContainer
-			friend={friend}
-			messageContainerRef={messageContainerRef}
-			isLoadingFriendInfo={isLoadingFriendInfo}
-			handleSendMessage={handleSendMessage}
-			handleSendMessageWithFile={handleSendMessageWithFile}>
+		<ChatContainer friend={friend} messageContainerRef={messageContainerRef} handleSendMessage={handleSendMessage} handleSendMessageWithFile={handleSendMessageWithFile}>
 			{allChatMessages?.length === 0 ? <EmptyState description="No messages yet. Start the conversation." /> : <MessageList messages={allChatMessages} currentUserId={currentUser._id} />}
 		</ChatContainer>
 	);

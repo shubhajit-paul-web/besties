@@ -37,5 +37,3 @@ export type ICECandidatePayload = {
 	to: string;
 	candidate: RTCIceCandidateInit;
 };
-
-export type CallStatus = "pending" | "calling" | "incoming" | "rejected" | "connected" | "canceled" | "faild" | "ended";

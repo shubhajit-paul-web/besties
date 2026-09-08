@@ -65,7 +65,7 @@ const ActiveSessionHeader = ({ isLeftSidebarOpen, setIsLeftSidebarOpen }: Active
 				</div>
 				<div className="min-w-0">
 					<p className="text-sm font-semibold text-slate-900">{session.label}</p>
-					<p className="truncate text-xs text-slate-500">{isLoading ? "Loading friend..." : friend?.name ? `With ${formatUserName(friend.name)}` : "Active session"}</p>
+					<p className="truncate text-xs text-slate-500 capitalize">{isLoading ? "Loading friend..." : friend?.name ? `With ${formatUserName(friend.name)}` : "Active session"}</p>
 				</div>
 			</div>
 
@@ -78,7 +78,7 @@ const ActiveSessionHeader = ({ isLeftSidebarOpen, setIsLeftSidebarOpen }: Active
 							aria-label={isFriendOnline ? "Online" : "Offline"}
 						/>
 					</div>
-					<span className="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block">{formatUserName(friend.name)}</span>
+					<span className="hidden max-w-32 truncate text-sm font-medium text-slate-700 sm:block capitalize">{formatUserName(friend.name)}</span>
 				</div>
 			)}
 		</header>

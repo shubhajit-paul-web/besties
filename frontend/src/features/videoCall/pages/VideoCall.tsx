@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from "react";
-import { Clock, Mic, MicOff, MonitorOff, MonitorUp, Phone, PhoneOff, Video, VideoOff, Volume2, VolumeOff } from "lucide-react";
+import { PhoneOff, Video } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
@@ -9,20 +9,15 @@ import { toast } from "react-toastify";
 import socket from "@/lib/socket";
 import { useParams } from "react-router-dom";
 import { Avatar, notification } from "antd";
-import type { AnswerPayload, CallStatus, ICECandidatePayload, OfferPayload } from "../types/videoCall.types";
+import type { AnswerPayload, ICECandidatePayload, OfferPayload } from "../types/videoCall.types";
+import type { CallStatus } from "@/types/global.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
-import formatCallDuration from "@/utils/formatCallDuration";
 import { showErrorToast } from "../utils/toast";
-
-// Ringing audio for incoming and outgoing call
-import outgoingCallRingtone from "@/assets/audio/phone-ringing.mp3";
-import incomingCallRingtone from "@/assets/audio/incoming-call-ringtone.mp3";
-import canceledCallRingtone from "@/assets/audio/call-reject-ringtone.wav";
-
-const isMediaStreamEmpty = (stream: MediaStream) => {
-	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
-};
+import useWebRTC from "@/hooks/useWebRTC";
+import useLocalMedia from "../hooks/useLocalMedia";
+import useRingtone from "../hooks/useRingtone";
+import CallControls from "../components/CallControls";
 
 const VideoCall = () => {
 	const { user: currentUser } = useCurrentUser();
@@ -36,7 +31,6 @@ const VideoCall = () => {
 	const offerPayloadRef = useRef<OfferPayload | null>(null);
 	const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
 	const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
-	const ringingAudio = useRef<HTMLAudioElement | null>(null);
 	const callStatusRef = useRef<CallStatus>("pending");
 
 	const [isLocalVideoSharing, setIsLocalVideoSharing] = useState(false);
@@ -56,41 +50,18 @@ const VideoCall = () => {
 		setCallStatus(status);
 	};
 
-	// Stop call ringtone
-	const stopRingtone = () => {
-		const player = ringingAudio.current;
-		if (!player) return;
+	// WebRTC connection initiator
+	const initiateWebRtcConnection = useWebRTC({
+		friendId,
+		remoteVideoRef,
+		localStreamRef,
+		peerConnectionRef,
+		updateCallStatus,
+	});
 
-		player.pause();
-		player.currentTime = 0;
-	};
+	const { toggleVideoSharing, toggleScreenSharing, toggleAudioSharing } = useLocalMedia({ localVideoRef, localAudioRef });
 
-	// Play call ringtone
-	const playRingtone = async (type: "calling" | "incoming" | "canceled", loop: boolean = true) => {
-		if (!ringingAudio.current) {
-			ringingAudio.current = new Audio();
-		}
-
-		stopRingtone();
-
-		const ringtones = {
-			calling: outgoingCallRingtone,
-			incoming: incomingCallRingtone,
-			canceled: canceledCallRingtone,
-		};
-
-		const player = ringingAudio.current;
-
-		player.src = ringtones[type];
-		player.loop = loop;
-		player.load();
-
-		try {
-			await player.play();
-		} catch (error) {
-			console.error("Failed to play ringtone:", error);
-		}
-	};
+	const { playRingtone, stopRingtone } = useRingtone();
 
 	// Pause ringing audio and destroy the notification UI
 	const removeNotification = (notificationKey: string, shouldStopRingtone: boolean = true) => {
@@ -135,280 +106,6 @@ const VideoCall = () => {
 		}
 	};
 
-	// Media controls
-	const toggleVideoSharing = async () => {
-		const localVideoElement = localVideoRef.current;
-		if (!localVideoElement) return;
-
-		if (!navigator.mediaDevices?.getUserMedia) {
-			toast.error("Camera access isn’t supported by your browser.");
-			return;
-		}
-
-		try {
-			if (!isLocalVideoSharing) {
-				let localStream = localStreamRef.current;
-
-				if (!localStream) {
-					localStream = new MediaStream();
-					localStreamRef.current = localStream;
-				}
-
-				const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-
-				const videoTrack = cameraStream.getVideoTracks()[0];
-				if (!videoTrack) return;
-
-				localStream.addTrack(videoTrack);
-
-				localVideoElement.srcObject = localStream;
-				setIsLocalVideoSharing(true);
-			} else {
-				const localStream = localStreamRef.current;
-				if (!localStream) return;
-
-				const videoTrack = localStream.getVideoTracks()[0];
-
-				if (videoTrack) {
-					videoTrack.stop();
-					localStream.removeTrack(videoTrack);
-				}
-
-				localVideoElement.srcObject = null;
-
-				if (isMediaStreamEmpty(localStream)) {
-					localStreamRef.current = null;
-				}
-
-				setIsLocalVideoSharing(false);
-			}
-
-			return true;
-		} catch (err) {
-			console.error("Failed to access camera:", err);
-
-			let errorMessage = "Unable to access your camera. Please try again.";
-
-			if (err instanceof DOMException) {
-				switch (err.name) {
-					case "NotAllowedError":
-						errorMessage = "Camera access was denied. Please allow access in your browser settings.";
-						break;
-
-					case "NotFoundError":
-						errorMessage = "No camera was found on your device.";
-						break;
-
-					case "NotReadableError":
-						errorMessage = "Your camera couldn't be accessed. It may be in use by another application.";
-						break;
-				}
-			}
-
-			toast.error(errorMessage);
-
-			return false;
-		}
-	};
-
-	const toggleScreenSharing = async () => {
-		const videoElement = localVideoRef.current;
-		if (!videoElement) return;
-
-		if (!navigator.mediaDevices?.getDisplayMedia) {
-			return toast.error("Screen sharing isn't supported by your browser.");
-		}
-
-		try {
-			if (!isScreenSharing) {
-				let localStream = localStreamRef.current;
-
-				if (!localStream) {
-					localStream = new MediaStream();
-					localStreamRef.current = localStream;
-				}
-
-				const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-
-				const screenTrack = screenStream.getVideoTracks()[0];
-				if (!screenTrack) return;
-
-				const cameraTrack = localStream.getVideoTracks()[0];
-
-				/* Camera and screen sharing both use a video track. We replace the camera track so the local stream only has one video source. */
-				if (cameraTrack) {
-					cameraTrack.stop();
-					// setIsLocalVideoSharing(false);
-					// localStream.removeTrack(cameraTrack);
-				}
-
-				/* The browser can stop screen sharing without going through this toggle (for example, when the user clicks "Stop sharing" in the browser UI). Keep our React state in sync with that. */
-				screenTrack.addEventListener("ended", () => {
-					videoElement.srcObject = null;
-					localStream.removeTrack(screenTrack);
-
-					if (isMediaStreamEmpty(localStream)) {
-						localStreamRef.current = null;
-					}
-
-					setIsScreenSharing(false);
-				});
-
-				localStream.addTrack(screenTrack);
-
-				videoElement.srcObject = localStream;
-
-				setIsScreenSharing(true);
-			} else {
-				const localStream = localStreamRef.current;
-				if (!localStream) return;
-
-				const screenTrack = localStream.getVideoTracks()[0];
-
-				if (screenTrack) {
-					screenTrack.stop();
-					localStream.removeTrack(screenTrack);
-				}
-
-				if (localStream.getVideoTracks().length === 0) {
-					videoElement.srcObject = null;
-				}
-				if (isMediaStreamEmpty(localStream)) {
-					localStreamRef.current = null;
-				}
-
-				setIsScreenSharing(false);
-			}
-		} catch (err) {
-			console.error("Failed to access screen sharing:", err);
-
-			let errorMessage = "Unable to share your screen. Please try again.";
-
-			if (err instanceof DOMException) {
-				switch (err.name) {
-					case "NotAllowedError":
-						errorMessage = "Screen sharing was cancelled or denied. Please allow screen sharing to continue.";
-						break;
-
-					case "NotFoundError":
-						errorMessage = "No screen or window was available to share.";
-						break;
-
-					case "NotReadableError":
-						errorMessage = "Your screen couldn't be shared. Please try again.";
-						break;
-
-					case "AbortError":
-						errorMessage = "Screen sharing was cancelled. Please try again.";
-						break;
-				}
-			}
-
-			toast.error(errorMessage);
-		}
-	};
-
-	const toggleAudioSharing = async () => {
-		if (!navigator.mediaDevices?.getUserMedia) {
-			return toast.error("Microphone access isn’t supported by your browser.");
-		}
-
-		try {
-			if (!isAudioSharing) {
-				let stream = localStreamRef.current;
-
-				if (!stream) {
-					stream = new MediaStream();
-					localStreamRef.current = stream;
-				}
-
-				const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-				const audioTrack = microphoneStream.getAudioTracks()[0];
-				if (!audioTrack) return;
-
-				stream.addTrack(audioTrack);
-
-				if (localAudioRef.current) {
-					localAudioRef.current.srcObject = microphoneStream;
-				}
-
-				setIsAudioSharing(true);
-			} else {
-				const localStream = localStreamRef.current;
-				if (!localStream) return;
-
-				const audioTrack = localStream.getAudioTracks()[0];
-
-				if (audioTrack) {
-					audioTrack.stop();
-					localStream.removeTrack(audioTrack);
-				}
-
-				if (isMediaStreamEmpty(localStream)) {
-					localStreamRef.current = null;
-				}
-
-				setIsAudioSharing(false);
-			}
-		} catch (err) {
-			console.error("Failed to access microphone:", err);
-
-			toast.error("Unable to access your microphone. Please try again.");
-		}
-	};
-
-	// WebRTC connection initiator
-	const webRtcConnection = () => {
-		const pc = new RTCPeerConnection({
-			iceServers: [
-				{
-					urls: "stun:stun.l.google.com:19302",
-				},
-			],
-		});
-
-		pc.onicecandidate = (event) => {
-			if (event.candidate) {
-				socket.emit("ice-candidate", {
-					to: friendId,
-					candidate: event.candidate,
-				});
-			}
-		};
-
-		pc.onconnectionstatechange = () => {
-			const connectionState = pc.connectionState;
-
-			if (connectionState === "connected") {
-				updateCallStatus("connected");
-			} else if (connectionState === "closed" || connectionState === "disconnected") {
-				updateCallStatus("ended");
-			}
-		};
-
-		pc.ontrack = (event) => {
-			console.log("On track fired");
-
-			const remoteVideoElement = remoteVideoRef.current;
-			if (!remoteVideoElement) return;
-
-			const remoteStream = event.streams[0];
-
-			remoteVideoElement.srcObject = remoteStream;
-		};
-
-		const localStream = localStreamRef.current;
-
-		if (localStream) {
-			localStream.getTracks().forEach((track) => {
-				pc.addTrack(track, localStream);
-			});
-		}
-
-		peerConnectionRef.current = pc;
-	};
-
 	const cancelOutgoingCall = () => {
 		if (callStatusRef.current !== "calling") return;
 
@@ -450,7 +147,7 @@ const VideoCall = () => {
 		if (!localStreamRef.current) return;
 
 		try {
-			webRtcConnection();
+			initiateWebRtcConnection();
 
 			const pc = peerConnectionRef.current;
 
@@ -505,7 +202,7 @@ const VideoCall = () => {
 		}
 
 		try {
-			webRtcConnection();
+			initiateWebRtcConnection();
 
 			const pc = peerConnectionRef.current;
 
@@ -751,45 +448,18 @@ const VideoCall = () => {
 			{/* <audio src={canceledCallRingtone} controls /> */}
 
 			{/* Call Action Buttons */}
-			<div className="relative z-30 mx-auto mt-6 flex w-fit max-w-full flex-wrap items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-slate-100/70 p-4 sm:gap-5 sm:p-5">
-				<IconControlButton activeIcon={Mic} inActiveIcon={MicOff} isActive={isAudioSharing} tooltipTitle="Microphone" onClick={toggleAudioSharing} />
-				<IconControlButton activeIcon={Video} inActiveIcon={VideoOff} isActive={isLocalVideoSharing} tooltipTitle="Camera" onClick={toggleVideoSharing} />
-				<IconControlButton activeIcon={MonitorUp} inActiveIcon={MonitorOff} isActive={isScreenSharing} tooltipTitle="Screen" onClick={toggleScreenSharing} />
-				<IconControlButton activeIcon={Volume2} inActiveIcon={VolumeOff} isActive={true} tooltipTitle="Voice" />
-
-				<div className="flex gap-5">
-					{/* show call duration timer */}
-					{callStatus === "connected" && (
-						<div className="bg-white border border-zinc-200 text-zinc-600 flex justify-center items-center gap-1.5 my-auto px-3 py-1 rounded-full">
-							<Clock size={16} />
-							<label>{formatCallDuration(callDuration)}</label>
-						</div>
-					)}
-
-					{/* Call button */}
-					{callStatus !== "connected" && (
-						<button
-							onClick={startCall}
-							type="button"
-							className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-green-600 text-white transition-colors hover:bg-green-700 active:bg-green-800 cursor-pointer"
-							disabled={callStatus === "calling"}>
-							<Phone size={20} />
-							{callStatus === "calling" ? "Calling..." : "Call"}
-						</button>
-					)}
-
-					{/* End button */}
-					{callStatus === "connected" && (
-						<button
-							onClick={endCall}
-							type="button"
-							className="flex px-6 py-3 items-center justify-center gap-2.5 font-medium rounded-full bg-red-500 text-white transition-colors hover:bg-red-600 active:bg-red-700 cursor-pointer">
-							<PhoneOff size={20} />
-							End
-						</button>
-					)}
-				</div>
-			</div>
+			<CallControls
+				callStatus={callStatus}
+				callDuration={callDuration}
+				isAudioOn={isAudioSharing}
+				isVideoOn={isLocalVideoSharing}
+				isScreenSharing={isScreenSharing}
+				onToggleMic={toggleAudioSharing}
+				onToggleCamera={toggleVideoSharing}
+				onToggleScreen={toggleScreenSharing}
+				onStartCall={startCall}
+				onEndCall={endCall}
+			/>
 
 			{notifyUi}
 		</div>

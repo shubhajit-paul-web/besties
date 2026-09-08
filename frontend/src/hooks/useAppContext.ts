@@ -1,14 +1,5 @@
-import { useContext } from "react";
-import Context from "../app/Context";
+import useAppStore from "../app/store";
 
-const useAppContext = () => {
-	const context = useContext(Context);
-
-	if (!context) {
-		throw new Error("useAppContext must be used within ContextProvider");
-	}
-
-	return context;
-};
+const useAppContext = useAppStore;
 
 export default useAppContext;

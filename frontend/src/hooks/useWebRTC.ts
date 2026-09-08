@@ -1,18 +1,67 @@
 import socket from "@/lib/socket";
-import type { CallStatus } from "@/types/global.types";
-import type { RefObject } from "react";
+import useAppContext from "./useAppContext";
 
-type UsePeerConnectionProps = {
-	friendId: string | undefined;
-	remoteVideoRef: RefObject<HTMLVideoElement | null>;
-	localStreamRef: RefObject<MediaStream | null>;
-	peerConnectionRef: RefObject<RTCPeerConnection | null>;
-	updateCallStatus: (state: CallStatus) => void;
-};
+// type UsePeerConnectionProps = {
+// 	friendId: string | undefined;
+// 	remoteVideoRef: RefObject<HTMLVideoElement | null>;
+// 	localStreamRef: RefObject<MediaStream | null>;
+// 	peerConnectionRef: RefObject<RTCPeerConnection | null>;
+// 	updateCallStatus: (state: CallStatus) => void;
+// };
 
 // RTCPeerConnection, ICE buffering, and sockets
-const useWebRTC = ({ friendId, remoteVideoRef, localStreamRef, peerConnectionRef, updateCallStatus }: UsePeerConnectionProps) => {
-	const webRtcConnection = () => {
+const useWebRTC = () => {
+	const { videoCallCommunication } = useAppContext();
+
+	const {
+		videoCallRemoteVideoRef: remoteVideoRef,
+		videoCallLocalStreamRef: localStreamRef,
+		videoCallPeerConnectionRef: peerConnectionRef,
+		videoCallLocalVideoRef: localVideoRef,
+		setIsVideoCallCameraOn: setIsCameraOn,
+		setIsVideoCallMicOn: setIsMicOn,
+		setIsVideoCallScreenSharing: setIsScreenSharing,
+		updateVideoCallStatus: updateCallStatus,
+		videoCallSenderInfo,
+	} = videoCallCommunication;
+
+	// Clean up the call and reset all related resources
+	const cleanupVideoCall = () => {
+		const pc = peerConnectionRef.current;
+		if (!pc) return;
+
+		// Stop local media tracks
+		const localStream = localStreamRef.current;
+
+		if (localStream) {
+			localStream.getTracks().forEach((track) => {
+				track.stop();
+			});
+
+			localStreamRef.current = null;
+		}
+
+		// Reset all local media sharing states
+		setIsCameraOn(false);
+		setIsMicOn(false);
+		setIsScreenSharing(false);
+
+		// Close peer connection
+		pc.close();
+		peerConnectionRef.current = null;
+
+		// Clear video elements
+		if (localVideoRef.current) {
+			localVideoRef.current.srcObject = null;
+		}
+		if (remoteVideoRef.current) {
+			remoteVideoRef.current.srcObject = null;
+		}
+	};
+
+	const initiateWebRtcConnection = (friendId?: string) => {
+		friendId = friendId ?? videoCallSenderInfo?._id;
+
 		if (!friendId) {
 			throw new Error("Friend id is required");
 		}
@@ -67,7 +116,7 @@ const useWebRTC = ({ friendId, remoteVideoRef, localStreamRef, peerConnectionRef
 		peerConnectionRef.current = peerConnection;
 	};
 
-	return webRtcConnection;
+	return { initiateWebRtcConnection, cleanupVideoCall };
 };
 
 export default useWebRTC;

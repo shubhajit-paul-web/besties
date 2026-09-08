@@ -1,25 +1,34 @@
-import { useRef, type Dispatch, type RefObject, type SetStateAction } from "react";
+import useAppContext from "@/hooks/useAppContext";
 import { toast } from "react-toastify";
 
-type UseLocalMediaProps = {
-	localVideoRef: RefObject<HTMLVideoElement | null>;
-	localAudioRef: RefObject<HTMLAudioElement | null>;
-	isCameraOn: boolean;
-	setIsCameraOn: Dispatch<SetStateAction<boolean>>;
-	isMicOn: boolean;
-	setIsMicOn: Dispatch<SetStateAction<boolean>>;
-	isScreenSharing: boolean;
-	setIsScreenSharing: Dispatch<SetStateAction<boolean>>;
-};
+// type UseLocalMediaProps = {
+// 	localVideoRef: RefObject<HTMLVideoElement | null>;
+// 	localAudioRef: RefObject<HTMLAudioElement | null>;
+// 	isCameraOn: boolean;
+// 	setIsCameraOn: Dispatch<SetStateAction<boolean>>;
+// 	isMicOn: boolean;
+// 	setIsMicOn: Dispatch<SetStateAction<boolean>>;
+// 	isScreenSharing: boolean;
+// 	setIsScreenSharing: Dispatch<SetStateAction<boolean>>;
+// };
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
 };
 
-const useLocalMedia = (props: UseLocalMediaProps) => {
-	const { localVideoRef, localAudioRef, isCameraOn, setIsCameraOn, isMicOn, setIsMicOn, isScreenSharing, setIsScreenSharing } = props;
-
-	const localStreamRef = useRef<MediaStream | null>(null);
+const useLocalMedia = () => {
+	const { videoCallCommunication } = useAppContext();
+	const {
+		videoCallLocalVideoRef: localVideoRef,
+		videoCallLocalAudioRef: localAudioRef,
+		isVideoCallCameraOn: isCameraOn,
+		setIsVideoCallCameraOn: setIsCameraOn,
+		isVideoCallMicOn: isMicOn,
+		setIsVideoCallMicOn: setIsMicOn,
+		isVideoCallScreenSharing: isScreenSharing,
+		setIsVideoCallScreenSharing: setIsScreenSharing,
+		videoCallLocalStreamRef: localStreamRef,
+	} = videoCallCommunication;
 
 	const getOrCreateStream = () => {
 		if (!localStreamRef.current) {
@@ -30,6 +39,7 @@ const useLocalMedia = (props: UseLocalMediaProps) => {
 
 	const toggleVideoSharing = async () => {
 		const localVideoElement = localVideoRef.current;
+
 		if (!localVideoElement) return;
 
 		if (!navigator.mediaDevices?.getUserMedia) {

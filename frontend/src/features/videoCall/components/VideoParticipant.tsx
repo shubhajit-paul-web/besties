@@ -49,7 +49,7 @@ const VideoParticipant = ({ fullName, children, className, ...props }: VideoPart
 			{/* Animated shadow */}
 			{/* <div className="w-10 h-10 rounded-full absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 shadow-[0_0_150px_120px] shadow-blue-200/25 animate-pulse"></div> */}
 
-			<div className="capitalize bg-slate-800/70 text-xs text-slate-100 w-fit py-1 px-3 rounded-lg absolute bottom-4 left-4 cursor-default flex items-center gap-2">
+			<div className="capitalize bg-slate-800/70 text-xs text-slate-100 w-fit py-1 px-3 rounded-lg absolute bottom-3 left-3 cursor-default flex items-center gap-2">
 				{/* <div className="w-1.5 h-1.5 bg-green-600 rounded-full animate-pulse"></div> */}
 				{fullName}
 			</div>
@@ -63,7 +63,7 @@ const VideoParticipant = ({ fullName, children, className, ...props }: VideoPart
 				aria-label={`${isFullscreen ? "Exit" : "View"} ${fullName}'s video ${isFullscreen ? "fullscreen" : "in fullscreen"}`}
 				aria-pressed={isFullscreen}
 				title={`${isFullscreen ? "Exit" : "View"} ${fullName}'s video fullscreen`}
-				className="absolute bottom-4 right-4 rounded-lg bg-slate-800/70 p-2 text-slate-100 transition-all hover:scale-110">
+				className="absolute bottom-2.5 right-2.5 rounded-lg bg-slate-800/70 p-2 text-slate-100 transition-all hover:scale-110">
 				{isFullscreen ? <Minimize2 size={13} strokeWidth={2.2} /> : <Maximize2 size={13} strokeWidth={2.2} />}
 			</button>
 		</div>

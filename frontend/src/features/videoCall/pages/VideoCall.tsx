@@ -1,17 +1,15 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
-import { PhoneOff, Video } from "lucide-react";
+import { PhoneOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useAppContext from "@/hooks/useAppContext";
 import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
-import { toast } from "react-toastify";
 import socket from "@/lib/socket";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { Avatar, notification } from "antd";
-import type { AnswerPayload, ICECandidatePayload, OfferPayload } from "../types/videoCall.types";
-import type { CallStatus } from "@/types/global.types";
+import type { AnswerPayload, ICECandidatePayload } from "../types/videoCall.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
 import { showErrorToast } from "../utils/toast";
@@ -21,64 +19,33 @@ import useRingtone from "../hooks/useRingtone";
 import CallControls from "../components/CallControls";
 
 const VideoCall = () => {
+	const { friendId } = useParams();
+	const location = useLocation();
+	const [isLocalPinned, setIsLocalPinned] = useState(false);
 	const { user: currentUser } = useCurrentUser();
 	const { videoCallCommunication } = useAppContext();
-	const { friendId } = useParams();
 	const [notify, notifyUi] = notification.useNotification();
-
-	const {
-		isVideoCallCameraOn: isCameraOn,
-		setIsVideoCallCameraOn: setIsCameraOn,
-		isVideoCallMicOn: isMicOn,
-		setIsVideoCallMicOn: setIsMicOn,
-		isVideoCallScreenSharing: isScreenSharing,
-		setIsVideoCallScreenSharing: setIsScreenSharing,
-		videoCallStatus: callStatus,
-		setVideoCallStatus: setCallStatus,
-		videoCallDuration: callDuration,
-		setVideoCallDuration: setCallDuration,
-		videoCallSenderInfo: senderInfo,
-		setVideoCallSenderInfo: setSenderInfo,
-		videoCallRemoteVideoRef: remoteVideoRef,
-		videoCallLocalVideoRef: localVideoRef,
-		videoCallLocalStreamRef: localStreamRef,
-		videoCallLocalAudioRef: localAudioRef,
-		videoCallOfferPayloadRef: offerPayloadRef,
-		videoCallPeerConnectionRef: peerConnectionRef,
-		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
-		videoCallStatusRef: callStatusRef,
-	} = videoCallCommunication;
-	const [isLocalPinned, setIsLocalPinned] = useState(false);
-
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
 
 	const friendInfo = friendProfileRes?.data ?? {};
+	const { incomingCall, offerPayload } = location.state ?? {};
+	const {
+		isVideoCallCameraOn: isCameraOn,
+		isVideoCallMicOn: isMicOn,
+		isVideoCallScreenSharing: isScreenSharing,
+		videoCallStatus: callStatus,
+		videoCallDuration: callDuration,
+		setVideoCallDuration: setCallDuration,
+		videoCallPeerConnectionRef: peerConnectionRef,
+		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
+		videoCallLocalStreamRef: localStreamRef,
+		videoCallStatusRef: callStatusRef,
+		updateVideoCallStatus: updateCallStatus,
+		videoCallOfferPayloadRef: offerPayloadRef,
+	} = videoCallCommunication;
 
-	const updateCallStatus = (status: CallStatus) => {
-		callStatusRef.current = status;
-		setCallStatus(status);
-	};
-
-	// WebRTC connection initiator
-	const initiateWebRtcConnection = useWebRTC({
-		friendId,
-		remoteVideoRef,
-		localStreamRef,
-		peerConnectionRef,
-		updateCallStatus,
-	});
-
-	const { toggleVideoSharing, toggleScreenSharing, toggleAudioSharing } = useLocalMedia({
-		localVideoRef,
-		localAudioRef,
-		isCameraOn,
-		setIsCameraOn,
-		isMicOn,
-		setIsMicOn,
-		isScreenSharing,
-		setIsScreenSharing,
-	});
-
+	const { initiateWebRtcConnection, cleanupVideoCall } = useWebRTC();
+	const { toggleVideoSharing, toggleScreenSharing, toggleAudioSharing } = useLocalMedia();
 	const { playRingtone, stopRingtone } = useRingtone();
 
 	// Pause ringing audio and destroy the notification UI
@@ -88,40 +55,6 @@ const VideoCall = () => {
 		}
 
 		notify.destroy(notificationKey);
-	};
-
-	// Clean up the call and reset all related resources
-	const cleanupCall = () => {
-		const pc = peerConnectionRef.current;
-		if (!pc) return;
-
-		// Stop local media tracks
-		const localStream = localStreamRef.current;
-
-		if (localStream) {
-			localStream.getTracks().forEach((track) => {
-				track.stop();
-			});
-
-			localStreamRef.current = null;
-		}
-
-		// Reset all local media sharing states
-		setIsCameraOn(false);
-		setIsMicOn(false);
-		setIsScreenSharing(false);
-
-		// Close peer connection
-		pc.close();
-		peerConnectionRef.current = null;
-
-		// Clear video elements
-		if (localVideoRef.current) {
-			localVideoRef.current.srcObject = null;
-		}
-		if (remoteVideoRef.current) {
-			remoteVideoRef.current.srcObject = null;
-		}
 	};
 
 	const cancelOutgoingCall = () => {
@@ -134,78 +67,7 @@ const VideoCall = () => {
 		updateCallStatus("canceled");
 
 		// Clean up the call and reset all related resources
-		cleanupCall();
-	};
-
-	const rejectIncomingCall = () => {
-		if (callStatusRef.current !== "incoming") return;
-
-		socket.emit("cancel-call", {
-			to: offerPayloadRef.current?.from._id,
-		});
-
-		updateCallStatus("rejected");
-
-		offerPayloadRef.current = null;
-	};
-
-	const acceptIncomingCall = async () => {
-		const offerPayload = offerPayloadRef.current;
-		if (!offerPayload) return;
-
-		if (!isCameraOn && !isScreenSharing && !isMicOn) {
-			const mediaStarted = await toggleVideoSharing();
-
-			if (!mediaStarted) {
-				updateCallStatus("faild");
-				return;
-			}
-		}
-
-		if (!localStreamRef.current) return;
-
-		try {
-			initiateWebRtcConnection();
-
-			const pc = peerConnectionRef.current;
-
-			if (!pc) {
-				throw new Error("Failed to initialize peer connection");
-			}
-
-			await pc.setRemoteDescription(offerPayload.offer);
-
-			for (const candidate of pendingIceCandidatesRef.current) {
-				await pc.addIceCandidate(candidate);
-			}
-
-			pendingIceCandidatesRef.current = [];
-
-			const answer = await pc.createAnswer();
-			await pc.setLocalDescription(answer);
-
-			if (!pc.localDescription) {
-				throw new Error("Failed to create local description");
-			}
-
-			socket.emit("answer", {
-				to: offerPayload.from._id,
-				answer: pc.localDescription,
-			});
-
-			offerPayloadRef.current = null;
-		} catch (err: unknown) {
-			console.error("Failed to accept incoming call:", err);
-
-			// removeNotification("incoming-call");
-
-			// clean up the partially created WebRTC connection
-			peerConnectionRef.current?.close();
-			peerConnectionRef.current = null;
-
-			updateCallStatus("faild");
-			showErrorToast("Unable to connect the call. Please try again.");
-		}
+		cleanupVideoCall();
 	};
 
 	const startCall = async () => {
@@ -214,13 +76,13 @@ const VideoCall = () => {
 			const mediaStarted = await toggleVideoSharing();
 
 			if (!mediaStarted) {
-				updateCallStatus("faild");
+				updateCallStatus("failed");
 				return;
 			}
 		}
 
 		try {
-			initiateWebRtcConnection();
+			initiateWebRtcConnection(friendId);
 
 			const pc = peerConnectionRef.current;
 
@@ -244,7 +106,7 @@ const VideoCall = () => {
 		} catch (err: unknown) {
 			console.error("Failed to start call:", err);
 
-			updateCallStatus("faild");
+			updateCallStatus("failed");
 
 			showErrorToast("Unable to start the call. Please try again.");
 		}
@@ -258,20 +120,10 @@ const VideoCall = () => {
 		});
 
 		updateCallStatus("ended");
-		cleanupCall();
+		cleanupVideoCall();
 	};
 
 	// Socket.io handlers
-	const onOfferListener = async (payload: OfferPayload) => {
-		try {
-			offerPayloadRef.current = payload;
-			setSenderInfo(payload.from);
-			updateCallStatus("incoming");
-		} catch (err: unknown) {
-			console.error(err);
-		}
-	};
-
 	const onAnswerListener = async (payload: AnswerPayload) => {
 		const pc = peerConnectionRef.current;
 		if (!pc) return;
@@ -298,49 +150,89 @@ const VideoCall = () => {
 		}
 	};
 
-	const onCancelCallListener = () => {
-		if (callStatusRef.current === "calling") {
-			toast.info("Call declined", {
-				theme: "colored",
-			});
-
-			playRingtone("canceled", false);
-
-			// change the call status after 1 seconds let the audio play
-			setTimeout(() => {
-				updateCallStatus("rejected");
-			}, 1000);
-
-			// Clean up the call and reset all related resources
-			cleanupCall();
-		} else if (callStatusRef.current === "incoming") {
-			updateCallStatus("rejected");
-		}
-	};
-
 	const onEndCallListener = ({ from }: { from: string }) => {
 		if (from === friendId) {
-			cleanupCall();
+			cleanupVideoCall();
 			updateCallStatus("ended");
 		}
 	};
 
 	// Socket.io listeners
 	useEffect(() => {
-		socket.on("offer", onOfferListener);
+		// socket.on("offer", onOfferListener);
 		socket.on("answer", onAnswerListener);
 		socket.on("ice-candidate", onIceCandidateListener);
-		socket.on("cancel-call", onCancelCallListener);
 		socket.on("end-call", onEndCallListener);
 
 		return () => {
-			socket.off("offer", onOfferListener);
+			// socket.off("offer", onOfferListener);
 			socket.off("answer", onAnswerListener);
 			socket.off("ice-candidate", onIceCandidateListener);
-			socket.off("cancel-call", onCancelCallListener);
 			socket.off("end-call", onEndCallListener);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!incomingCall || !offerPayload) return;
+
+		const acceptCall = async () => {
+			try {
+				if (!isCameraOn && !isScreenSharing && !isMicOn) {
+					const mediaStarted = await toggleVideoSharing();
+
+					if (!mediaStarted) {
+						updateCallStatus("failed");
+						return;
+					}
+				}
+
+				if (!localStreamRef.current) {
+					updateCallStatus("failed");
+					return;
+				}
+
+				initiateWebRtcConnection(offerPayload.from._id);
+
+				const pc = peerConnectionRef.current;
+
+				if (!pc) {
+					throw new Error("Failed to initialize peer connection");
+				}
+
+				await pc.setRemoteDescription(offerPayload.offer);
+
+				for (const candidate of pendingIceCandidatesRef.current) {
+					await pc.addIceCandidate(candidate);
+				}
+
+				pendingIceCandidatesRef.current = [];
+
+				const answer = await pc.createAnswer();
+				await pc.setLocalDescription(answer);
+
+				if (!pc.localDescription) {
+					throw new Error("Failed to create local description");
+				}
+
+				socket.emit("answer", {
+					to: offerPayload.from._id,
+					answer: pc.localDescription,
+				});
+
+				offerPayloadRef.current = null;
+			} catch (err) {
+				console.error("Failed to accept incoming call:", err);
+
+				peerConnectionRef.current?.close();
+				peerConnectionRef.current = null;
+
+				updateCallStatus("failed");
+				showErrorToast("Unable to connect the call. Please try again.");
+			}
+		};
+
+		acceptCall();
+	});
 
 	useEffect(() => {
 		if (callStatus === "pending") return;
@@ -356,7 +248,7 @@ const VideoCall = () => {
 						<Avatar size={44} src={friendInfo?.avatar ?? "/profile-img.jpeg"} />
 
 						<div className="min-w-0">
-							<div className="font-medium truncate">{friendInfo?.username}</div>
+							<div className="font-medium truncate capitalize">{formatUserName(friendInfo?.name)}</div>
 
 							<div className="text-gray-500 text-sm">Calling...</div>
 						</div>
@@ -370,57 +262,13 @@ const VideoCall = () => {
 				actions: <IconControlButton activeIcon={PhoneOff} inActiveIcon={PhoneOff} onClick={cancelOutgoingCall} />,
 				onClose: stopRingtone,
 			});
-		} else if (callStatus === "incoming") {
-			playRingtone("incoming");
-
-			notify.open({
-				key: "incoming-call",
-				title: "Incoming video call",
-				description: (
-					<div className="flex items-center gap-3 mt-1">
-						<Avatar size={44} src={senderInfo?.avatar ?? "/profile-img.jpeg"} />
-
-						<div className="min-w-0">
-							<div className="font-medium truncate">{senderInfo?.username}</div>
-
-							<div className="text-gray-500 text-sm">is calling you...</div>
-						</div>
-					</div>
-				),
-				duration: 30,
-				showProgress: true,
-				pauseOnHover: false,
-				placement: "topRight",
-				actions: [
-					<div className="flex justify-end gap-3">
-						<IconControlButton
-							activeIcon={PhoneOff}
-							inActiveIcon={PhoneOff}
-							style={{
-								backgroundColor: "#ff4d4f",
-							}}
-							onClick={rejectIncomingCall}
-						/>
-
-						<IconControlButton
-							activeIcon={Video}
-							inActiveIcon={Video}
-							style={{
-								backgroundColor: "#16a34a",
-							}}
-							onClick={acceptIncomingCall}
-						/>
-					</div>,
-				],
-				onClose: stopRingtone,
-			});
 		} else if (callStatus === "rejected" || callStatus === "canceled") {
 			removeNotification("outgoing-call", false);
 			removeNotification("incoming-call", true);
 		} else if (callStatus === "connected") {
 			removeNotification("outgoing-call");
 			removeNotification("incoming-call");
-		} else if (callStatus === "faild") {
+		} else if (callStatus === "failed") {
 			removeNotification("incoming-call");
 			removeNotification("outgoing-call");
 		}
@@ -454,9 +302,6 @@ const VideoCall = () => {
 
 			{/* The arrangement is local-only swapping it never changes the media connection */}
 			<VideoStage
-				remoteVideoRef={remoteVideoRef}
-				localVideoRef={localVideoRef}
-				localAudioRef={localAudioRef}
 				remoteName={formatUserName(friendInfo?.name)}
 				localName={`${formatUserName(currentUser?.name)} (You)`}
 				isLocalPinned={isLocalPinned}

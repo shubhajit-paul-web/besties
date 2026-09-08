@@ -4,4 +4,4 @@ export type ImageWithFallbackProps = ImgHTMLAttributes<HTMLImageElement> & {
 	fallback: string;
 };
 
-export type CallStatus = "pending" | "calling" | "incoming" | "rejected" | "connected" | "canceled" | "faild" | "ended";
+export type CallStatus = "pending" | "calling" | "incoming" | "rejected" | "connected" | "canceled" | "failed" | "ended";

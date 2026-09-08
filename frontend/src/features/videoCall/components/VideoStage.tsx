@@ -1,8 +1,13 @@
 import { ArrowLeftRight } from "lucide-react";
 import VideoParticipant from "./VideoParticipant";
 import type { VideoStageProps } from "../types/videoCall.types";
+import useAppContext from "@/hooks/useAppContext";
 
-const VideoStage = ({ remoteVideoRef, localVideoRef, localAudioRef, remoteName, localName, isLocalPinned, onSwap }: VideoStageProps) => {
+const VideoStage = ({ remoteName, localName, isLocalPinned, onSwap }: VideoStageProps) => {
+	const { videoCallCommunication } = useAppContext();
+
+	const { videoCallRemoteVideoRef: remoteVideoRef, videoCallLocalVideoRef: localVideoRef, videoCallLocalAudioRef: localAudioRef } = videoCallCommunication;
+
 	const primaryParticipantClassName = "absolute inset-0 h-full w-full rounded-[1.25rem] transition-[inset,width,height] duration-300 ease-out";
 	const previewParticipantClassName = "absolute bottom-4 right-4 z-10 aspect-video rounded-xl border-2 border-white/15 shadow-xl transition-[inset,width,height] duration-300 ease-out";
 

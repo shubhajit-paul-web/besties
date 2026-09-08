@@ -1,6 +1,6 @@
 import type { CallStatus } from "@/types/global.types";
 import type { UserType } from "@/types/user.types";
-import type { ComponentProps, ReactNode, RefObject } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 export interface VideoParticipantProps extends ComponentProps<"div"> {
 	fullName: string;
@@ -8,9 +8,6 @@ export interface VideoParticipantProps extends ComponentProps<"div"> {
 }
 
 export type VideoStageProps = {
-	remoteVideoRef: RefObject<HTMLVideoElement | null>;
-	localVideoRef: RefObject<HTMLVideoElement | null>;
-	localAudioRef: RefObject<HTMLAudioElement | null>;
 	remoteName: string;
 	localName: string;
 	isLocalPinned: boolean;

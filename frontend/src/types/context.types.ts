@@ -1,21 +1,22 @@
-import { createContext, type Dispatch, type RefObject, type SetStateAction } from "react";
-import type { AccessTokenPayload, UserType } from "../types/user.types";
-import type { CallStatus } from "@/types/global.types";
+import type { RefObject, SetStateAction } from "react";
+import type { CallStatus } from "./global.types";
 import type { OfferPayload } from "@/features/videoCall/types/videoCall.types";
+import type { AccessTokenPayload, UserType } from "./user.types";
 
 export type VideoCallCommunication = {
 	isVideoCallCameraOn: boolean;
-	setIsVideoCallCameraOn: Dispatch<SetStateAction<boolean>>;
+	setIsVideoCallCameraOn: (value: SetStateAction<boolean>) => void;
 	isVideoCallMicOn: boolean;
-	setIsVideoCallMicOn: Dispatch<SetStateAction<boolean>>;
+	setIsVideoCallMicOn: (value: SetStateAction<boolean>) => void;
 	isVideoCallScreenSharing: boolean;
-	setIsVideoCallScreenSharing: Dispatch<SetStateAction<boolean>>;
+	setIsVideoCallScreenSharing: (value: SetStateAction<boolean>) => void;
 	videoCallStatus: CallStatus;
-	setVideoCallStatus: Dispatch<SetStateAction<CallStatus>>;
+	setVideoCallStatus: (value: SetStateAction<CallStatus>) => void;
+	updateVideoCallStatus: (status: CallStatus) => void;
 	videoCallDuration: number;
-	setVideoCallDuration: Dispatch<SetStateAction<number>>;
+	setVideoCallDuration: (value: SetStateAction<number>) => void;
 	videoCallSenderInfo: OfferPayload["from"] | null;
-	setVideoCallSenderInfo: Dispatch<SetStateAction<OfferPayload["from"] | null>>;
+	setVideoCallSenderInfo: (value: SetStateAction<OfferPayload["from"] | null>) => void;
 	videoCallRemoteVideoRef: RefObject<HTMLVideoElement | null>;
 	videoCallLocalVideoRef: RefObject<HTMLVideoElement | null>;
 	videoCallLocalStreamRef: RefObject<MediaStream | null>;
@@ -26,14 +27,10 @@ export type VideoCallCommunication = {
 	videoCallStatusRef: RefObject<CallStatus>;
 };
 
-export type ContextType = {
+export type AppStore = {
 	user: UserType | null;
-	setUser: Dispatch<SetStateAction<UserType | null>>;
+	setUser: (value: SetStateAction<UserType | null>) => void;
 	onlineFriends: AccessTokenPayload[];
-	setOnlineFriends: Dispatch<SetStateAction<AccessTokenPayload[]>>;
+	setOnlineFriends: (value: SetStateAction<AccessTokenPayload[]>) => void;
 	videoCallCommunication: VideoCallCommunication;
 };
-
-const Context = createContext<ContextType | null>(null);
-
-export default Context;

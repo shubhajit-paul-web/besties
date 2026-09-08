@@ -1,3 +1,4 @@
+import type { CallStatus } from "@/types/global.types";
 import type { UserType } from "@/types/user.types";
 import type { ComponentProps, ReactNode, RefObject } from "react";
 
@@ -14,6 +15,19 @@ export type VideoStageProps = {
 	localName: string;
 	isLocalPinned: boolean;
 	onSwap: () => void;
+};
+
+export type CallControlsProps = {
+	callStatus: CallStatus;
+	callDuration: number;
+	isAudioOn: boolean;
+	isVideoOn: boolean;
+	isScreenSharing: boolean;
+	onToggleMic: () => void;
+	onToggleCamera: () => void;
+	onToggleScreen: () => void;
+	onStartCall: () => void;
+	onEndCall: () => void;
 };
 
 type Sender = Pick<UserType, "_id" | "name" | "username" | "avatar">;

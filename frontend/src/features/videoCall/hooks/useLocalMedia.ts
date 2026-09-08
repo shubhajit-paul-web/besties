@@ -1,20 +1,25 @@
-import { useRef, useState, type RefObject } from "react";
+import { useRef, type Dispatch, type RefObject, type SetStateAction } from "react";
 import { toast } from "react-toastify";
 
 type UseLocalMediaProps = {
 	localVideoRef: RefObject<HTMLVideoElement | null>;
 	localAudioRef: RefObject<HTMLAudioElement | null>;
+	isCameraOn: boolean;
+	setIsCameraOn: Dispatch<SetStateAction<boolean>>;
+	isMicOn: boolean;
+	setIsMicOn: Dispatch<SetStateAction<boolean>>;
+	isScreenSharing: boolean;
+	setIsScreenSharing: Dispatch<SetStateAction<boolean>>;
 };
 
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
 };
 
-const useLocalMedia = ({ localVideoRef, localAudioRef }: UseLocalMediaProps) => {
+const useLocalMedia = (props: UseLocalMediaProps) => {
+	const { localVideoRef, localAudioRef, isCameraOn, setIsCameraOn, isMicOn, setIsMicOn, isScreenSharing, setIsScreenSharing } = props;
+
 	const localStreamRef = useRef<MediaStream | null>(null);
-	const [isCameraOn, setIsCameraOn] = useState(false);
-	const [isMicOn, setIsMicOn] = useState(false);
-	const [isScreenSharing, setIsScreenSharing] = useState(false);
 
 	const getOrCreateStream = () => {
 		if (!localStreamRef.current) {

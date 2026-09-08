@@ -1,20 +1,7 @@
 import { Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff, Phone, PhoneOff, Clock } from "lucide-react";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import formatCallDuration from "@/utils/formatCallDuration";
-import type { CallStatus } from "@/types/global.types";
-
-interface CallControlsProps {
-	callStatus: CallStatus;
-	callDuration: number;
-	isAudioOn: boolean;
-	isVideoOn: boolean;
-	isScreenSharing: boolean;
-	onToggleMic: () => void;
-	onToggleCamera: () => void;
-	onToggleScreen: () => void;
-	onStartCall: () => void;
-	onEndCall: () => void;
-}
+import type { CallControlsProps } from "../types/videoCall.types";
 
 const CallControls = ({ callStatus, callDuration, isAudioOn, isVideoOn, isScreenSharing, onToggleMic, onToggleCamera, onToggleScreen, onStartCall, onEndCall }: CallControlsProps) => (
 	<div className="relative z-30 mx-auto mt-6 flex w-fit max-w-full flex-wrap items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-slate-100/70 p-4 sm:gap-5 sm:p-5">

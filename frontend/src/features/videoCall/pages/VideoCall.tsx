@@ -1,7 +1,8 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { PhoneOff, Video } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
+import useAppContext from "@/hooks/useAppContext";
 import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
@@ -21,24 +22,32 @@ import CallControls from "../components/CallControls";
 
 const VideoCall = () => {
 	const { user: currentUser } = useCurrentUser();
+	const { videoCallCommunication } = useAppContext();
 	const { friendId } = useParams();
 	const [notify, notifyUi] = notification.useNotification();
 
-	const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
-	const localVideoRef = useRef<HTMLVideoElement | null>(null);
-	const localStreamRef = useRef<MediaStream | null>(null);
-	const localAudioRef = useRef<HTMLAudioElement | null>(null);
-	const offerPayloadRef = useRef<OfferPayload | null>(null);
-	const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
-	const pendingIceCandidatesRef = useRef<RTCIceCandidateInit[]>([]);
-	const callStatusRef = useRef<CallStatus>("pending");
-
-	const [isLocalVideoSharing, setIsLocalVideoSharing] = useState(false);
-	const [isScreenSharing, setIsScreenSharing] = useState(false);
-	const [isAudioSharing, setIsAudioSharing] = useState(false);
-	const [callStatus, setCallStatus] = useState<CallStatus>("pending");
-	const [callDuration, setCallDuration] = useState(0);
-	const [senderInfo, setSenderInfo] = useState<OfferPayload["from"] | null>(null);
+	const {
+		isVideoCallCameraOn: isCameraOn,
+		setIsVideoCallCameraOn: setIsCameraOn,
+		isVideoCallMicOn: isMicOn,
+		setIsVideoCallMicOn: setIsMicOn,
+		isVideoCallScreenSharing: isScreenSharing,
+		setIsVideoCallScreenSharing: setIsScreenSharing,
+		videoCallStatus: callStatus,
+		setVideoCallStatus: setCallStatus,
+		videoCallDuration: callDuration,
+		setVideoCallDuration: setCallDuration,
+		videoCallSenderInfo: senderInfo,
+		setVideoCallSenderInfo: setSenderInfo,
+		videoCallRemoteVideoRef: remoteVideoRef,
+		videoCallLocalVideoRef: localVideoRef,
+		videoCallLocalStreamRef: localStreamRef,
+		videoCallLocalAudioRef: localAudioRef,
+		videoCallOfferPayloadRef: offerPayloadRef,
+		videoCallPeerConnectionRef: peerConnectionRef,
+		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
+		videoCallStatusRef: callStatusRef,
+	} = videoCallCommunication;
 	const [isLocalPinned, setIsLocalPinned] = useState(false);
 
 	const { data: friendProfileRes } = useSWR(friendId ? `/users/${friendId}` : null, fetcher);
@@ -59,7 +68,16 @@ const VideoCall = () => {
 		updateCallStatus,
 	});
 
-	const { toggleVideoSharing, toggleScreenSharing, toggleAudioSharing } = useLocalMedia({ localVideoRef, localAudioRef });
+	const { toggleVideoSharing, toggleScreenSharing, toggleAudioSharing } = useLocalMedia({
+		localVideoRef,
+		localAudioRef,
+		isCameraOn,
+		setIsCameraOn,
+		isMicOn,
+		setIsMicOn,
+		isScreenSharing,
+		setIsScreenSharing,
+	});
 
 	const { playRingtone, stopRingtone } = useRingtone();
 
@@ -89,8 +107,8 @@ const VideoCall = () => {
 		}
 
 		// Reset all local media sharing states
-		setIsLocalVideoSharing(false);
-		setIsAudioSharing(false);
+		setIsCameraOn(false);
+		setIsMicOn(false);
 		setIsScreenSharing(false);
 
 		// Close peer connection
@@ -135,7 +153,7 @@ const VideoCall = () => {
 		const offerPayload = offerPayloadRef.current;
 		if (!offerPayload) return;
 
-		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
+		if (!isCameraOn && !isScreenSharing && !isMicOn) {
 			const mediaStarted = await toggleVideoSharing();
 
 			if (!mediaStarted) {
@@ -192,7 +210,7 @@ const VideoCall = () => {
 
 	const startCall = async () => {
 		// Make sure at least one media type is available.
-		if (!isLocalVideoSharing && !isScreenSharing && !isAudioSharing) {
+		if (!isCameraOn && !isScreenSharing && !isMicOn) {
 			const mediaStarted = await toggleVideoSharing();
 
 			if (!mediaStarted) {
@@ -451,8 +469,8 @@ const VideoCall = () => {
 			<CallControls
 				callStatus={callStatus}
 				callDuration={callDuration}
-				isAudioOn={isAudioSharing}
-				isVideoOn={isLocalVideoSharing}
+				isAudioOn={isMicOn}
+				isVideoOn={isCameraOn}
 				isScreenSharing={isScreenSharing}
 				onToggleMic={toggleAudioSharing}
 				onToggleCamera={toggleVideoSharing}

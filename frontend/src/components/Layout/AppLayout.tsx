@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { lazy, useEffect, useState } from "react";
+import { lazy, useCallback, useEffect, useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import MainContent from "./MainContent";
 import RightSidebar from "./Sidebar/Right/Sidebar";
@@ -9,8 +9,6 @@ import type { OfferPayload } from "@/features/videoCall/types/videoCall.types";
 import useAppContext from "@/hooks/useAppContext";
 import useRingtone from "@/features/videoCall/hooks/useRingtone";
 import useWebRTC from "@/hooks/useWebRTC";
-import { showErrorToast } from "@/features/videoCall/utils/toast";
-import useLocalMedia from "@/features/videoCall/hooks/useLocalMedia";
 import { Avatar, notification } from "antd";
 import IconControlButton from "../ui/Button/IconControlButton";
 import { PhoneOff, Video } from "lucide-react";
@@ -22,26 +20,12 @@ const AppLayout = () => {
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
 	const [isLeftSidebarOpen, setIsLeftSidebarOpen] = useState(true);
-	const [notify, notifyUi] = notification.useNotification();
 	const { videoCallCommunication } = useAppContext();
-
-	const { initiateWebRtcConnection, cleanupVideoCall } = useWebRTC();
-	const { toggleVideoSharing } = useLocalMedia();
+	const { cleanupVideoCall } = useWebRTC();
 	const { playRingtone, stopRingtone } = useRingtone();
+	const [notify, notifyUi] = notification.useNotification();
 
-	const {
-		isVideoCallCameraOn: isCameraOn,
-		isVideoCallMicOn: isMicOn,
-		isVideoCallScreenSharing: isScreenSharing,
-		videoCallOfferPayloadRef: offerPayloadRef,
-		setVideoCallSenderInfo: setSenderInfo,
-		videoCallStatusRef: callStatusRef,
-		videoCallStatus,
-		videoCallLocalStreamRef,
-		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
-		videoCallPeerConnectionRef,
-		updateVideoCallStatus,
-	} = videoCallCommunication;
+	const { videoCallOfferPayloadRef: offerPayloadRef, setVideoCallSenderInfo: setSenderInfo, videoCallStatusRef: callStatusRef, videoCallStatus, updateVideoCallStatus } = videoCallCommunication;
 
 	// Pause ringing audio and destroy the notification UI
 	const removeNotification = (notificationKey: string, shouldStopRingtone: boolean = true) => {
@@ -53,6 +37,8 @@ const AppLayout = () => {
 	};
 
 	const rejectIncomingCall = () => {
+		console.log({ callStatusRef: callStatusRef.current });
+
 		if (callStatusRef.current !== "incoming") return;
 
 		socket.emit("cancel-call", {
@@ -72,66 +58,14 @@ const AppLayout = () => {
 
 		const sender = offerPayload.from;
 
-		navigate(`/app/video-call/${sender._id}`, {
+		if (pathname === `/app/video-call/${sender._id}`) return;
+
+		await navigate(`/app/video-call/${sender._id}`, {
 			state: {
 				incomingCall: true,
 				offerPayload,
 			},
 		});
-
-		if (!isCameraOn && !isScreenSharing && !isMicOn) {
-			const mediaStarted = await toggleVideoSharing();
-
-			if (!mediaStarted) {
-				updateVideoCallStatus("failed");
-				return;
-			}
-		}
-
-		if (!videoCallLocalStreamRef.current) return;
-
-		try {
-			// navigate("")
-
-			initiateWebRtcConnection(sender._id);
-
-			const pc = videoCallPeerConnectionRef.current;
-
-			if (!pc) {
-				throw new Error("Failed to initialize peer connection");
-			}
-
-			await pc.setRemoteDescription(offerPayload.offer);
-
-			for (const candidate of pendingIceCandidatesRef.current) {
-				await pc.addIceCandidate(candidate);
-			}
-
-			pendingIceCandidatesRef.current = [];
-
-			const answer = await pc.createAnswer();
-			await pc.setLocalDescription(answer);
-
-			if (!pc.localDescription) {
-				throw new Error("Failed to create local description");
-			}
-
-			socket.emit("answer", {
-				to: offerPayload.from._id,
-				answer: pc.localDescription,
-			});
-
-			offerPayloadRef.current = null;
-		} catch (err: unknown) {
-			console.error("Failed to accept incoming call:", err);
-
-			// clean up the partially created WebRTC connection
-			videoCallPeerConnectionRef.current?.close();
-			videoCallPeerConnectionRef.current = null;
-
-			updateVideoCallStatus("failed");
-			showErrorToast("Unable to connect the call. Please try again.");
-		}
 	};
 
 	const onCancelCallListener = () => {
@@ -154,11 +88,14 @@ const AppLayout = () => {
 		}
 	};
 
-	const onOfferListener = async (payload: OfferPayload) => {
-		const sender = payload.from;
+	const onOfferListener = useCallback(async (payload: OfferPayload) => {
+		if (!payload) return;
+
+		console.log({ offer: payload });
 
 		try {
 			offerPayloadRef.current = payload;
+			const sender = payload.from;
 
 			setSenderInfo(sender);
 			updateVideoCallStatus("incoming");
@@ -208,7 +145,7 @@ const AppLayout = () => {
 		} catch (err: unknown) {
 			console.error(err);
 		}
-	};
+	}, []);
 
 	// Socket.io listeners
 	useEffect(() => {
@@ -225,7 +162,6 @@ const AppLayout = () => {
 		if (videoCallStatus === "pending") return;
 
 		if (videoCallStatus === "rejected" || videoCallStatus === "canceled") {
-			removeNotification("outgoing-call", false);
 			removeNotification("incoming-call", true);
 		}
 	}, [videoCallStatus]);

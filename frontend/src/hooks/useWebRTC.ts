@@ -1,14 +1,6 @@
 import socket from "@/lib/socket";
 import useAppContext from "./useAppContext";
 
-// type UsePeerConnectionProps = {
-// 	friendId: string | undefined;
-// 	remoteVideoRef: RefObject<HTMLVideoElement | null>;
-// 	localStreamRef: RefObject<MediaStream | null>;
-// 	peerConnectionRef: RefObject<RTCPeerConnection | null>;
-// 	updateCallStatus: (state: CallStatus) => void;
-// };
-
 // RTCPeerConnection, ICE buffering, and sockets
 const useWebRTC = () => {
 	const { videoCallCommunication } = useAppContext();
@@ -18,6 +10,8 @@ const useWebRTC = () => {
 		videoCallLocalStreamRef: localStreamRef,
 		videoCallPeerConnectionRef: peerConnectionRef,
 		videoCallLocalVideoRef: localVideoRef,
+		videoCallOfferPayloadRef: offerPayloadRef,
+		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
 		setIsVideoCallCameraOn: setIsCameraOn,
 		setIsVideoCallMicOn: setIsMicOn,
 		setIsVideoCallScreenSharing: setIsScreenSharing,
@@ -28,7 +22,6 @@ const useWebRTC = () => {
 	// Clean up the call and reset all related resources
 	const cleanupVideoCall = () => {
 		const pc = peerConnectionRef.current;
-		if (!pc) return;
 
 		// Stop local media tracks
 		const localStream = localStreamRef.current;
@@ -47,8 +40,10 @@ const useWebRTC = () => {
 		setIsScreenSharing(false);
 
 		// Close peer connection
-		pc.close();
+		pc?.close();
 		peerConnectionRef.current = null;
+		offerPayloadRef.current = null;
+		pendingIceCandidatesRef.current = [];
 
 		// Clear video elements
 		if (localVideoRef.current) {
@@ -94,8 +89,6 @@ const useWebRTC = () => {
 		};
 
 		peerConnection.ontrack = (event) => {
-			console.log("On track fired");
-
 			const remoteVideoElement = remoteVideoRef.current;
 			if (!remoteVideoElement) return;
 

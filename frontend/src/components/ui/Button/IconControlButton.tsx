@@ -15,8 +15,6 @@ const activeButtonStyle = "bg-white text-slate-700 border border-slate-300 hover
 const inActiveButtonStyle = "bg-red-500 text-white hover:bg-red-700 active:bg-red-800";
 
 const IconControlButton = ({ activeIcon: ActiveIcon, inActiveIcon: InActiveIcon, iconSize = 20, isActive = false, tooltipTitle, className = "", ...props }: IconControlButtonProps) => {
-	console.log(isActive);
-
 	return tooltipTitle ? (
 		<Tooltip title={tooltipTitle}>
 			<button className={`transition-colors p-4 rounded-full cursor-pointer ${isActive ? activeButtonStyle : inActiveButtonStyle} ${className}`} {...props}>

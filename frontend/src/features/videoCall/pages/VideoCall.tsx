@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PhoneOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useAppContext from "@/hooks/useAppContext";
@@ -21,6 +21,7 @@ import CallControls from "../components/CallControls";
 const VideoCall = () => {
 	const { friendId } = useParams();
 	const location = useLocation();
+	const hasAcceptedCallRef = useRef(false);
 	const [isLocalPinned, setIsLocalPinned] = useState(false);
 	const { user: currentUser } = useCurrentUser();
 	const { videoCallCommunication } = useAppContext();
@@ -113,7 +114,8 @@ const VideoCall = () => {
 	};
 
 	const endCall = () => {
-		if (callStatusRef.current !== "connected") return;
+		const activeCallStatuses = ["incoming", "calling", "connected"];
+		if (!activeCallStatuses.includes(callStatusRef.current)) return;
 
 		socket.emit("end-call", {
 			to: friendId,
@@ -124,7 +126,9 @@ const VideoCall = () => {
 	};
 
 	// Socket.io handlers
-	const onAnswerListener = async (payload: AnswerPayload) => {
+	const onAnswerListener = useCallback(async (payload: AnswerPayload) => {
+		console.log({ answer: payload.answer });
+
 		const pc = peerConnectionRef.current;
 		if (!pc) return;
 
@@ -133,9 +137,9 @@ const VideoCall = () => {
 		} catch (err: unknown) {
 			console.error(err);
 		}
-	};
+	}, []);
 
-	const onIceCandidateListener = async (payload: ICECandidatePayload) => {
+	const onIceCandidateListener = useCallback(async (payload: ICECandidatePayload) => {
 		const pc = peerConnectionRef.current;
 
 		if (!pc || !pc.remoteDescription) {
@@ -148,24 +152,24 @@ const VideoCall = () => {
 		} catch (err: unknown) {
 			console.error("Failed to add ICE candidate:", err);
 		}
-	};
+	}, []);
 
-	const onEndCallListener = ({ from }: { from: string }) => {
+	const onEndCallListener = useCallback(({ from }: { from: string }) => {
 		if (from === friendId) {
+			console.log("call ended from remote", { from, friendId });
+
 			cleanupVideoCall();
 			updateCallStatus("ended");
 		}
-	};
+	}, []);
 
 	// Socket.io listeners
 	useEffect(() => {
-		// socket.on("offer", onOfferListener);
 		socket.on("answer", onAnswerListener);
 		socket.on("ice-candidate", onIceCandidateListener);
 		socket.on("end-call", onEndCallListener);
 
 		return () => {
-			// socket.off("offer", onOfferListener);
 			socket.off("answer", onAnswerListener);
 			socket.off("ice-candidate", onIceCandidateListener);
 			socket.off("end-call", onEndCallListener);
@@ -173,24 +177,25 @@ const VideoCall = () => {
 	}, []);
 
 	useEffect(() => {
-		if (!incomingCall || !offerPayload) return;
+		if (!incomingCall || !offerPayload || hasAcceptedCallRef.current) return;
+		hasAcceptedCallRef.current = true;
 
 		const acceptCall = async () => {
-			try {
-				if (!isCameraOn && !isScreenSharing && !isMicOn) {
-					const mediaStarted = await toggleVideoSharing();
+			if (!isCameraOn && !isScreenSharing && !isMicOn) {
+				const mediaStarted = await toggleVideoSharing();
 
-					if (!mediaStarted) {
-						updateCallStatus("failed");
-						return;
-					}
-				}
-
-				if (!localStreamRef.current) {
+				if (!mediaStarted) {
 					updateCallStatus("failed");
 					return;
 				}
+			}
 
+			if (!localStreamRef.current) {
+				updateCallStatus("failed");
+				return;
+			}
+
+			try {
 				initiateWebRtcConnection(offerPayload.from._id);
 
 				const pc = peerConnectionRef.current;
@@ -232,7 +237,7 @@ const VideoCall = () => {
 		};
 
 		acceptCall();
-	});
+	}, [incomingCall, offerPayload]);
 
 	useEffect(() => {
 		if (callStatus === "pending") return;
@@ -263,8 +268,7 @@ const VideoCall = () => {
 				onClose: stopRingtone,
 			});
 		} else if (callStatus === "rejected" || callStatus === "canceled") {
-			removeNotification("outgoing-call", false);
-			removeNotification("incoming-call", true);
+			removeNotification("outgoing-call", true);
 		} else if (callStatus === "connected") {
 			removeNotification("outgoing-call");
 			removeNotification("incoming-call");
@@ -289,10 +293,7 @@ const VideoCall = () => {
 
 	// Cleanup
 	useEffect(() => {
-		return () => {
-			peerConnectionRef.current?.close();
-			peerConnectionRef.current = null;
-		};
+		return cleanupVideoCall;
 	}, []);
 
 	return (

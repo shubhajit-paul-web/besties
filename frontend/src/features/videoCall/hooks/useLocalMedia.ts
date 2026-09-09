@@ -28,6 +28,7 @@ const useLocalMedia = () => {
 		isVideoCallScreenSharing: isScreenSharing,
 		setIsVideoCallScreenSharing: setIsScreenSharing,
 		videoCallLocalStreamRef: localStreamRef,
+		videoCallPeerConnectionRef: peerConnectionRef,
 	} = videoCallCommunication;
 
 	const getOrCreateStream = () => {
@@ -51,12 +52,26 @@ const useLocalMedia = () => {
 			if (!isCameraOn) {
 				const localStream = getOrCreateStream();
 				const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+				const cameraTrack = cameraStream.getVideoTracks()[0];
 
-				const videoTrack = cameraStream.getVideoTracks()[0];
-				if (!videoTrack) return;
+				if (!cameraTrack) return;
 
-				localStream.addTrack(videoTrack);
+				const screenTrack = localStream.getVideoTracks()[0];
+				const pc = peerConnectionRef.current;
 
+				if (screenTrack) {
+					screenTrack.stop();
+					localStream.removeTrack(screenTrack);
+					setIsScreenSharing(false);
+
+					const videoSender = pc?.getSenders().find((sender) => sender.track?.kind === "video");
+					await videoSender?.replaceTrack(cameraTrack);
+				} else {
+					localStream.addTrack(cameraTrack);
+					pc?.addTrack(cameraTrack, localStream);
+				}
+
+				localStream.addTrack(cameraTrack);
 				localVideoElement.srcObject = localStream;
 				setIsCameraOn(true);
 			} else {
@@ -120,16 +135,22 @@ const useLocalMedia = () => {
 				const localStream = getOrCreateStream();
 				const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
 
+				const pc = peerConnectionRef.current;
 				const screenTrack = screenStream.getVideoTracks()[0];
-				if (!screenTrack) return;
+
+				if (!pc || !screenTrack) return;
 
 				const cameraTrack = localStream.getVideoTracks()[0];
 
-				/* Camera and screen sharing both use a video track. We replace the camera track so the local stream only has one video source. */
 				if (cameraTrack) {
 					cameraTrack.stop();
-					// setIsLocalVideoSharing(false);
-					// localStream.removeTrack(cameraTrack);
+					localStream.removeTrack(cameraTrack);
+					setIsCameraOn(false);
+
+					const videoSender = pc.getSenders().find((sender) => sender.track?.kind === "video");
+					await videoSender?.replaceTrack(screenTrack);
+				} else {
+					pc.addTrack(screenTrack, localStream);
 				}
 
 				/* The browser can stop screen sharing without going through this toggle (for example, when the user clicks "Stop sharing" in the browser UI). Keep our React state in sync with that. */
@@ -145,9 +166,7 @@ const useLocalMedia = () => {
 				});
 
 				localStream.addTrack(screenTrack);
-
 				videoElement.srcObject = localStream;
-
 				setIsScreenSharing(true);
 			} else {
 				const localStream = localStreamRef.current;

@@ -7,7 +7,7 @@ import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import socket from "@/lib/socket";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigationType, useParams } from "react-router-dom";
 import { Avatar, notification } from "antd";
 import type { AnswerPayload, ICECandidatePayload } from "../types/videoCall.types";
 import useSWR from "swr";
@@ -21,6 +21,7 @@ import CallControls from "../components/CallControls";
 const VideoCall = () => {
 	const { friendId } = useParams();
 	const location = useLocation();
+	const navigationType = useNavigationType();
 	const hasAcceptedCallRef = useRef(false);
 	const [isLocalPinned, setIsLocalPinned] = useState(false);
 	const { user: currentUser } = useCurrentUser();
@@ -177,7 +178,7 @@ const VideoCall = () => {
 	}, []);
 
 	useEffect(() => {
-		if (!incomingCall || !offerPayload || hasAcceptedCallRef.current) return;
+		if (navigationType !== "PUSH" || !incomingCall || !offerPayload || hasAcceptedCallRef.current) return;
 		hasAcceptedCallRef.current = true;
 
 		const acceptCall = async () => {
@@ -237,7 +238,7 @@ const VideoCall = () => {
 		};
 
 		acceptCall();
-	}, [incomingCall, offerPayload]);
+	}, [incomingCall, navigationType, offerPayload]);
 
 	useEffect(() => {
 		if (callStatus === "pending") return;

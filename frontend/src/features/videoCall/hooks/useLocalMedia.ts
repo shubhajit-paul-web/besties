@@ -1,17 +1,6 @@
 import useAppContext from "@/hooks/useAppContext";
 import { toast } from "react-toastify";
 
-// type UseLocalMediaProps = {
-// 	localVideoRef: RefObject<HTMLVideoElement | null>;
-// 	localAudioRef: RefObject<HTMLAudioElement | null>;
-// 	isCameraOn: boolean;
-// 	setIsCameraOn: Dispatch<SetStateAction<boolean>>;
-// 	isMicOn: boolean;
-// 	setIsMicOn: Dispatch<SetStateAction<boolean>>;
-// 	isScreenSharing: boolean;
-// 	setIsScreenSharing: Dispatch<SetStateAction<boolean>>;
-// };
-
 const isMediaStreamEmpty = (stream: MediaStream) => {
 	return stream.getVideoTracks().length === 0 && stream.getAudioTracks().length === 0;
 };
@@ -20,7 +9,6 @@ const useLocalMedia = () => {
 	const { videoCallCommunication } = useAppContext();
 	const {
 		videoCallLocalVideoRef: localVideoRef,
-		videoCallLocalAudioRef: localAudioRef,
 		isVideoCallCameraOn: isCameraOn,
 		setIsVideoCallCameraOn: setIsCameraOn,
 		isVideoCallMicOn: isMicOn,
@@ -223,36 +211,38 @@ const useLocalMedia = () => {
 		}
 
 		try {
+			const localStream = getOrCreateStream();
+			const microphoneTrack = localStream.getAudioTracks()[0];
+
 			if (!isMicOn) {
-				const localStream = getOrCreateStream();
-				const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-				const audioTrack = microphoneStream.getAudioTracks()[0];
-				if (!audioTrack) return;
-
-				localStream.addTrack(audioTrack);
-
-				if (localAudioRef.current) {
-					localAudioRef.current.srcObject = microphoneStream;
+				if (microphoneTrack) {
+					microphoneTrack.enabled = true;
+					setIsMicOn(true);
+					return;
 				}
 
+				const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+				const audioTrack = microphoneStream.getAudioTracks()[0];
+
+				localStream.addTrack(audioTrack);
 				setIsMicOn(true);
 			} else {
 				const localStream = localStreamRef.current;
 				if (!localStream) return;
 
-				const audioTrack = localStream.getAudioTracks()[0];
-
-				if (audioTrack) {
-					audioTrack.stop();
-					localStream.removeTrack(audioTrack);
-				}
-
-				if (isMediaStreamEmpty(localStream)) {
-					localStreamRef.current = null;
-				}
-
+				microphoneTrack.enabled = false;
 				setIsMicOn(false);
+
+				// const audioTrack = localStream.getAudioTracks()[0];
+
+				// if (audioTrack) {
+				// 	audioTrack.stop();
+				// 	localStream.removeTrack(audioTrack);
+				// }
+
+				// if (isMediaStreamEmpty(localStream)) {
+				// 	localStreamRef.current = null;
+				// }
 			}
 		} catch (err) {
 			console.error("Failed to access microphone:", err);

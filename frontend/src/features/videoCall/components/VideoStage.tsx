@@ -6,7 +6,7 @@ import useAppContext from "@/hooks/useAppContext";
 const VideoStage = ({ remoteName, localName, isLocalPinned, onSwap }: VideoStageProps) => {
 	const { videoCallCommunication } = useAppContext();
 
-	const { videoCallRemoteVideoRef: remoteVideoRef, videoCallLocalVideoRef: localVideoRef, videoCallLocalAudioRef: localAudioRef } = videoCallCommunication;
+	const { videoCallRemoteVideoRef: remoteVideoRef, videoCallLocalVideoRef: localVideoRef } = videoCallCommunication;
 
 	const primaryParticipantClassName = "absolute inset-0 h-full w-full rounded-[1.25rem] transition-[inset,width,height] duration-300 ease-out";
 	const previewParticipantClassName = "absolute bottom-4 right-4 z-10 aspect-video rounded-xl border-2 border-white/15 shadow-xl transition-[inset,width,height] duration-300 ease-out";
@@ -21,7 +21,7 @@ const VideoStage = ({ remoteName, localName, isLocalPinned, onSwap }: VideoStage
 					inset: 0,
 					zIndex: 0,
 				}}>
-				<video ref={isLocalPinned ? localVideoRef : remoteVideoRef} autoPlay playsInline muted={isLocalPinned} className="absolute left-0 top-0 h-full w-full object-cover" />
+				<video ref={isLocalPinned ? localVideoRef : remoteVideoRef} autoPlay playsInline className="absolute left-0 top-0 h-full w-full object-cover" />
 			</VideoParticipant>
 
 			<VideoParticipant
@@ -31,8 +31,8 @@ const VideoStage = ({ remoteName, localName, isLocalPinned, onSwap }: VideoStage
 					zIndex: 20,
 					width: "clamp(12rem, 30%, 20rem)",
 				}}>
-				<video ref={isLocalPinned ? remoteVideoRef : localVideoRef} autoPlay playsInline muted={!isLocalPinned} className="absolute left-0 top-0 h-full w-full object-cover" />
-				<audio ref={localAudioRef} autoPlay playsInline muted />
+				<video ref={isLocalPinned ? remoteVideoRef : localVideoRef} autoPlay playsInline muted className="absolute left-0 top-0 h-full w-full object-cover" />
+				{/* <audio ref={localAudioRef} autoPlay playsInline muted /> */}
 			</VideoParticipant>
 
 			<button

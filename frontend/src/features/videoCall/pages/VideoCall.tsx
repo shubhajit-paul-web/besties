@@ -1,14 +1,14 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PhoneOff } from "lucide-react";
+import { Home, PhoneOff } from "lucide-react";
 import useCurrentUser from "@/hooks/useCurrentUser";
 import useAppContext from "@/hooks/useAppContext";
 import VideoStage from "../components/VideoStage";
 import formatUserName from "@/utils/formatUserName";
 import IconControlButton from "@/components/ui/Button/IconControlButton";
 import socket from "@/lib/socket";
-import { useLocation, useNavigationType, useParams } from "react-router-dom";
-import { Avatar, notification } from "antd";
+import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
+import { Avatar, Modal, notification } from "antd";
 import type { AnswerPayload, ICECandidatePayload } from "../types/videoCall.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
@@ -17,13 +17,16 @@ import useWebRTC from "@/hooks/useWebRTC";
 import useLocalMedia from "../hooks/useLocalMedia";
 import useRingtone from "../hooks/useRingtone";
 import CallControls from "../components/CallControls";
+import Button from "@/components/ui/Button/Button";
 
 const VideoCall = () => {
 	const { friendId } = useParams();
 	const location = useLocation();
+	const navigate = useNavigate();
 	const navigationType = useNavigationType();
 	const hasAcceptedCallRef = useRef(false);
 	const [isLocalPinned, setIsLocalPinned] = useState(false);
+	const [isCallEndedModalOpen, setIsCallEndedModalOpen] = useState(false);
 	const { user: currentUser } = useCurrentUser();
 	const { videoCallCommunication } = useAppContext();
 	const [notify, notifyUi] = notification.useNotification();
@@ -114,6 +117,12 @@ const VideoCall = () => {
 		}
 	};
 
+	const handleCallEnded = () => {
+		cleanupVideoCall();
+		updateCallStatus("ended");
+		setIsCallEndedModalOpen(true);
+	};
+
 	const endCall = () => {
 		const activeCallStatuses = ["incoming", "calling", "connected"];
 		if (!activeCallStatuses.includes(callStatusRef.current)) return;
@@ -122,8 +131,7 @@ const VideoCall = () => {
 			to: friendId,
 		});
 
-		updateCallStatus("ended");
-		cleanupVideoCall();
+		handleCallEnded();
 	};
 
 	// Socket.io handlers
@@ -159,8 +167,7 @@ const VideoCall = () => {
 		if (from === friendId) {
 			console.log("call ended from remote", { from, friendId });
 
-			cleanupVideoCall();
-			updateCallStatus("ended");
+			handleCallEnded();
 		}
 	}, []);
 
@@ -299,9 +306,6 @@ const VideoCall = () => {
 
 	return (
 		<div>
-			{/* Meeting info */}
-			{/* <MeetingInfo meetingId="AK454679S0DS" sessionLength="00:12:45" /> */}
-
 			{/* The arrangement is local-only swapping it never changes the media connection */}
 			<VideoStage
 				remoteName={formatUserName(friendInfo?.name)}
@@ -309,8 +313,6 @@ const VideoCall = () => {
 				isLocalPinned={isLocalPinned}
 				onSwap={() => setIsLocalPinned((isPinned) => !isPinned)}
 			/>
-
-			{/* <audio src={canceledCallRingtone} controls /> */}
 
 			{/* Call Action Buttons */}
 			<CallControls
@@ -325,6 +327,30 @@ const VideoCall = () => {
 				onStartCall={startCall}
 				onEndCall={endCall}
 			/>
+
+			{/* Call end modal */}
+			<Modal centered open={isCallEndedModalOpen} closable={false} keyboard={false} destroyOnHidden footer={null}>
+				<div className="flex flex-col items-center px-2 py-3 text-center">
+					<div className="mb-5 flex size-16 items-center justify-center rounded-full bg-red-50 text-red-500 ring-8 ring-red-50/60">
+						<PhoneOff size={28} strokeWidth={1.8} />
+					</div>
+
+					<h2 className="text-xl font-semibold text-slate-900">Call ended</h2>
+					<p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">Your video call has ended. Return home when you are ready.</p>
+
+					<Button
+						type="button"
+						variant="indigo"
+						icon={Home}
+						iconSize={17}
+						centerContent
+						width="100%"
+						onClick={() => navigate("/app/home", { replace: true })}
+						className="mt-7 shadow-sm shadow-indigo-200">
+						<span>Back to home</span>
+					</Button>
+				</div>
+			</Modal>
 
 			{notifyUi}
 		</div>

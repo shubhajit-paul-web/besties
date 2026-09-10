@@ -7,6 +7,7 @@ const useWebRTC = () => {
 
 	const {
 		videoCallRemoteVideoRef: remoteVideoRef,
+		videoCallRemoteStreamRef: remoteStreamRef,
 		videoCallLocalStreamRef: localStreamRef,
 		videoCallPeerConnectionRef: peerConnectionRef,
 		videoCallLocalVideoRef: localVideoRef,
@@ -52,6 +53,7 @@ const useWebRTC = () => {
 		if (remoteVideoRef.current) {
 			remoteVideoRef.current.srcObject = null;
 		}
+		remoteStreamRef.current = null;
 	};
 
 	const initiateWebRtcConnection = (friendId?: string) => {
@@ -69,9 +71,16 @@ const useWebRTC = () => {
 			],
 		});
 
+		const videoSender = peerConnection.addTransceiver("video", {
+			direction: "sendrecv",
+		}).sender;
+		const audioSender = peerConnection.addTransceiver("audio", {
+			direction: "sendrecv",
+		}).sender;
+
 		peerConnection.onicecandidate = (event) => {
 			if (event.candidate) {
-				socket.emit("ice-candidate", {
+				socket.emit("call:video:ice-candidate", {
 					to: friendId,
 					candidate: event.candidate,
 				});
@@ -79,33 +88,48 @@ const useWebRTC = () => {
 		};
 
 		peerConnection.onconnectionstatechange = () => {
-			const connectionState = peerConnection.connectionState;
+			const state = peerConnection.connectionState;
 
-			if (connectionState === "connected") {
+			if (state === "connected") {
 				updateCallStatus("connected");
-			} else if (connectionState === "closed" || connectionState === "disconnected") {
+			} else if (state === "closed" || state === "disconnected") {
 				updateCallStatus("ended");
 			}
 		};
 
 		peerConnection.ontrack = (event) => {
+			console.log("ontrack fired:", event.track.kind);
+
+			let remoteStream = remoteStreamRef.current;
+
+			if (!remoteStream) {
+				remoteStream = new MediaStream();
+				remoteStreamRef.current = remoteStream;
+			}
+
+			// Avoid adding the same track twice
+			if (!remoteStream.getTracks().includes(event.track)) {
+				remoteStream.addTrack(event.track);
+			}
+
+			console.log("Remote tracks:", remoteStream.getTracks());
+
 			const remoteVideoElement = remoteVideoRef.current;
-			if (!remoteVideoElement) return;
 
-			const remoteStream = event.streams[0];
-
-			remoteVideoElement.srcObject = remoteStream;
+			if (remoteVideoElement) {
+				remoteVideoElement.srcObject = remoteStream;
+			}
 		};
 
 		const localStream = localStreamRef.current;
 
 		if (localStream) {
 			localStream.getTracks().forEach((track) => {
-				peerConnection.addTrack(track, localStream);
+				const sender = track.kind === "audio" ? audioSender : videoSender;
+				sender.replaceTrack(track);
 			});
 		}
 
-		// return peerConnection;
 		peerConnectionRef.current = peerConnection;
 	};
 

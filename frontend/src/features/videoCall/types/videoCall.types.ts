@@ -4,6 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 export interface VideoParticipantProps extends ComponentProps<"div"> {
 	fullName: string;
+	isRemote: boolean;
 	children: ReactNode;
 }
 
@@ -47,4 +48,11 @@ export type AnswerPayload = {
 export type ICECandidatePayload = {
 	to: string;
 	candidate: RTCIceCandidateInit;
+};
+
+export type VideoCallStateChangedPayload = {
+	from: string;
+	video: boolean;
+	audio: boolean;
+	screenShare: boolean;
 };

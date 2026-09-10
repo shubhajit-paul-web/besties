@@ -4,6 +4,12 @@ import type { OfferPayload } from "@/features/videoCall/types/videoCall.types";
 import type { AccessTokenPayload, UserType } from "./user.types";
 
 export type VideoCallCommunication = {
+	videoCallRemoteMediaState: {
+		video: boolean;
+		audio: boolean;
+		screenShare: boolean;
+	};
+	setVideoCallRemoteMediaState: (value: SetStateAction<VideoCallCommunication["videoCallRemoteMediaState"]>) => void;
 	isVideoCallCameraOn: boolean;
 	setIsVideoCallCameraOn: (value: SetStateAction<boolean>) => void;
 	isVideoCallMicOn: boolean;
@@ -18,6 +24,7 @@ export type VideoCallCommunication = {
 	videoCallSenderInfo: OfferPayload["from"] | null;
 	setVideoCallSenderInfo: (value: SetStateAction<OfferPayload["from"] | null>) => void;
 	videoCallRemoteVideoRef: RefObject<HTMLVideoElement | null>;
+	videoCallRemoteStreamRef: RefObject<MediaStream | null>;
 	videoCallLocalVideoRef: RefObject<HTMLVideoElement | null>;
 	videoCallLocalStreamRef: RefObject<MediaStream | null>;
 	videoCallLocalAudioRef: RefObject<HTMLAudioElement | null>;

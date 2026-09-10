@@ -2,37 +2,60 @@ import { ArrowLeftRight } from "lucide-react";
 import VideoParticipant from "./VideoParticipant";
 import type { VideoStageProps } from "../types/videoCall.types";
 import useAppContext from "@/hooks/useAppContext";
+import { useEffect } from "react";
 
 const VideoStage = ({ remoteName, localName, isLocalPinned, onSwap }: VideoStageProps) => {
 	const { videoCallCommunication } = useAppContext();
 
-	const { videoCallRemoteVideoRef: remoteVideoRef, videoCallLocalVideoRef: localVideoRef } = videoCallCommunication;
+	const {
+		videoCallRemoteVideoRef: remoteVideoRef,
+		videoCallRemoteStreamRef: remoteStreamRef,
+		videoCallLocalVideoRef: localVideoRef,
+		videoCallRemoteMediaState: remoteMediaState,
+	} = videoCallCommunication;
 
 	const primaryParticipantClassName = "absolute inset-0 h-full w-full rounded-[1.25rem] transition-[inset,width,height] duration-300 ease-out";
 	const previewParticipantClassName = "absolute bottom-4 right-4 z-10 aspect-video rounded-xl border-2 border-white/15 shadow-xl transition-[inset,width,height] duration-300 ease-out";
 
+	useEffect(() => {
+		const remoteVideoElement = remoteVideoRef.current;
+		if (!remoteVideoElement) return;
+
+		const { video, audio, screenShare } = remoteMediaState;
+		const remoteStream = remoteStreamRef.current;
+		const hasLiveRemoteTrack = remoteStream?.getTracks().some((track) => track.readyState !== "ended") ?? false;
+
+		if (video || audio || screenShare || hasLiveRemoteTrack) {
+			remoteVideoElement.srcObject = remoteStream;
+		} else {
+			remoteVideoElement.srcObject = null;
+		}
+	}, [remoteMediaState, remoteStreamRef, remoteVideoRef]);
+
 	return (
 		<section className="relative isolate aspect-video w-full overflow-hidden rounded-[1.25rem] bg-slate-950">
-			{/* shadow-[0_20px_60px_-30px_rgba(15,23,42,0.45)] */}
+			{/* Remote video */}
 			<VideoParticipant
-				fullName={isLocalPinned ? localName : remoteName}
+				isRemote={true}
+				fullName={remoteName}
 				className={primaryParticipantClassName}
 				style={{
 					inset: 0,
 					zIndex: 0,
 				}}>
-				<video ref={isLocalPinned ? localVideoRef : remoteVideoRef} autoPlay playsInline className="absolute left-0 top-0 h-full w-full object-cover" />
+				<video ref={remoteVideoRef} autoPlay playsInline className="absolute left-0 top-0 h-full w-full object-cover" />
 			</VideoParticipant>
 
+			{/* Local video */}
 			<VideoParticipant
-				fullName={isLocalPinned ? remoteName : localName}
+				isRemote={false}
+				fullName={localName}
 				className={previewParticipantClassName}
 				style={{
 					zIndex: 20,
 					width: "clamp(12rem, 30%, 20rem)",
 				}}>
-				<video ref={isLocalPinned ? remoteVideoRef : localVideoRef} autoPlay playsInline muted className="absolute left-0 top-0 h-full w-full object-cover" />
-				{/* <audio ref={localAudioRef} autoPlay playsInline muted /> */}
+				<video ref={localVideoRef} autoPlay playsInline muted className="absolute left-0 top-0 h-full w-full object-cover" />
 			</VideoParticipant>
 
 			<button

@@ -32,3 +32,10 @@ export type ICECandidatePayload = {
     to: string;
     candidate: RTCIceCandidateInit;
 };
+
+export type VideoCallStateChangedPayload = {
+    to: string;
+    video: boolean;
+    audio: boolean;
+    screenShare: boolean;
+};

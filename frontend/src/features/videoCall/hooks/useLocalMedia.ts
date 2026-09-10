@@ -26,6 +26,24 @@ const useLocalMedia = () => {
 		return localStreamRef.current;
 	};
 
+	const getSenderForKind = (kind: "audio" | "video") => {
+		const pc = peerConnectionRef.current;
+		if (!pc) return;
+
+		return pc.getTransceivers().find((t) => t.receiver.track.kind === kind)?.sender;
+	};
+
+	const attachTrack = async (track: MediaStreamTrack, localStream: MediaStream) => {
+		const pc = peerConnectionRef.current;
+		const sender = getSenderForKind(track.kind as "audio" | "video");
+
+		if (sender) {
+			await sender.replaceTrack(track);
+		} else if (pc) {
+			pc.addTrack(track, localStream);
+		}
+	};
+
 	const toggleVideoSharing = async () => {
 		const localVideoElement = localVideoRef.current;
 
@@ -39,29 +57,29 @@ const useLocalMedia = () => {
 		try {
 			if (!isCameraOn) {
 				const localStream = getOrCreateStream();
-				const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+				const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: !isMicOn });
 				const cameraTrack = cameraStream.getVideoTracks()[0];
+				const audioTrack = cameraStream.getAudioTracks()[0];
 
-				if (!cameraTrack) return;
+				if (!cameraTrack) return false;
 
 				const screenTrack = localStream.getVideoTracks()[0];
-				const pc = peerConnectionRef.current;
 
-				if (screenTrack) {
+				if (screenTrack && isScreenSharing) {
 					screenTrack.stop();
 					localStream.removeTrack(screenTrack);
 					setIsScreenSharing(false);
-
-					const videoSender = pc?.getSenders().find((sender) => sender.track?.kind === "video");
-					await videoSender?.replaceTrack(cameraTrack);
-				} else {
-					localStream.addTrack(cameraTrack);
-					pc?.addTrack(cameraTrack, localStream);
 				}
 
 				localStream.addTrack(cameraTrack);
+				if (audioTrack) localStream.addTrack(audioTrack);
+
+				await attachTrack(cameraTrack, localStream);
+				if (audioTrack) await attachTrack(audioTrack, localStream);
+
 				localVideoElement.srcObject = localStream;
 				setIsCameraOn(true);
+				if (audioTrack) setIsMicOn(true);
 			} else {
 				const localStream = localStreamRef.current;
 				if (!localStream) return;
@@ -71,9 +89,10 @@ const useLocalMedia = () => {
 				if (videoTrack) {
 					videoTrack.stop();
 					localStream.removeTrack(videoTrack);
+					await getSenderForKind("video")?.replaceTrack(null);
 				}
 
-				localVideoElement.srcObject = null;
+				localVideoElement.srcObject = isMediaStreamEmpty(localStream) ? null : localStream;
 
 				if (isMediaStreamEmpty(localStream)) {
 					localStreamRef.current = null;
@@ -121,12 +140,10 @@ const useLocalMedia = () => {
 		try {
 			if (!isScreenSharing) {
 				const localStream = getOrCreateStream();
-				const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-
-				const pc = peerConnectionRef.current;
+				const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: !isMicOn });
 				const screenTrack = screenStream.getVideoTracks()[0];
 
-				if (!pc || !screenTrack) return;
+				if (!screenTrack) return false;
 
 				const cameraTrack = localStream.getVideoTracks()[0];
 
@@ -134,17 +151,15 @@ const useLocalMedia = () => {
 					cameraTrack.stop();
 					localStream.removeTrack(cameraTrack);
 					setIsCameraOn(false);
-
-					const videoSender = pc.getSenders().find((sender) => sender.track?.kind === "video");
-					await videoSender?.replaceTrack(screenTrack);
-				} else {
-					pc.addTrack(screenTrack, localStream);
 				}
+
+				await attachTrack(screenTrack, localStream);
 
 				/* The browser can stop screen sharing without going through this toggle (for example, when the user clicks "Stop sharing" in the browser UI). Keep our React state in sync with that. */
 				screenTrack.addEventListener("ended", () => {
-					videoElement.srcObject = null;
+					void getSenderForKind("video")?.replaceTrack(null);
 					localStream.removeTrack(screenTrack);
+					videoElement.srcObject = isMediaStreamEmpty(localStream) ? null : localStream;
 
 					if (isMediaStreamEmpty(localStream)) {
 						localStreamRef.current = null;
@@ -165,11 +180,10 @@ const useLocalMedia = () => {
 				if (screenTrack) {
 					screenTrack.stop();
 					localStream.removeTrack(screenTrack);
+					await getSenderForKind("video")?.replaceTrack(null);
 				}
 
-				if (localStream.getVideoTracks().length === 0) {
-					videoElement.srcObject = null;
-				}
+				videoElement.srcObject = isMediaStreamEmpty(localStream) ? null : localStream;
 				if (isMediaStreamEmpty(localStream)) {
 					localStreamRef.current = null;
 				}
@@ -214,36 +228,21 @@ const useLocalMedia = () => {
 			const localStream = getOrCreateStream();
 			const microphoneTrack = localStream.getAudioTracks()[0];
 
-			if (!isMicOn) {
-				if (microphoneTrack) {
-					microphoneTrack.enabled = true;
-					setIsMicOn(true);
-					return;
-				}
+			if (!microphoneTrack) {
+				if (isMicOn) return;
 
 				const microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 				const audioTrack = microphoneStream.getAudioTracks()[0];
+				if (!audioTrack) return;
 
 				localStream.addTrack(audioTrack);
+				await attachTrack(audioTrack, localStream);
 				setIsMicOn(true);
-			} else {
-				const localStream = localStreamRef.current;
-				if (!localStream) return;
-
-				microphoneTrack.enabled = false;
-				setIsMicOn(false);
-
-				// const audioTrack = localStream.getAudioTracks()[0];
-
-				// if (audioTrack) {
-				// 	audioTrack.stop();
-				// 	localStream.removeTrack(audioTrack);
-				// }
-
-				// if (isMediaStreamEmpty(localStream)) {
-				// 	localStreamRef.current = null;
-				// }
+				return;
 			}
+
+			microphoneTrack.enabled = !isMicOn;
+			setIsMicOn(!isMicOn);
 		} catch (err) {
 			console.error("Failed to access microphone:", err);
 

@@ -9,7 +9,7 @@ import IconControlButton from "@/components/ui/Button/IconControlButton";
 import socket from "@/lib/socket";
 import { useLocation, useNavigate, useNavigationType, useParams } from "react-router-dom";
 import { Avatar, Modal, notification } from "antd";
-import type { AnswerPayload, ICECandidatePayload } from "../types/videoCall.types";
+import type { AnswerPayload, ICECandidatePayload, VideoCallStateChangedPayload } from "../types/videoCall.types";
 import useSWR from "swr";
 import fetcher from "@/utils/fetcher";
 import { showErrorToast } from "../utils/toast";
@@ -43,10 +43,10 @@ const VideoCall = () => {
 		setVideoCallDuration: setCallDuration,
 		videoCallPeerConnectionRef: peerConnectionRef,
 		videoCallPendingIceCandidatesRef: pendingIceCandidatesRef,
-		videoCallLocalStreamRef: localStreamRef,
 		videoCallStatusRef: callStatusRef,
 		updateVideoCallStatus: updateCallStatus,
 		videoCallOfferPayloadRef: offerPayloadRef,
+		setVideoCallRemoteMediaState: setRemoteMediaState,
 	} = videoCallCommunication;
 
 	const { initiateWebRtcConnection, cleanupVideoCall } = useWebRTC();
@@ -65,7 +65,7 @@ const VideoCall = () => {
 	const cancelOutgoingCall = () => {
 		if (callStatusRef.current !== "calling") return;
 
-		socket.emit("cancel-call", {
+		socket.emit("call:video:cancel", {
 			to: friendId,
 		});
 
@@ -102,7 +102,7 @@ const VideoCall = () => {
 				throw new Error("Failed to create local description");
 			}
 
-			socket.emit("offer", {
+			socket.emit("call:video:offer", {
 				to: friendId,
 				offer: pc.localDescription,
 			});
@@ -124,10 +124,9 @@ const VideoCall = () => {
 	};
 
 	const endCall = () => {
-		const activeCallStatuses = ["incoming", "calling", "connected"];
-		if (!activeCallStatuses.includes(callStatusRef.current)) return;
+		if (callStatusRef.current !== "connected") return;
 
-		socket.emit("end-call", {
+		socket.emit("call:video:end", {
 			to: friendId,
 		});
 
@@ -136,13 +135,17 @@ const VideoCall = () => {
 
 	// Socket.io handlers
 	const onAnswerListener = useCallback(async (payload: AnswerPayload) => {
-		console.log({ answer: payload.answer });
-
 		const pc = peerConnectionRef.current;
 		if (!pc) return;
 
 		try {
 			await pc.setRemoteDescription(payload.answer);
+
+			for (const candidate of pendingIceCandidatesRef.current) {
+				await pc.addIceCandidate(candidate);
+			}
+
+			pendingIceCandidatesRef.current = [];
 		} catch (err: unknown) {
 			console.error(err);
 		}
@@ -171,18 +174,37 @@ const VideoCall = () => {
 		}
 	}, []);
 
+	const onMediaStateChangedListener = useCallback((payload: VideoCallStateChangedPayload) => {
+		if (payload.from !== friendId || callStatusRef.current !== "connected") return;
+
+		setRemoteMediaState(payload);
+	}, []);
+
 	// Socket.io listeners
 	useEffect(() => {
-		socket.on("answer", onAnswerListener);
-		socket.on("ice-candidate", onIceCandidateListener);
-		socket.on("end-call", onEndCallListener);
+		socket.on("call:video:answer", onAnswerListener);
+		socket.on("call:video:ice-candidate", onIceCandidateListener);
+		socket.on("call:video:end", onEndCallListener);
+		socket.on("call:video:media-state-changed", onMediaStateChangedListener);
 
 		return () => {
-			socket.off("answer", onAnswerListener);
-			socket.off("ice-candidate", onIceCandidateListener);
-			socket.off("end-call", onEndCallListener);
+			socket.off("call:video:answer", onAnswerListener);
+			socket.off("call:video:ice-candidate", onIceCandidateListener);
+			socket.off("call:video:end", onEndCallListener);
+			socket.off("call:video:media-state-changed", onMediaStateChangedListener);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (callStatus !== "connected") return;
+
+		socket.emit("call:video:media-state-changed", {
+			to: friendId,
+			video: isCameraOn,
+			audio: isMicOn,
+			screenShare: isScreenSharing,
+		});
+	}, [isCameraOn, isMicOn, isScreenSharing, callStatus]);
 
 	useEffect(() => {
 		if (navigationType !== "PUSH" || !incomingCall || !offerPayload || hasAcceptedCallRef.current) return;
@@ -196,11 +218,6 @@ const VideoCall = () => {
 					updateCallStatus("failed");
 					return;
 				}
-			}
-
-			if (!localStreamRef.current) {
-				updateCallStatus("failed");
-				return;
 			}
 
 			try {
@@ -227,7 +244,7 @@ const VideoCall = () => {
 					throw new Error("Failed to create local description");
 				}
 
-				socket.emit("answer", {
+				socket.emit("call:video:answer", {
 					to: offerPayload.from._id,
 					answer: pc.localDescription,
 				});

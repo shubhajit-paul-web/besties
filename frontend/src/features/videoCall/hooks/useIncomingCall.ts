@@ -20,7 +20,7 @@ const useIncomingCall = () => {
 		if (callStatusRef.current !== "incoming") return;
 
 		// Tell the caller we declined before clearing the incoming call state.
-		socket.emit("cancel-call", {
+		socket.emit("call:video:cancel", {
 			to: offerPayloadRef.current?.from._id,
 		});
 
@@ -38,7 +38,7 @@ const useIncomingCall = () => {
 
 		const sender = offerPayload.from;
 
-		// The call page uses the offer to finish the WebRTC handshake.
+		// The call page uses the offer to finish the WebRTC handshake
 		setIncomingCall(null);
 		await navigate(`/app/video-call/${sender._id}`, {
 			state: {
@@ -85,12 +85,12 @@ const useIncomingCall = () => {
 
 	// Socket.io listeners
 	useEffect(() => {
-		socket.on("offer", onOfferListener);
-		socket.on("cancel-call", onCancelCallListener);
+		socket.on("call:video:offer", onOfferListener);
+		socket.on("call:video:cancel", onCancelCallListener);
 
 		return () => {
-			socket.off("offer", onOfferListener);
-			socket.off("cancel-call", onCancelCallListener);
+			socket.off("call:video:offer", onOfferListener);
+			socket.off("call:video:cancel", onCancelCallListener);
 		};
 	}, [onCancelCallListener, onOfferListener]);
 

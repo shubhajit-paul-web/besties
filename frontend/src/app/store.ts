@@ -37,7 +37,15 @@ const useAppStore = create<AppStore>((set) => {
 		setUser: (value) => set((state) => ({ user: resolveStateAction(value, state.user) })),
 		onlineFriends: [],
 		setOnlineFriends: (value) => set((state) => ({ onlineFriends: resolveStateAction(value, state.onlineFriends) })),
+
+		/* Video call communication */
 		videoCallCommunication: {
+			videoCallRemoteMediaState: {
+				video: false,
+				audio: false,
+				screenShare: false,
+			},
+			setVideoCallRemoteMediaState: (value) => updateVideoCallState("videoCallRemoteMediaState", value),
 			isVideoCallCameraOn: false,
 			setIsVideoCallCameraOn: (value) => updateVideoCallState("isVideoCallCameraOn", value),
 			isVideoCallMicOn: false,
@@ -66,6 +74,7 @@ const useAppStore = create<AppStore>((set) => {
 			    handlers without putting mutable connection state into rerenders.
             */
 			videoCallRemoteVideoRef: createRef<HTMLVideoElement | null>(null),
+			videoCallRemoteStreamRef: createRef<MediaStream | null>(null),
 			videoCallLocalVideoRef: createRef<HTMLVideoElement | null>(null),
 			videoCallLocalStreamRef: createRef<MediaStream | null>(null),
 			videoCallLocalAudioRef: createRef<HTMLAudioElement | null>(null),

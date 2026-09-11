@@ -1,7 +1,7 @@
 import Post from "../../../components/ui/Post";
+import CreatePostComposer from "../../posts/components/create-post/CreatePostComposer";
 
 const Home = () => {
-
 	const postsDummyData = [
 		{
 			id: "a4v45403450",
@@ -197,6 +197,8 @@ const Home = () => {
 
 	return (
 		<div className="bg-slate-50 rounded-2xl p-3 sm:p-4 md:p-5 flex flex-col items-center gap-4 md:gap-5">
+			<CreatePostComposer />
+
 			{postsDummyData.map((post, index) => (
 				<Post
 					key={index}

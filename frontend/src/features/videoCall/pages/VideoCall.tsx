@@ -19,6 +19,19 @@ import useRingtone from "../hooks/useRingtone";
 import CallControls from "../components/CallControls";
 import Button from "@/components/ui/Button/Button";
 
+/* 
+	WebRTC
+	├── ✅ Basic call established
+	├── ✅ Audio/video tracks
+	├── ✅ ICE candidates
+	├── ✅ STUN
+	├── ✅ Transceivers
+	├── ✅ replaceTrack()
+	├── ✅ Screen sharing concepts
+	├── 🟡 Remote stream issue
+	└── ⏸️ Revisit later
+*/
+
 const VideoCall = () => {
 	const { friendId } = useParams();
 	const location = useLocation();

@@ -11,15 +11,14 @@ const ProtectedRoute = () => {
 		const user = data?.data?.user;
 
 		if (user) setUser(user);
-	}, [data, setUser]);
+		else if (error) setUser(null);
+	}, [data, error, setUser]);
 
 	if (isLoading) {
 		return null;
 	}
 
 	if (error) {
-		setUser(null);
-
 		return <Navigate to="/login" replace />;
 	}
 

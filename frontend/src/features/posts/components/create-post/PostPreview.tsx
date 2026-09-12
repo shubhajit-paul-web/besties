@@ -8,7 +8,7 @@ const PostPreview = ({ values, avatarUrl, userName }: PostPreviewProps) => (
 		<div className="flex items-center gap-3 p-4">
 			<img src={avatarUrl} alt="" className="size-11 rounded-full object-cover" />
 			<div className="min-w-0">
-				<p className="font-semibold text-slate-800">{userName}</p>
+				<p className="font-semibold text-slate-800 capitalize">{userName}</p>
 				<PostVisibilitySelector value={values.visibility} onChange={() => undefined} />
 			</div>
 		</div>
@@ -16,7 +16,7 @@ const PostPreview = ({ values, avatarUrl, userName }: PostPreviewProps) => (
 			<p className="whitespace-pre-wrap text-[15px] leading-6 text-slate-700">{values.content}</p>
 			{values.feeling && (
 				<div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700">
-					{values.feeling.icon} Feeling {values.feeling.label}
+					{values.feeling.icon} {values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}
 				</div>
 			)}
 			{values.attachments.length > 0 && (

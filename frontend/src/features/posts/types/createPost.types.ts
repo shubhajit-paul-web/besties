@@ -1,4 +1,4 @@
-export type PostVisibility = "public" | "friends" | "only-me";
+export type PostVisibility = "public" | "friends" | "private";
 export type AttachmentCategory = "image" | "video" | "pdf";
 
 export type AttachmentPickerProps = {

@@ -28,12 +28,14 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import friendRoutes from "./routes/friend.routes.js";
 import messageRoutes from "./routes/message.routes.js";
+import postRoutes from "./routes/post.routes.js";
 
 // Route implementations
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/friends", friendRoutes);
 app.use("/messages", messageRoutes);
+app.use("/posts", postRoutes);
 app.use(
     "/api-docs",
     swaggerUi.serve,

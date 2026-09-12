@@ -13,7 +13,7 @@ const CreatePostComposer = () => {
 		<>
 			<section className="w-full max-w-150 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition hover:shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
 				<div className="flex items-center gap-3">
-					<img src={user?.avatar ?? "/profile-img.jpeg"} alt="" className="size-11 rounded-full object-cover" />
+					<img src={user?.avatar ?? "/profile-img.jpeg"} className="size-11 rounded-full object-cover" />
 					<button type="button" onClick={() => setOpen(true)} className="flex-1 rounded-full bg-slate-50 px-5 py-3 text-left text-[15px] text-slate-400 transition hover:bg-slate-100">
 						What's on your mind, {userName.split(" ")[0]}?
 					</button>

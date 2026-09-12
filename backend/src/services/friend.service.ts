@@ -79,9 +79,7 @@ const getFriendSuggestions = async (userId: string) => {
         currentUserId: userId,
     });
 
-    // const friendRelations = getFriendRelations(userId, friendships);
     const friendIds = getFriendIds(userId, friendships);
-
     const suggestions = await userRepository.findRandomUserSuggestions(userId, friendIds);
 
     return suggestions;

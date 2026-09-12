@@ -95,7 +95,7 @@ const removeRefreshToken = async (refreshTokenHash: string) => {
 
 const findRandomUserSuggestions = async (
     currentUserId: string,
-    friendIds: Types.ObjectId[],
+    friendIds: Types.ObjectId[] | string[],
 ): Promise<UserSuggestion[] | []> => {
     const pipeline: PipelineStage[] = [
         {

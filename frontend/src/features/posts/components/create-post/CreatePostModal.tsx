@@ -10,6 +10,7 @@ import AttachmentPicker from "./AttachmentPicker";
 import FeelingActivityPicker from "./FeelingActivityPicker";
 import PostPreview from "./PostPreview";
 import PostVisibilitySelector from "./PostVisibilitySelector";
+import useUploadFile from "../../hooks/useUploadFile";
 
 // Default user data to display if current user info is unavailable
 const fallbackUser = {
@@ -26,6 +27,7 @@ const textAreaAutoSize = { minRows: 4, maxRows: 8 };
  */
 const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 	const { user } = useCurrentUser();
+	const { uploadFiles } = useUploadFile();
 
 	// Modal steps: "compose" (writing the post) or "preview" (reviewing before publishing)
 	const [step, setStep] = useState<"compose" | "preview">("compose");
@@ -102,17 +104,21 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 		setIsSubmitting(true);
 
 		try {
+			const files = formValues.attachments.map((attachment) => attachment.file).filter(Boolean);
+
+			await uploadFiles(files);
+
 			await createPost({
 				content: formValues.content.trim(),
 				visibility: formValues.visibility,
 				feeling: formValues.feeling,
 				aiLabel: formValues.aiLabel,
-				files: formValues.attachments.map((attachment) => attachment.file),
+				files,
 			});
 
 			closeAndReset();
 			notify.success({
-				message: "Post published",
+				title: "Post published",
 				description: "Your post is now ready to share.",
 			});
 		} finally {
@@ -147,13 +153,13 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 				className="create-post-modal">
 				{/* Step 1: Compose Post */}
 				{step === "compose" ? (
-					<form onSubmit={handleSubmit(goToPreview)} className="space-y-5">
+					<form onSubmit={handleSubmit(goToPreview)} className="space-y-5 mt-4">
 						{/* Author info and visibility dropdown */}
 						<div className="flex items-center justify-between border-b border-slate-100 pb-4">
 							<div className="flex items-center gap-3">
 								<img src={avatarUrl} alt="" className="size-11 rounded-full object-cover" />
 								<div>
-									<p className="font-semibold text-slate-800">{userName}</p>
+									<p className="font-semibold text-slate-800 capitalize">{userName}</p>
 									<PostVisibilitySelector value={values.visibility} onChange={updateVisibility} />
 								</div>
 							</div>
@@ -169,7 +175,8 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 									autoSize={textAreaAutoSize}
 									placeholder={`What's on your mind, ${userName.split(" ")[0]}?`}
 									variant="borderless"
-									className="resize-none! text-lg! shadow-none! placeholder:text-slate-400! outline-zinc-300!"
+									className="resize-none! text-lg! shadow-none! outline-0! border-0!"
+									autoFocus
 								/>
 							)}
 						/>
@@ -179,10 +186,11 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 						{/* Selected feeling badge with remove button */}
 						{values.feeling && (
 							<div className="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
-								<span>
-									{values.feeling.icon} Feeling {values.feeling.label}
+								<span className="flex items-center gap-1.5">
+									<span>{values.feeling.icon}</span>
+									<span>{values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}</span>
 								</span>
-								<button type="button" onClick={() => setValue("feeling", null)} className="text-xs underline">
+								<button type="button" onClick={() => setValue("feeling", null)} className="text-xs font-semibold text-amber-700 hover:text-amber-900 underline">
 									Remove
 								</button>
 							</div>
@@ -204,7 +212,16 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 						{formError && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{formError}</p>}
 
 						{/* Continue to Preview button */}
-						<Button htmlType="submit" type="primary" block disabled={!canContinue} className="h-11! rounded-xl! bg-slate-900! font-semibold! text-white! hover:bg-emerald-600!">
+						<Button
+							htmlType="submit"
+							type="primary"
+							block
+							disabled={!canContinue}
+							className={`h-11! rounded-xl! font-semibold! text-sm! transition-all duration-200 ${
+								canContinue
+									? "bg-blue-600! hover:bg-blue-700! text-white! cursor-pointer! shadow-sm hover:shadow"
+									: "bg-slate-100! text-slate-400! border-none! cursor-not-allowed! shadow-none!"
+							}`}>
 							Next <ArrowRight size={16} />
 						</Button>
 					</form>
@@ -214,11 +231,16 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 						<PostPreview values={getValues()} avatarUrl={avatarUrl} userName={userName} />
 						<div className="flex gap-3">
 							{/* Back to Compose */}
-							<Button block onClick={() => setStep("compose")} className="h-11! rounded-xl!">
+							<Button block onClick={() => setStep("compose")} className="h-11! rounded-xl! font-semibold! text-slate-700! border-slate-200! hover:bg-slate-50!">
 								<ArrowLeft size={16} /> Back
 							</Button>
 							{/* Final Publish button */}
-							<Button block type="primary" loading={isSubmitting} onClick={handleSubmit(submitPost)} className="h-11! rounded-xl! bg-emerald-600! font-semibold! hover:bg-emerald-700!">
+							<Button
+								block
+								type="primary"
+								loading={isSubmitting}
+								onClick={handleSubmit(submitPost)}
+								className="h-11! rounded-xl! bg-blue-600! font-semibold! text-white! hover:bg-blue-700! shadow-sm hover:shadow">
 								Post
 							</Button>
 						</div>

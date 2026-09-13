@@ -63,7 +63,7 @@ const PostVisibilitySelector = ({ value, onChange }: PostVisibilitySelectorProps
 					})}
 				</div>
 			}>
-			<button type="button" className="flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200">
+			<button type="button" className="flex items-center gap-1.5 rounded-full bg-slate-100 mt-0.5 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-200">
 				<SelectedIcon size={13} /> {selected.label}
 			</button>
 		</Popover>

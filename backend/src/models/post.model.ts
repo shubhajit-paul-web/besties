@@ -13,11 +13,6 @@ const fileSchema = new Schema(
             trim: true,
             required: true,
         },
-        // size: {
-        //     type: Number,
-        //     min: 1,
-        //     required: true,
-        // },
     },
     { _id: false, versionKey: false },
 );
@@ -55,6 +50,16 @@ const postSchema = new Schema(
             type: String,
             enum: POST_STATUS_VALUES,
             default: "active",
+        },
+        archivedAt: {
+            type: Date,
+            default: null,
+            select: false,
+        },
+        deletedAt: {
+            type: Date,
+            default: null,
+            select: false,
         },
     },
     { timestamps: true },

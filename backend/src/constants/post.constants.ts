@@ -35,5 +35,24 @@ export const FILE_TYPE_EXTENSIONS: Record<SupportedFileType, string> = {
     "application/pdf": "pdf",
 };
 
+export const POST_FEELING_IDS = [
+    "happy",
+    "loved",
+    "excited",
+    "grateful",
+    "blessed",
+    "relaxed",
+    "proud",
+    "motivated",
+    "sad",
+    "tired",
+    "lonely",
+    "angry",
+    "cool",
+    "hopeful",
+    "bored",
+    "silly",
+] as const;
+
 export const POST_VISIBILITY_LEVELS = ["public", "friends", "private"] as const;
 export const POST_STATUS_VALUES = ["active", "deleted", "archived"] as const;

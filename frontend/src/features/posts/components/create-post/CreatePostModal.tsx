@@ -219,7 +219,7 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 							render={({ field }) => (
 								<Input.TextArea
 									{...field}
-									autoSize={{ minRows: 3, maxRows: 6 }}
+									autoSize={{ minRows: 5, maxRows: 6 }}
 									placeholder={`What's on your mind, ${userName.split(" ")[0]}?`}
 									variant="borderless"
 									className="resize-none! text-base! text-slate-800! placeholder:text-slate-400! shadow-none! outline-0! border-0! p-0!"
@@ -265,7 +265,7 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 						{formError && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{formError}</p>}
 
 						{/* Continue to Preview button - sticky at bottom */}
-						<div className="sticky bottom-0 bg-white/95 pt-2 pb-0.5 backdrop-blur-xs">
+						<div className="sticky -bottom-2.5 bg-white/95 pt-2 pb-0.5 backdrop-blur-xs">
 							<Button
 								htmlType="submit"
 								type="primary"

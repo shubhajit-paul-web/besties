@@ -1,57 +1,14 @@
 import { useState } from "react";
 import { Popover } from "antd";
 import { Check, Search, X } from "lucide-react";
-import type { FeelingActivityPickerProps } from "../../types/post.types";
-
-type Category = "feeling" | "activity";
-
-type FeelingItem = {
-	id: string;
-	label: string;
-	icon: string;
-	category: Category;
-};
-
-const options: FeelingItem[] = [
-	// Feelings
-	{ id: "happy", label: "Happy", icon: "😊", category: "feeling" },
-	{ id: "loved", label: "Loved", icon: "🥰", category: "feeling" },
-	{ id: "excited", label: "Excited", icon: "✨", category: "feeling" },
-	{ id: "grateful", label: "Grateful", icon: "🙏", category: "feeling" },
-	{ id: "blessed", label: "Blessed", icon: "😇", category: "feeling" },
-	{ id: "relaxed", label: "Relaxed", icon: "😌", category: "feeling" },
-	{ id: "proud", label: "Proud", icon: "🌟", category: "feeling" },
-	{ id: "motivated", label: "Motivated", icon: "💪", category: "feeling" },
-	{ id: "sad", label: "Sad", icon: "😔", category: "feeling" },
-	{ id: "tired", label: "Tired", icon: "😴", category: "feeling" },
-	{ id: "lonely", label: "Lonely", icon: "🌙", category: "feeling" },
-	{ id: "angry", label: "Angry", icon: "😤", category: "feeling" },
-	{ id: "cool", label: "Cool", icon: "😎", category: "feeling" },
-	{ id: "hopeful", label: "Hopeful", icon: "🌈", category: "feeling" },
-	{ id: "bored", label: "Bored", icon: "🥱", category: "feeling" },
-	{ id: "silly", label: "Silly", icon: "😜", category: "feeling" },
-
-	// Activities
-	{ id: "celebrating", label: "Celebrating", icon: "🎉", category: "activity" },
-	{ id: "watching", label: "Watching", icon: "📺", category: "activity" },
-	{ id: "eating", label: "Eating", icon: "🍜", category: "activity" },
-	{ id: "drinking", label: "Drinking", icon: "☕", category: "activity" },
-	{ id: "listening", label: "Listening to", icon: "🎧", category: "activity" },
-	{ id: "traveling", label: "Traveling to", icon: "✈️", category: "activity" },
-	{ id: "reading", label: "Reading", icon: "📚", category: "activity" },
-	{ id: "playing", label: "Playing", icon: "🎮", category: "activity" },
-	{ id: "exercising", label: "Exercising", icon: "🏋️", category: "activity" },
-	{ id: "working", label: "Working", icon: "💼", category: "activity" },
-	{ id: "attending", label: "Attending", icon: "🎟️", category: "activity" },
-	{ id: "thinking", label: "Thinking about", icon: "💭", category: "activity" },
-];
+import type { FeelingActivityPickerProps, FeelingOption } from "../../types/post.types";
+import { FEELING_OPTIONS } from "../../constants/constants";
 
 const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) => {
 	const [open, setOpen] = useState(false);
-	const [activeTab, setActiveTab] = useState<Category>("feeling");
 	const [searchQuery, setSearchQuery] = useState("");
 
-	const handleSelect = (option: FeelingItem) => {
+	const handleSelect = (option: FeelingOption) => {
 		if (value?.id === option.id) {
 			onChange(null);
 		} else {
@@ -65,9 +22,8 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 		setSearchQuery("");
 	};
 
-	const filteredOptions = searchQuery.trim()
-		? options.filter((option) => option.label.toLowerCase().includes(searchQuery.toLowerCase().trim()))
-		: options.filter((option) => option.category === activeTab);
+	const query = searchQuery.trim().toLowerCase();
+	const filteredOptions = query ? FEELING_OPTIONS.filter((option) => option.label.toLowerCase().includes(query)) : FEELING_OPTIONS;
 
 	return (
 		<Popover
@@ -90,32 +46,6 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 						</button>
 					</div>
 
-					{/* Tabs */}
-					<div className="flex rounded-xl bg-slate-100 p-1">
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("feeling");
-								setSearchQuery("");
-							}}
-							className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-								activeTab === "feeling" && !searchQuery ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"
-							}`}>
-							Feelings
-						</button>
-						<button
-							type="button"
-							onClick={() => {
-								setActiveTab("activity");
-								setSearchQuery("");
-							}}
-							className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-								activeTab === "activity" && !searchQuery ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"
-							}`}>
-							Activities
-						</button>
-					</div>
-
 					{/* Search Bar */}
 					<div className="relative">
 						<Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -123,7 +53,7 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 							type="text"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder="Search feelings or activities..."
+							placeholder="Search feelings..."
 							className="w-full rounded-xl bg-slate-100 py-1.5 pl-8 pr-7 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 border border-transparent focus:border-blue-500 transition"
 						/>
 						{searchQuery && (
@@ -145,15 +75,11 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 											type="button"
 											onClick={() => handleSelect(option)}
 											className={`group flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left transition ${
-												isSelected
-													? "border border-blue-200 bg-blue-50 text-blue-700 font-semibold shadow-2xs"
-													: "border border-transparent text-slate-700 hover:bg-slate-100"
+												isSelected ? "border border-blue-200 bg-blue-50 text-blue-700 font-semibold shadow-2xs" : "border border-transparent text-slate-700 hover:bg-slate-100"
 											}`}>
 											<div className="flex items-center gap-2 min-w-0">
 												<span className="text-lg shrink-0 leading-none select-none">{option.icon}</span>
-												<span className={`truncate text-xs ${isSelected ? "font-semibold text-blue-700" : "font-medium text-slate-700"}`}>
-													{option.label}
-												</span>
+												<span className={`truncate text-xs ${isSelected ? "font-semibold text-blue-700" : "font-medium text-slate-700"}`}>{option.label}</span>
 											</div>
 											{isSelected && <Check size={13} className="shrink-0 text-blue-600" />}
 										</button>
@@ -161,7 +87,7 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 								})}
 							</div>
 						) : (
-							<div className="py-6 text-center text-xs text-slate-400">No feelings or activities found</div>
+							<div className="py-6 text-center text-xs text-slate-400">No feelings found</div>
 						)}
 					</div>
 				</div>
@@ -169,12 +95,10 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 			<button
 				type="button"
 				className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
-					value
-						? "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100/80 font-semibold shadow-2xs"
-						: "border border-transparent text-slate-600 hover:bg-slate-100 font-medium"
+					value ? "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100/80 font-semibold shadow-2xs" : "border border-transparent text-slate-600 hover:bg-slate-100 font-medium"
 				}`}>
 				<span className="text-base leading-none select-none">{value?.icon ?? "🙂"}</span>
-				<span className="truncate max-w-44">{value ? value.label : "Feeling / Activity"}</span>
+				<span className="truncate max-w-44">{value ? value.label : "Feeling"}</span>
 			</button>
 		</Popover>
 	);

@@ -26,7 +26,13 @@ router.post("/", validate(createPostSchema), postController.createPost);
 // (Private) PATCH /posts/:postId
 router.patch("/:postId", validate(updatePostSchema), postController.updatePost);
 
+// (Private) DELETE /posts/:postId
+router.delete("/:postId", validate(postIdSchema), postController.deletePost);
+
 // (Private) PATCH /posts/:postId/archive
 router.patch("/:postId/archive", validate(postIdSchema), postController.archivePost);
+
+// (Private) PATCH /posts/:postId/restore
+router.patch("/:postId/restore", validate(postIdSchema), postController.restorePost);
 
 export default router;

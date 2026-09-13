@@ -39,9 +39,23 @@ const archivePost = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Post archived successfully."));
 });
 
+const deletePost = asyncHandler(async (req, res) => {
+    await postService.deletePost(req.user?._id as string, req.params.postId as string);
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Post deleted successfully."));
+});
+
+const restorePost = asyncHandler(async (req, res) => {
+    await postService.restorePost(req.user?._id as string, req.params.postId as string);
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Post activated successfully."));
+});
+
 export default {
     createPost,
     generateFileUploadUrl,
     updatePost,
     archivePost,
+    deletePost,
+    restorePost,
 };

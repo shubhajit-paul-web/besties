@@ -1,5 +1,5 @@
 import { StatusCodes } from "http-status-codes";
-import PostModel from "../models/post.model.js";
+import PostModel, { type PostDocument } from "../models/post.model.js";
 import type {
     CreatePostPayload,
     SupportedFileType,
@@ -7,6 +7,32 @@ import type {
 } from "../types/post/post.types.js";
 import ApiError from "../utils/apiError.js";
 import storageService from "./storage.service.js";
+
+// Verifies ownership and ensures the post isn't already in the target state
+const getPostAndValidateOwnership = async (
+    userId: string,
+    postId: string,
+    targetStatus: PostDocument["status"],
+) => {
+    const post = await PostModel.findById(postId).select("user status").lean();
+
+    if (!post) {
+        throw new ApiError(StatusCodes.NOT_FOUND, "Post not found or has been removed.");
+    }
+
+    if (post.user?.toString() !== userId) {
+        throw new ApiError(
+            StatusCodes.FORBIDDEN,
+            "You do not have permission to modify this post.",
+        );
+    }
+
+    if (post.status === targetStatus) {
+        throw new ApiError(StatusCodes.CONFLICT, `Post is already ${targetStatus}.`);
+    }
+
+    return post;
+};
 
 const generateFileUploadUrl = async (userId: string, contentType: SupportedFileType) => {
     const result = await storageService.createPresignedPostUpload({
@@ -52,24 +78,7 @@ const updatePost = async (userId: string, postId: string, payload: UpdatePostPay
 };
 
 const archivePost = async (userId: string, postId: string) => {
-    const post = await PostModel.findById(postId).select("user status").lean();
-
-    if (!post) {
-        throw new ApiError(StatusCodes.NOT_FOUND, "Post not found or has been removed.");
-    }
-
-    const isOwner = post.user?.toString() === userId;
-
-    if (!isOwner) {
-        throw new ApiError(
-            StatusCodes.FORBIDDEN,
-            "You don't have permission to archived this post.",
-        );
-    }
-
-    if (post.status === "archived") {
-        throw new ApiError(StatusCodes.CONFLICT, "Post is already archived.");
-    }
+    const post = await getPostAndValidateOwnership(userId, postId, "archived");
 
     await PostModel.updateOne(
         { _id: post._id },
@@ -82,9 +91,38 @@ const archivePost = async (userId: string, postId: string) => {
     );
 };
 
+const deletePost = async (userId: string, postId: string) => {
+    const post = await getPostAndValidateOwnership(userId, postId, "deleted");
+
+    await PostModel.updateOne(
+        { _id: post._id },
+        {
+            status: "deleted",
+            $currentDate: {
+                deletedAt: true,
+            },
+        },
+    );
+};
+
+const restorePost = async (userId: string, postId: string) => {
+    const post = await getPostAndValidateOwnership(userId, postId, "active");
+
+    await PostModel.updateOne(
+        { _id: post._id },
+        {
+            status: "active",
+            archivedAt: null,
+            deletedAt: null,
+        },
+    );
+};
+
 export default {
     createPost,
     generateFileUploadUrl,
     updatePost,
     archivePost,
+    deletePost,
+    restorePost,
 };

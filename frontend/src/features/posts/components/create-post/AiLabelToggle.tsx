@@ -1,6 +1,6 @@
 import { Switch, Tooltip } from "antd";
 import { Info } from "lucide-react";
-import type { AiLabelToggleProps } from "../../types/createPost.types";
+import type { AiLabelToggleProps } from "../../types/post.types";
 
 const AiLabelToggle = ({ checked, onChange }: AiLabelToggleProps) => (
 	<div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">

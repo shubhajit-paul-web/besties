@@ -1,7 +1,7 @@
 import { Button, Tooltip } from "antd";
 import { FileText, ImagePlus, Trash2, Upload, Video } from "lucide-react";
 import type { ChangeEvent } from "react";
-import type { AttachmentCategory, AttachmentPickerProps } from "../../types/createPost.types";
+import type { AttachmentCategory, AttachmentPickerProps } from "../../types/post.types";
 import { formatFileSize, MAX_IMAGES, validateFiles } from "../../utils/attachmentValidation";
 
 const AttachmentPicker = ({ attachments, onChange, error, onError }: AttachmentPickerProps) => {

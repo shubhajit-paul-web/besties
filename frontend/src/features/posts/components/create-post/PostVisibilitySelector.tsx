@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Popover } from "antd";
 import { Check, Earth, LockKeyhole, Users } from "lucide-react";
-import type { PostVisibility, PostVisibilitySelectorProps } from "../../types/createPost.types";
+import type { PostVisibility, PostVisibilitySelectorProps } from "../../types/post.types";
 
 const visibilityOptions: { value: PostVisibility; label: string; description: string }[] = [
 	{ value: "public", label: "Public", description: "Anyone can see this post" },
@@ -43,9 +43,7 @@ const PostVisibilitySelector = ({ value, onChange }: PostVisibilitySelectorProps
 								key={option.value}
 								type="button"
 								onClick={() => handleSelect(option.value)}
-								className={`flex w-full items-center justify-between rounded-xl p-2.5 text-left transition hover:bg-slate-100 ${
-									isSelected ? "bg-slate-50" : ""
-								}`}>
+								className={`flex w-full items-center justify-between rounded-xl p-2.5 text-left transition hover:bg-slate-100 ${isSelected ? "bg-slate-50" : ""}`}>
 								<div className="flex items-center gap-3">
 									<span className={`grid size-9 shrink-0 place-items-center rounded-full ${isSelected ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-600"}`}>
 										<Icon size={17} />

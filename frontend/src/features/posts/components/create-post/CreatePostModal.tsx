@@ -3,23 +3,22 @@ import { Button, Input, Modal, notification } from "antd";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import useCurrentUser from "@/hooks/useCurrentUser";
-import { createPost } from "../../services/createPost.service";
-import type { CreatePostFormValues, CreatePostModalProps, PostVisibility } from "../../types/createPost.types";
+import type { CreatePostFormValues, CreatePostModalProps, CreatePostPayload, FileAttachmentPayload, PostVisibility, SupportedFileType } from "../../types/post.types";
 import AiLabelToggle from "./AiLabelToggle";
 import AttachmentPicker from "./AttachmentPicker";
 import FeelingActivityPicker from "./FeelingActivityPicker";
 import PostPreview from "./PostPreview";
 import PostVisibilitySelector from "./PostVisibilitySelector";
 import useUploadFile from "../../hooks/useUploadFile";
+import { SUPPORTED_CONTENT_TYPES } from "../../constants/constants";
+import { createPostApi } from "../../apis/post.api";
+import formatUserName from "@/utils/formatUserName";
 
 // Default user data to display if current user info is unavailable
 const fallbackUser = {
 	name: "You",
 	avatar: "/profile-img.jpeg",
 };
-
-// Dynamic row limits for the post text area
-const textAreaAutoSize = { minRows: 4, maxRows: 8 };
 
 /**
  * Modal dialog for creating a new post.
@@ -39,13 +38,19 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [notify, notifyUi] = notification.useNotification();
 
-	// Resolved user info (fallback if not logged in)
-	const userName = user ? `${user.name.first} ${user.name.last ?? ""}`.trim() : fallbackUser.name;
+	// User info (fallback if not logged in)
+	const userName = user ? formatUserName(user.name) : fallbackUser.name;
 	const avatarUrl = user?.avatar ?? fallbackUser.avatar;
 
 	// Form management via react-hook-form
 	const { handleSubmit, control, setValue, reset, getValues } = useForm<CreatePostFormValues>({
-		defaultValues: { content: "", visibility: "friends", feeling: null, aiLabel: false, attachments: [] },
+		defaultValues: {
+			content: "",
+			visibility: "friends",
+			feeling: null,
+			isAIGenerated: false,
+			attachments: [],
+		},
 	});
 
 	const values = useWatch({ control }) as CreatePostFormValues;
@@ -104,22 +109,64 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 		setIsSubmitting(true);
 
 		try {
-			const files = formValues.attachments.map((attachment) => attachment.file).filter(Boolean);
+			// Collect only valid, existing files from the form inputs
+			const validFiles = formValues.attachments.map((attachment) => attachment.file).filter((file): file is File => Boolean(file));
 
-			await uploadFiles(files);
+			let uploadedAttachments: FileAttachmentPayload[] = [];
 
-			await createPost({
+			if (validFiles.length > 0) {
+				const uploadResult = await uploadFiles(validFiles);
+
+				// Stop early if the upload failed or returned no file keys
+				if (!uploadResult.success || !uploadResult.keys) {
+					notify.error({
+						title: "Upload failed",
+						description: "Could not upload attachments.",
+					});
+					return;
+				}
+
+				// Match each uploaded storage key back to its original file and format
+				uploadedAttachments = uploadResult.keys.flatMap((storageKey, index) => {
+					const file = validFiles[index];
+					const isSupported = SUPPORTED_CONTENT_TYPES.includes(file?.type as SupportedFileType);
+
+					if (!file || !isSupported) return [];
+
+					return [
+						{
+							path: storageKey,
+							contentType: file.type as SupportedFileType,
+						},
+					];
+				});
+			}
+
+			const payload: CreatePostPayload = {
 				content: formValues.content.trim(),
 				visibility: formValues.visibility,
-				feeling: formValues.feeling,
-				aiLabel: formValues.aiLabel,
-				files,
-			});
+				isAIGenerated: formValues.isAIGenerated,
+				files: uploadedAttachments,
+			};
+
+			if (formValues.feeling?.id) {
+				payload.feeling = formValues.feeling.id;
+			}
+
+			// Save the post to DB
+			await createPostApi(payload);
 
 			closeAndReset();
 			notify.success({
 				title: "Post published",
 				description: "Your post is now ready to share.",
+			});
+		} catch (err) {
+			console.error("[CreatePost] Failed to publish post:", err);
+
+			notify.error({
+				title: "Unable to publish post",
+				description: "Please try again in a moment.",
 			});
 		} finally {
 			setIsSubmitting(false);
@@ -172,7 +219,7 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 							render={({ field }) => (
 								<Input.TextArea
 									{...field}
-									autoSize={textAreaAutoSize}
+									autoSize={{ minRows: 4, maxRows: 8 }}
 									placeholder={`What's on your mind, ${userName.split(" ")[0]}?`}
 									variant="borderless"
 									className="resize-none! text-lg! shadow-none! outline-0! border-0!"
@@ -185,13 +232,21 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 
 						{/* Selected feeling badge with remove button */}
 						{values.feeling && (
-							<div className="flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700">
-								<span className="flex items-center gap-1.5">
-									<span>{values.feeling.icon}</span>
-									<span>{values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}</span>
-								</span>
-								<button type="button" onClick={() => setValue("feeling", null)} className="text-xs font-semibold text-amber-700 hover:text-amber-900 underline">
-									Remove
+							<div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/90 px-3.5 py-2 transition-all">
+								<div className="flex items-center gap-2 min-w-0">
+									<span className="text-base leading-none select-none">{values.feeling.icon}</span>
+									<span className="truncate text-sm font-medium text-slate-700">
+										{values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}
+									</span>
+								</div>
+								<button
+									type="button"
+									onClick={() => setValue("feeling", null, { shouldDirty: true })}
+									className="group flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 transition"
+									title="Remove feeling"
+									aria-label="Remove feeling">
+									<X size={13} className="text-slate-400 group-hover:text-slate-600 transition-colors" />
+									<span>Remove</span>
 								</button>
 							</div>
 						)}
@@ -206,7 +261,7 @@ const CreatePostModal = ({ open, onClose }: CreatePostModalProps) => {
 						</div>
 
 						{/* AI-generated content tag toggle */}
-						<AiLabelToggle checked={values.aiLabel} onChange={(aiLabel) => setValue("aiLabel", aiLabel, { shouldDirty: true })} />
+						<AiLabelToggle checked={values.isAIGenerated} onChange={(isAIGenerated) => setValue("isAIGenerated", isAIGenerated, { shouldDirty: true })} />
 
 						{/* Inline form validation error */}
 						{formError && <p className="rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-600">{formError}</p>}

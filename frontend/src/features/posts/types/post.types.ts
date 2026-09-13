@@ -1,5 +1,9 @@
+import type { SUPPORTED_CONTENT_TYPES } from "../constants/constants";
+
 export type PostVisibility = "public" | "friends" | "private";
 export type AttachmentCategory = "image" | "video" | "pdf";
+
+export type SupportedFileType = (typeof SUPPORTED_CONTENT_TYPES)[number];
 
 export type AttachmentPickerProps = {
 	attachments: PostAttachment[];
@@ -51,14 +55,19 @@ export type CreatePostFormValues = {
 	content: string;
 	visibility: PostVisibility;
 	feeling: FeelingOption | null;
-	aiLabel: boolean;
+	isAIGenerated: boolean;
 	attachments: PostAttachment[];
 };
 
+export type FileAttachmentPayload = {
+	path: string;
+	contentType: SupportedFileType;
+};
+
 export type CreatePostPayload = {
-	content: string;
+	content?: string;
 	visibility: PostVisibility;
-	feeling: FeelingOption | null;
-	aiLabel: boolean;
-	files: File[];
+	feeling?: FeelingOption["id"];
+	isAIGenerated: boolean;
+	files?: FileAttachmentPayload[];
 };

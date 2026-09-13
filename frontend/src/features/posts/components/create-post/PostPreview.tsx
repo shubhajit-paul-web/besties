@@ -1,5 +1,5 @@
 import { FileText } from "lucide-react";
-import type { PostPreviewProps } from "../../types/createPost.types";
+import type { PostPreviewProps } from "../../types/post.types";
 import { formatFileSize } from "../../utils/attachmentValidation";
 import PostVisibilitySelector from "./PostVisibilitySelector";
 
@@ -15,8 +15,9 @@ const PostPreview = ({ values, avatarUrl, userName }: PostPreviewProps) => (
 		<div className="space-y-3 px-4 pb-4">
 			<p className="whitespace-pre-wrap text-[15px] leading-6 text-slate-700">{values.content}</p>
 			{values.feeling && (
-				<div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-medium text-amber-700">
-					{values.feeling.icon} {values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}
+				<div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700">
+					<span>{values.feeling.icon}</span>
+					<span>{values.feeling.label.toLowerCase().includes("ing") ? values.feeling.label : `Feeling ${values.feeling.label}`}</span>
 				</div>
 			)}
 			{values.attachments.length > 0 && (
@@ -40,7 +41,7 @@ const PostPreview = ({ values, avatarUrl, userName }: PostPreviewProps) => (
 					)}
 				</div>
 			)}
-			{values.aiLabel && <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">AI-generated content</span>}
+			{values.isAIGenerated && <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">AI-generated content</span>}
 		</div>
 	</div>
 );

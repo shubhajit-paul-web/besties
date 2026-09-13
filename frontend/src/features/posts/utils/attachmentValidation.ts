@@ -1,4 +1,4 @@
-import type { AttachmentCategory, PostAttachment } from "../types/createPost.types";
+import type { AttachmentCategory, PostAttachment } from "../types/post.types";
 
 export const MAX_FILE_SIZE = 100 * 1024 * 1024;
 export const MAX_IMAGES = 10;

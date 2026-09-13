@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Popover } from "antd";
-import { Search, X } from "lucide-react";
-import type { FeelingActivityPickerProps } from "../../types/createPost.types";
+import { Check, Search, X } from "lucide-react";
+import type { FeelingActivityPickerProps } from "../../types/post.types";
 
 type Category = "feeling" | "activity";
 
@@ -52,11 +52,15 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 	const [searchQuery, setSearchQuery] = useState("");
 
 	const handleSelect = (option: FeelingItem) => {
-		onChange({
-			id: option.id,
-			label: option.label,
-			icon: option.icon,
-		});
+		if (value?.id === option.id) {
+			onChange(null);
+		} else {
+			onChange({
+				id: option.id,
+				label: option.label,
+				icon: option.icon,
+			});
+		}
 		setOpen(false);
 		setSearchQuery("");
 	};
@@ -95,9 +99,7 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 								setSearchQuery("");
 							}}
 							className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-								activeTab === "feeling" && !searchQuery
-									? "bg-white text-slate-800 shadow-xs"
-									: "text-slate-500 hover:text-slate-800"
+								activeTab === "feeling" && !searchQuery ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"
 							}`}>
 							Feelings
 						</button>
@@ -108,9 +110,7 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 								setSearchQuery("");
 							}}
 							className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-								activeTab === "activity" && !searchQuery
-									? "bg-white text-slate-800 shadow-xs"
-									: "text-slate-500 hover:text-slate-800"
+								activeTab === "activity" && !searchQuery ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"
 							}`}>
 							Activities
 						</button>
@@ -127,10 +127,7 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 							className="w-full rounded-xl bg-slate-100 py-1.5 pl-8 pr-7 text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 border border-transparent focus:border-blue-500 transition"
 						/>
 						{searchQuery && (
-							<button
-								type="button"
-								onClick={() => setSearchQuery("")}
-								className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+							<button type="button" onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
 								<X size={13} />
 							</button>
 						)}
@@ -147,11 +144,18 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 											key={option.id}
 											type="button"
 											onClick={() => handleSelect(option)}
-											className={`flex items-center gap-2.5 rounded-xl px-2.5 py-2 text-left transition hover:bg-slate-100 ${
-												isSelected ? "bg-blue-50 text-blue-700 font-semibold" : "text-slate-700"
+											className={`group flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-left transition ${
+												isSelected
+													? "border border-blue-200 bg-blue-50 text-blue-700 font-semibold shadow-2xs"
+													: "border border-transparent text-slate-700 hover:bg-slate-100"
 											}`}>
-											<span className="text-xl shrink-0 leading-none">{option.icon}</span>
-											<span className="truncate text-xs font-medium">{option.label}</span>
+											<div className="flex items-center gap-2 min-w-0">
+												<span className="text-lg shrink-0 leading-none select-none">{option.icon}</span>
+												<span className={`truncate text-xs ${isSelected ? "font-semibold text-blue-700" : "font-medium text-slate-700"}`}>
+													{option.label}
+												</span>
+											</div>
+											{isSelected && <Check size={13} className="shrink-0 text-blue-600" />}
 										</button>
 									);
 								})}
@@ -164,11 +168,13 @@ const FeelingActivityPicker = ({ value, onChange }: FeelingActivityPickerProps) 
 			}>
 			<button
 				type="button"
-				className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-					value ? "bg-amber-50 text-amber-700 hover:bg-amber-100 ring-1 ring-amber-200" : "text-slate-600 hover:bg-slate-100"
+				className={`flex items-center gap-2 rounded-xl px-3 py-1.5 text-sm transition ${
+					value
+						? "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100/80 font-semibold shadow-2xs"
+						: "border border-transparent text-slate-600 hover:bg-slate-100 font-medium"
 				}`}>
-				<span className="text-base">{value?.icon ?? "🙂"}</span>
-				<span>{value ? value.label : "Feeling / Activity"}</span>
+				<span className="text-base leading-none select-none">{value?.icon ?? "🙂"}</span>
+				<span className="truncate max-w-44">{value ? value.label : "Feeling / Activity"}</span>
 			</button>
 		</Popover>
 	);

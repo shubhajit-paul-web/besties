@@ -35,3 +35,86 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
+
+/* ==========================================================================
+   Create Post Modal & Attachment Swiper (UX polish & 95% max-height limit)
+   ========================================================================== */
+
+.create-post-modal {
+  max-width: calc(100vw - 24px) !important;
+  top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.create-post-modal .ant-modal-content {
+  max-height: 95vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  border-radius: 18px !important;
+  box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.12), 0 10px 15px -5px rgba(0, 0, 0, 0.04) !important;
+  padding: 0 !important;
+}
+
+.create-post-modal .ant-modal-header {
+  flex-shrink: 0 !important;
+  padding: 16px 20px 14px 20px !important;
+  margin: 0 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.create-post-modal .ant-modal-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: calc(95vh - 65px) !important;
+  padding: 16px 20px 20px 20px !important;
+  overscroll-behavior: contain;
+}
+
+/* Modal body custom scrollbar */
+.create-post-modal .ant-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.create-post-modal .ant-modal-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.create-post-modal .ant-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.create-post-modal .ant-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Attachment Swiper override */
+.attachment-swiper {
+  width: 100% !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
+}
+
+.attachment-swiper .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+}
+
+/* .create-post-modal header {
+  flex-shrink: 0;
+  padding: "16px 20px 14px 20px";
+  margin: 0;
+  border-bottom: "100px solid #f1f5f9";
+}
+
+.create-post-modal body {
+  flex: "1 1 auto";
+  overflow-y: "auto";
+  overflow-x: "hidden";
+  max-height: "calc(95vh - 65px)";
+  padding: "18px 20px 20px 20px";
+} */

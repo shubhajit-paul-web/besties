@@ -3,13 +3,15 @@ import z from "zod";
 import { FRIENDSHIP_STATUSES } from "../constants/constants.js";
 
 export const sendFriendRequestSchema = z.object({
-    body: z.object({
-        receiverId: z
-            .string("Receiver ID is required")
-            .trim()
-            .min(1, "Receiver ID is required")
-            .refine(mongoose.isValidObjectId, "Invalid receiver ID"),
-    }),
+    body: z
+        .object({
+            receiverId: z
+                .string("Receiver ID is required")
+                .trim()
+                .min(1, "Receiver ID is required")
+                .refine(mongoose.isValidObjectId, "Invalid receiver ID"),
+        })
+        .strict(),
 });
 
 export const getFriendsByStatusSchema = z.object({

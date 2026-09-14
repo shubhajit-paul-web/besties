@@ -12,16 +12,16 @@ const validate =
                 query: req.query as unknown,
             });
 
-            if (data.body !== undefined) {
-                Object.assign(req.body, data.body);
+            if (data.body) {
+                req.body = data.body;
             }
 
-            if (data.params !== undefined) {
-                Object.assign(req.params, data.params);
+            if (data.params) {
+                req.params = data.params as Record<string, string>;
             }
 
-            if (data.query !== undefined) {
-                Object.assign(req.query, data.query);
+            if (data.query) {
+                req.query = data.query as unknown as typeof req.query;
             }
 
             next();
@@ -38,7 +38,6 @@ const validate =
                         message: isMissingSection
                             ? `Request ${String(source)} is required`
                             : message,
-                        // message: path.slice(1).length ? message : "Request body is required",
                     };
                 });
 

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
     POST_FEELING_IDS,
-    POST_STATUS_VALUES,
     POST_VISIBILITY_LEVELS,
     SUPPORTED_CONTENT_TYPES,
 } from "../constants/post.constants.js";
@@ -34,30 +33,40 @@ const postBodySchema = z.object({
         .enum(POST_VISIBILITY_LEVELS, "Visibility must be either 'public', 'friends', or 'private'")
         .default("friends"),
     isAIGenerated: z.boolean("isAIGenerated must be a boolean (true or false)").default(false),
-    status: z
-        .enum(POST_STATUS_VALUES, "Status must be either 'active', 'deleted', or 'archived'")
-        .default("active"),
+    // status: z
+    //     .enum(POST_STATUS_VALUES, "Status must be either 'active', 'deleted', or 'archived'")
+    //     .default("active"),
 });
 
 export const createPostSchema = z.object({
-    body: postBodySchema.refine((data) => Boolean(data.content?.length || data.files?.length), {
-        error: "A post must include either text content or at least one file",
-        path: ["content"],
-    }),
+    body: postBodySchema
+        .strict()
+        .refine((data) => Boolean(data.content?.length || data.files?.length), {
+            error: "A post must include either text content or at least one file",
+            path: ["content"],
+        }),
 });
 
 export const generateFileUploadUrlSchema = z.object({
-    body: z.object({
-        contentType: z.enum(
-            SUPPORTED_CONTENT_TYPES,
-            `Unsupported file type. Allowed: ${SUPPORTED_CONTENT_TYPES.join(", ")}`,
-        ),
-    }),
+    body: z
+        .object({
+            contentType: z.enum(
+                SUPPORTED_CONTENT_TYPES,
+                `Unsupported file type. Allowed: ${SUPPORTED_CONTENT_TYPES.join(", ")}`,
+            ),
+        })
+        .strict(),
 });
 
 export const updatePostSchema = z.object({
     params: postIdSchema.shape.params,
-    body: postBodySchema.omit({ files: true }).partial(),
+    body: postBodySchema
+        .omit({ files: true })
+        .partial()
+        .strict()
+        .refine((data) => Object.keys(data).length > 0, {
+            error: "At least one field must be provided for update",
+        }),
 });
 
 // Inferred TypeScript types

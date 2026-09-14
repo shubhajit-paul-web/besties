@@ -11,13 +11,15 @@ export const friendIdSchema = z.object({
 });
 
 export const generateFileUploadUrlSchema = z.object({
-    body: z.object({
-        friendId: z
-            .string()
-            .min(1, "Friend id required")
-            .refine(mongoose.isValidObjectId, "Invalid friend id"),
-        contentType: z.enum(SUPPORTED_FILE_TYPES, "This file type is not allowed"),
-    }),
+    body: z
+        .object({
+            friendId: z
+                .string()
+                .min(1, "Friend id required")
+                .refine(mongoose.isValidObjectId, "Invalid friend id"),
+            contentType: z.enum(SUPPORTED_FILE_TYPES, "This file type is not allowed"),
+        })
+        .strict(),
 });
 
 export const generateFileDownloadUrlSchema = z
@@ -27,4 +29,5 @@ export const generateFileDownloadUrlSchema = z
             messageId: objectIdSchema.optional(),
         }),
     })
+    .strict()
     .refine(({ body }) => body.path || body.messageId, "Either path or messageId is required");

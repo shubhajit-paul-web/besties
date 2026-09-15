@@ -21,7 +21,10 @@ const validate =
             }
 
             if (data.query) {
-                req.query = data.query as unknown as typeof req.query;
+                // for (const key of Object.keys(req.query)) {
+                //     delete (req.query as Record<string, unknown>)[key];
+                // }
+                Object.assign(req.query, data.query);
             }
 
             next();

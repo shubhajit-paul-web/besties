@@ -4,9 +4,11 @@ import validate from "../middlewares/validator.middleware.js";
 import {
     createPostSchema,
     generateFileUploadUrlSchema,
+    getMyPostsByStatusSchema,
     postIdSchema,
     updatePostSchema,
 } from "../validators/post.validator.js";
+import { userIdSchema } from "../validators/utils.validator.js";
 import postController from "../controllers/post.controller.js";
 
 const router = Router();
@@ -22,6 +24,12 @@ router.post(
 
 // (Private) POST /posts
 router.post("/", validate(createPostSchema), postController.createPost);
+
+// (Private) GET /posts/me
+router.get("/me", validate(getMyPostsByStatusSchema), postController.getMyPostsByStatus);
+
+// (Private) GET /posts/users/:userId
+router.get("/users/:userId", validate(userIdSchema), postController.getProfilePosts);
 
 // (Private) PATCH /posts/:postId
 router.patch("/:postId", validate(updatePostSchema), postController.updatePost);

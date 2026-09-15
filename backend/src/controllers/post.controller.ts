@@ -4,6 +4,7 @@ import { createPostRequest, UpdatePostRequest } from "../types/post/post.request
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiResponse from "../utils/apiResponse.js";
 import { GenerateFileUploadUrlRequest } from "../types/utils.types.js";
+import { PostStatus } from "../types/post/post.types.js";
 
 const generateFileUploadUrl = asyncHandler(async (req: GenerateFileUploadUrlRequest, res) => {
     const result = await postService.generateFileUploadUrl(
@@ -51,6 +52,26 @@ const restorePost = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Post activated successfully."));
 });
 
+const getMyPostsByStatus = asyncHandler(async (req, res) => {
+    const status = req.query.status as PostStatus;
+    const posts = await postService.getMyPostsByStatus(req.user?._id as string, status);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success(`Posts fetched successfully`, posts));
+});
+
+const getProfilePosts = asyncHandler(async (req, res) => {
+    const viewerId = req.user?._id as string;
+    const profileUserId = req.params.userId as string;
+
+    const posts = await postService.getProfilePosts(viewerId, profileUserId);
+
+    return res
+        .status(StatusCodes.OK)
+        .json(ApiResponse.success("Profile posts fetched successfully", posts));
+});
+
 export default {
     createPost,
     generateFileUploadUrl,
@@ -58,4 +79,6 @@ export default {
     archivePost,
     deletePost,
     restorePost,
+    getMyPostsByStatus,
+    getProfilePosts,
 };

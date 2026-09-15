@@ -80,6 +80,7 @@ postSchema.index({
     createdAt: -1,
 });
 
+export type PostFileDocument = InferSchemaType<typeof fileSchema>;
 export type PostDocument = InferSchemaType<typeof postSchema>;
 
 const PostModel = model("Post", postSchema);

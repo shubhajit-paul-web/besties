@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
     POST_FEELING_IDS,
+    POST_STATUS_VALUES,
     POST_VISIBILITY_LEVELS,
     SUPPORTED_CONTENT_TYPES,
 } from "../constants/post.constants.js";
@@ -25,10 +26,9 @@ export const fileValidationSchema = z.object({
 const postBodySchema = z.object({
     content: z.string().trim().max(2000, "Content cannot exceed 2000 characters").optional(),
     files: z.array(fileValidationSchema).default([]),
-    feeling: z.enum(
-        POST_FEELING_IDS,
-        `Unsupported feeling id. Allowed: ${POST_FEELING_IDS.join(", ")}`,
-    ),
+    feeling: z
+        .enum(POST_FEELING_IDS, `Unsupported feeling id. Allowed: ${POST_FEELING_IDS.join(", ")}`)
+        .optional(),
     visibility: z
         .enum(POST_VISIBILITY_LEVELS, "Visibility must be either 'public', 'friends', or 'private'")
         .default("friends"),
@@ -67,6 +67,18 @@ export const updatePostSchema = z.object({
         .refine((data) => Object.keys(data).length > 0, {
             error: "At least one field must be provided for update",
         }),
+});
+
+export const getMyPostsByStatusSchema = z.object({
+    query: z.object({
+        status: z
+            .enum(
+                POST_STATUS_VALUES,
+                `Invalid status. Expected one of: ${POST_STATUS_VALUES.join(", ")}`,
+            )
+            .optional()
+            .default("active"),
+    }),
 });
 
 // Inferred TypeScript types

@@ -1,18 +1,20 @@
 import { StatusCodes } from "http-status-codes";
-import PostModel, { type PostDocument } from "../models/post.model.js";
+import PostModel from "../models/post.model.js";
 import type {
     CreatePostPayload,
+    PostStatus,
     SupportedFileType,
     UpdatePostPayload,
 } from "../types/post/post.types.js";
 import ApiError from "../utils/apiError.js";
 import storageService from "./storage.service.js";
+import friendRepository from "../repositories/friend.repository.js";
 
 // Verifies ownership and ensures the post isn't already in the target state
 const getPostAndValidateOwnership = async (
     userId: string,
     postId: string,
-    targetStatus: PostDocument["status"],
+    targetStatus: PostStatus,
 ) => {
     const post = await PostModel.findById(postId).select("user status").lean();
 
@@ -118,6 +120,72 @@ const restorePost = async (userId: string, postId: string) => {
     );
 };
 
+const getMyPostsByStatus = async (userId: string, status: PostStatus = "active") => {
+    const posts = await PostModel.find({
+        user: userId,
+        status,
+    })
+        .sort({ createdAt: -1 })
+        .lean();
+
+    if (posts.length === 0) return [];
+
+    const postsWithDownloadUrls = await Promise.all(
+        posts.map(async (currentPost) => {
+            const files = currentPost.files;
+
+            if (files.length === 0) return currentPost;
+
+            // Generate all file URLs at the same time. If one fails, the others still work
+            const fileDownloadOutcomes = await Promise.allSettled(
+                files.map((file) => storageService.downloadFile(file.path)),
+            );
+
+            return {
+                ...currentPost,
+
+                // Preserve the original file order and expose an empty path for failed URLs
+                files: fileDownloadOutcomes.map((outcome, index) => {
+                    return {
+                        path: outcome.status === "fulfilled" ? outcome.value : null,
+                        contentType: files[index].contentType,
+                    };
+                }),
+            };
+        }),
+    );
+
+    return postsWithDownloadUrls;
+};
+
+const getProfilePosts = async (viewerId: string, profileUserId: string) => {
+    if (viewerId === profileUserId) {
+        return await getMyPostsByStatus(viewerId, "active");
+    }
+
+    const isFriend = await friendRepository.existsFriendship(viewerId, profileUserId, "accepted");
+
+    if (isFriend) {
+        const posts = await PostModel.find({
+            user: profileUserId,
+            visibility: {
+                $in: ["public", "friends"],
+            },
+            status: "active",
+        }).lean();
+
+        return posts;
+    }
+
+    const posts = await PostModel.find({
+        user: profileUserId,
+        visibility: "public",
+        status: "active",
+    }).lean();
+
+    return posts;
+};
+
 export default {
     createPost,
     generateFileUploadUrl,
@@ -125,4 +193,6 @@ export default {
     archivePost,
     deletePost,
     restorePost,
+    getMyPostsByStatus,
+    getProfilePosts,
 };

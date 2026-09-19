@@ -9,6 +9,8 @@ import type {
 import ApiError from "../utils/apiError.js";
 import storageService from "./storage.service.js";
 import friendRepository from "../repositories/friend.repository.js";
+import getFriendRelations from "../utils/getFriendRelations.js";
+import { FEED_CONFIG } from "../constants/post.constants.js";
 
 // Verifies ownership and ensures the post isn't already in the target state
 const getPostAndValidateOwnership = async (
@@ -186,6 +188,78 @@ const getProfilePosts = async (viewerId: string, profileUserId: string) => {
     return posts;
 };
 
+const generateUserFeed = async (userId: string) => {
+    // Get the user's accepted friends
+    const friendships = await friendRepository.findFriendshipsByStatus({
+        currentUserId: userId,
+        status: "accepted",
+    });
+
+    const friendIds = getFriendRelations(userId, friendships).map(({ friendId }) =>
+        friendId.toString(),
+    );
+
+    /* 
+        Fetch posts the user is allowed to see:
+        -> public posts
+        -> own posts 
+        -> posts from friends
+    */
+    const posts = await PostModel.find({
+        status: "active",
+        $or: [
+            { visibility: "public" },
+            { user: userId },
+            {
+                visibility: "friends",
+                user: {
+                    $in: friendIds,
+                },
+            },
+        ],
+    })
+        .populate("user", "avatar username name")
+        .sort({ createdAt: -1 })
+        .limit(FEED_CONFIG.maxPosts)
+        .lean();
+
+    const friendPosts = [];
+    const publicPosts = [];
+
+    // Separate friend/own posts from public discovery posts
+    for (const post of posts) {
+        const isOwnPost = post.user._id.toString() === userId;
+
+        if (isOwnPost || post.visibility === "friends") {
+            friendPosts.push(post);
+        } else {
+            publicPosts.push(post);
+        }
+    }
+
+    const feed = [];
+
+    let friendPostIndex = 0;
+    let publicPostIndex = 0;
+
+    // Mix N friend posts with 1 public post for discovery
+    while (friendPostIndex < friendPosts.length || publicPostIndex < publicPosts.length) {
+        for (
+            let count = 0;
+            count < FEED_CONFIG.friendPostsPerPublicPost && friendPostIndex < friendPosts.length;
+            count++
+        ) {
+            feed.push(friendPosts[friendPostIndex++]);
+        }
+
+        if (publicPostIndex < publicPosts.length) {
+            feed.push(publicPosts[publicPostIndex++]);
+        }
+    }
+
+    return feed;
+};
+
 export default {
     createPost,
     generateFileUploadUrl,
@@ -195,4 +269,5 @@ export default {
     restorePost,
     getMyPostsByStatus,
     getProfilePosts,
+    generateUserFeed,
 };

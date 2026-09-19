@@ -56,3 +56,8 @@ export const POST_FEELING_IDS = [
 
 export const POST_VISIBILITY_LEVELS = ["public", "friends", "private"] as const;
 export const POST_STATUS_VALUES = ["active", "deleted", "archived"] as const;
+
+export const FEED_CONFIG = {
+    friendPostsPerPublicPost: 3,
+    maxPosts: 30,
+} as const;

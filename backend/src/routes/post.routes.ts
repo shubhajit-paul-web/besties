@@ -31,6 +31,9 @@ router.get("/me", validate(getMyPostsByStatusSchema), postController.getMyPostsB
 // (Private) GET /posts/users/:userId
 router.get("/users/:userId", validate(userIdSchema), postController.getProfilePosts);
 
+// (Private) GET /posts/feed
+router.get("/feed", postController.generateUserFeed);
+
 // (Private) PATCH /posts/:postId
 router.patch("/:postId", validate(updatePostSchema), postController.updatePost);
 

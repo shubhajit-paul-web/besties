@@ -72,6 +72,13 @@ const getProfilePosts = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Profile posts fetched successfully", posts));
 });
 
+const generateUserFeed = asyncHandler(async (req, res) => {
+    const userId = req.user?._id as string;
+    const feed = await postService.generateUserFeed(userId);
+
+    return res.status(StatusCodes.OK).json(ApiResponse.success("Feed fetched successfully", feed));
+});
+
 export default {
     createPost,
     generateFileUploadUrl,
@@ -81,4 +88,5 @@ export default {
     restorePost,
     getMyPostsByStatus,
     getProfilePosts,
+    generateUserFeed,
 };

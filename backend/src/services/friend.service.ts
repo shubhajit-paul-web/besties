@@ -9,6 +9,7 @@ import FriendModel, { type FriendDocument } from "../models/friend.model.js";
 import moment from "moment";
 import getFriendIds from "../utils/getFriendIds.js";
 
+// Send a new friend request if the user is not asking themselves and no old request blocks it.
 const sendFriendRequest = async (senderId: string, receiverId: string) => {
     const isSelfRequest = senderId === receiverId;
 
@@ -52,7 +53,7 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
                     );
                 }
 
-                // remove the previous rejected friend request
+                // Replace the expired rejection so a new request can be created cleanly.
                 await friendRepository.deleteFriendshipById(friendshipId);
             }
         }
@@ -74,6 +75,7 @@ const sendFriendRequest = async (senderId: string, receiverId: string) => {
     }
 };
 
+// Get people the user may know, excluding current friends and blocked connections.
 const getFriendSuggestions = async (userId: string) => {
     const friendships = await friendRepository.findFriendshipsByStatus({
         currentUserId: userId,
@@ -85,6 +87,7 @@ const getFriendSuggestions = async (userId: string) => {
     return suggestions;
 };
 
+// Return friends or requests based on the given status, with user profile data attached.
 const getFriendsByStatus = async (userId: string, status: FriendDocument["status"]) => {
     const friendships = await friendRepository.findFriendshipsByStatus({
         currentUserId: userId,
@@ -96,14 +99,14 @@ const getFriendsByStatus = async (userId: string, status: FriendDocument["status
         return [];
     }
 
-    // Keep both IDs since the response needs the friendship ID as well
+    // Keep both IDs because the response needs the relationship and profile identifiers.
     const friendRelations = getFriendRelations(userId, friendships);
     const friendIds = friendRelations.map(({ friendId }) => friendId);
 
-    // Fetch profiles together instead of querying for each friend
+    // Fetch profiles in one query to avoid a database request for every friend.
     const profiles = await userRepository.findUsersByIds(friendIds);
 
-    // Avoid repeatedly searching the profiles array below
+    // Use constant-time lookups while rebuilding the response in relationship order.
     const profilesById = new Map(profiles.map((profile) => [String(profile._id), profile]));
 
     const friends = friendRelations
@@ -125,6 +128,7 @@ const getFriendsByStatus = async (userId: string, status: FriendDocument["status
     return friends;
 };
 
+// Accept a pending request sent to the current user.
 const acceptFriendRequest = async (userId: string, friendshipId: string) => {
     const friendship = await friendRepository.findFriendshipByIdAndReceiver(friendshipId, userId);
 
@@ -143,18 +147,21 @@ const acceptFriendRequest = async (userId: string, friendshipId: string) => {
     await friendRepository.updateStatusById(friendshipId, "accepted");
 };
 
+// Show the requests sent by the user with the chosen status.
 const getSentFriendshipsByStatus = async (userId: string, status: FriendDocument["status"]) => {
     const friendships = await friendRepository.findSentFriendRequestsByStatus(userId, status);
 
     return friendships;
 };
 
+// Get all pending friend requests received by this user.
 const getReceivedFriendRequests = async (userId: string) => {
     const requests = await friendRepository.findPendingRequestsByReceiver(userId);
 
     return requests;
 };
 
+// Remove a friend link between two users.
 const removeFriend = async (userId: string, friendshipId: string) => {
     const deleted = await friendRepository.deleteFriendship(userId, friendshipId);
 
@@ -163,6 +170,7 @@ const removeFriend = async (userId: string, friendshipId: string) => {
     }
 };
 
+// Reject a request from another user and set a short cool-down time.
 const rejectFriendRequest = async (userId: string, friendshipId: string) => {
     const friendRequest = await friendRepository.findFriendshipByIdAndReceiver(
         friendshipId,
@@ -187,6 +195,7 @@ const rejectFriendRequest = async (userId: string, friendshipId: string) => {
     await friendRepository.rejectFriendRequest(friendshipId, now.toDate(), rejectionExpiresAt);
 };
 
+// Cancel a friend request that was sent by the current user.
 const cancelFriendRequest = async (userId: string, friendshipId: string) => {
     const friendRequest = await friendRepository.findFriendshipByIdAndSender(friendshipId, userId);
 

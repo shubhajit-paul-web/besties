@@ -11,10 +11,11 @@ const registerChatHandlers = async (io: Server, socket: Socket) => {
     const currentUserId = String(socket.user._id);
     const roomId = `user:${currentUserId}`;
 
-    // Join user's private room for direct messages
+    // Each user has one private room for direct messages.
     await socket.join(roomId);
 
     socket.on("message", async (payload: MessagePayload, ack: MessageAck) => {
+        // Check the message before saving it.
         const parsed = sendMessageSchema.safeParse(payload);
 
         if (!parsed.success) {
@@ -26,7 +27,7 @@ const registerChatHandlers = async (io: Server, socket: Socket) => {
 
         const receiver = parsed.data.receiver;
 
-        // Same key regardless of who sends the message
+        // Use one key for both sides of the same chat.
         const conversationKey = generateConversationKey(currentUserId, receiver);
 
         try {
@@ -36,18 +37,19 @@ const registerChatHandlers = async (io: Server, socket: Socket) => {
                 sender: currentUserId,
             });
 
-            // Generate a signed url for file download if file path exists
+            // If a file was sent, make it ready to download.
             if (message.file?.path) {
                 message.file.path = await storageService
                     .downloadFile(message.file.path)
                     .catch(() => "");
             }
 
+            // Send the message only to the other user.
             io.to(`user:${receiver}`).emit("message", message);
 
             return sendAck(ack, { success: true });
         } catch (err: unknown) {
-            // Keep enough context to trace failed messages in production
+            // Save enough detail to fix message problems later.
             logger.error(
                 `Failed to send message: sender=${currentUserId}, receiver=${receiver}, conversation=${conversationKey}`,
                 err,

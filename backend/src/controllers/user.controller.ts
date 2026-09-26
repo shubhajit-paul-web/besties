@@ -7,6 +7,7 @@ import type {
     UpdateAvatarRequest,
 } from "../types/user/user.request.js";
 
+// Gets the profile of the currently logged-in user.
 const getCurrentUser = asyncHandler(async (req, res) => {
     const user = await userService.getCurrentUser(req.user?._id as string);
 
@@ -15,6 +16,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("User profile fetched successfully.", { user }));
 });
 
+// Creates a temporary URL for uploading a profile avatar.
 const generateAvatarUploadUrl = asyncHandler(async (req: GenerateAvatarUploadUrlRequest, res) => {
     const result = await userService.generateAvatarUploadUrl(
         req.user?._id as string,
@@ -24,12 +26,14 @@ const generateAvatarUploadUrl = asyncHandler(async (req: GenerateAvatarUploadUrl
     return res.status(StatusCodes.OK).json(result);
 });
 
+// Saves the new avatar for the current user.
 const updateAvatar = asyncHandler(async (req: UpdateAvatarRequest, res) => {
     await userService.updateAvatar(req.user?._id as string, req.body.path);
 
     res.status(StatusCodes.OK).json(ApiResponse.success("Avatar updated successfully."));
 });
 
+// Gets the profile of another user.
 const getUserProfile = asyncHandler(async (req, res) => {
     const user = await userService.getUserProfile(req.params.id as string);
 

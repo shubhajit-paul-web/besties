@@ -8,11 +8,13 @@ import verifyAccessToken from "../utils/verifyAccessToken.js";
  * Authenticates requests by validating the access token and attaching the decoded user.
  */
 const authenticate = (req: Request, _res: Response, next: NextFunction) => {
+    // Try token from the Authorization header first, then from cookies.
     const headerToken = req.headers?.authorization?.startsWith("Bearer ")
         ? req.headers.authorization.slice(7)
         : undefined;
     const cookieToken = req.cookies?.accessToken as string | undefined;
 
+    // Accept either place, but keep only the valid one.
     const accessToken = (cookieToken ?? headerToken)?.trim();
 
     if (!accessToken) {
@@ -20,6 +22,7 @@ const authenticate = (req: Request, _res: Response, next: NextFunction) => {
     }
 
     try {
+        // Verify the token and attach the decoded user for the route.
         const decoded = verifyAccessToken(accessToken);
 
         req.user = {
@@ -28,6 +31,7 @@ const authenticate = (req: Request, _res: Response, next: NextFunction) => {
         };
         next();
     } catch (err) {
+        // Give a clear message depending on what went wrong with the token.
         if (err instanceof jwt.JsonWebTokenError) {
             if (err.name === "TokenExpiredError") {
                 return next(

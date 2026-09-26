@@ -9,6 +9,7 @@ import type {
 import type { GetFriendsByStatus } from "../types/friend/friend.service.js";
 import _ from "lodash";
 
+// Sends a request to connect with another user.
 const sendFriendRequest = asyncHandler(async (req: AddFriendRequest, res) => {
     const senderId = String(req.user?._id);
     const receiverId = req.body.receiverId;
@@ -20,6 +21,7 @@ const sendFriendRequest = asyncHandler(async (req: AddFriendRequest, res) => {
         .json(ApiResponse.created("Friend request sent successfully.", friend));
 });
 
+// Finds users who may be good friends for the current user.
 const getFriendSuggestions = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
 
@@ -32,6 +34,7 @@ const getFriendSuggestions = asyncHandler(async (req, res) => {
     );
 });
 
+// Gets friends filtered by their connection status.
 const getFriendsByStatus = asyncHandler(async (req: GetFriendsByStatus, res) => {
     const userId = String(req.user?._id);
     const status = req.query?.status || "accepted";
@@ -45,6 +48,7 @@ const getFriendsByStatus = asyncHandler(async (req: GetFriendsByStatus, res) => 
     );
 });
 
+// Accepts a pending friend request.
 const acceptFriendRequest = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
     const friendshipId = String(req.params?.friendshipId);
@@ -56,6 +60,7 @@ const acceptFriendRequest = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Friend request accepted successfully."));
 });
 
+// Gets friend requests sent by the current user.
 const getSentFriendshipsByStatus = asyncHandler(async (req: GetFriendshipsByStatusRequest, res) => {
     const userId = String(req.user?._id);
     const status = req.query?.status || "pending";
@@ -69,6 +74,7 @@ const getSentFriendshipsByStatus = asyncHandler(async (req: GetFriendshipsByStat
     );
 });
 
+// Gets friend requests received by the current user.
 const getReceivedFriendRequests = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
 
@@ -79,6 +85,7 @@ const getReceivedFriendRequests = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Friend requests retrieved successfully.", { requests }));
 });
 
+// Removes an existing friend connection.
 const removeFriend = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
     const friendshipId = String(req.params?.friendshipId);
@@ -88,6 +95,7 @@ const removeFriend = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Friend removed successfully."));
 });
 
+// Rejects a pending friend request.
 const rejectFriendRequest = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
     const friendshipId = String(req.params?.friendshipId);
@@ -99,6 +107,7 @@ const rejectFriendRequest = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Friend request rejected successfully."));
 });
 
+// Cancels a friend request sent by the current user.
 const cancelFriendRequest = asyncHandler(async (req, res) => {
     const userId = String(req.user?._id);
     const friendshipId = String(req.params?.friendshipId);

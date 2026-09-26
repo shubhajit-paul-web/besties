@@ -8,11 +8,10 @@ import generateConversationKey from "../utils/generateConversationKey.js";
 import logger from "../utils/logger.js";
 import MessageModel from "../models/message.model.js";
 
+// Get all messages between the current user and a friend.
+// Only friends can read this chat, and files get a ready-to-use download link.
 const getMessagesByConversationKey = async (currentUserId: string, friendId: string) => {
-    /* 
-        Messages are private to the friendship, so authorize access before
-        retrieving any messages from the conversation.
-    */
+    // Messages are private to accepted friendships, so authorize access first.
     const isFriend = await friendRepository.existsFriendship(currentUserId, friendId, "accepted");
 
     if (!isFriend) {
@@ -58,6 +57,8 @@ const getMessagesByConversationKey = async (currentUserId: string, friendId: str
     return customizedMessages;
 };
 
+// Create a safe upload link for a file in this chat.
+// This lets the client send a file without exposing the storage path directly.
 const generateFileUploadUrl = async (
     userId: string,
     friendId: string,
@@ -77,16 +78,15 @@ const generateFileUploadUrl = async (
     return result;
 };
 
+// Create a download link for a file only if the user is allowed to see it.
+// It checks the message owner or the file owner before giving access.
 const generateFileDownloadUrl = async (
     userId: string,
     path: string,
     messageId: string | undefined,
 ) => {
     if (messageId) {
-        /* 
-            When a message ID is provided, resolve the file path from the message
-            after verifying that the user is either the sender or receiver. 
-        */
+        // Resolve the stored path only after confirming the user owns the message.
         const message = await MessageModel.findOne({
             _id: messageId,
             $or: [{ sender: userId }, { receiver: userId }],
@@ -104,10 +104,7 @@ const generateFileDownloadUrl = async (
 
         path = message.file.path;
     } else {
-        /* 
-            Without a message ID, verify ownership directly from the storage path 
-            before generating a URL. This prevents users from accessing arbitrary files. 
-        */
+        // For a raw path, verify storage ownership before generating a signed URL.
         const isOwner = await storageService.validateObjectOwnership(userId, path);
 
         if (!isOwner) {

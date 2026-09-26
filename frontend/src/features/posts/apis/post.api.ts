@@ -10,3 +10,7 @@ export const generateSignedUrlForFileUploadApi = async (contentType: string) => 
 export const createPostApi = async (payload: CreatePostPayload) => {
 	return HttpInterceptor.post("/posts", payload);
 };
+
+export const generateUserFeedApi = async () => {
+	return HttpInterceptor.get("/posts/feed");
+};

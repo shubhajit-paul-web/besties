@@ -72,16 +72,32 @@ const findUserById = async (userId: string, lean: boolean = true, fields?: strin
     return await query;
 };
 
+/** Updates a user's profile image path.
+ *
+ * @param {string} userId - The ID of the user to update.
+ * @param {string} path - The new image path.
+ * @returns {Promise<any>} A promise resolving to the update result.
+ */
 const updateAvatarByUserId = async (userId: string, path: string) => {
     return await UserModel.updateOne({ _id: userId }, { $set: { avatar: path } }).lean();
 };
 
+/** Finds a user by their refresh token.
+ *
+ * @param {string} refreshToken - The refresh token to search for.
+ * @returns {Promise<any>} A promise resolving to the matching user document.
+ */
 const findUserByRefreshToken = async (refreshToken: string) => {
     return await UserModel.findOne({ refreshToken }).select(
         "+refreshToken +expiresAt -createdAt -updatedAt -dob -gender -__v",
     );
 };
 
+/** Removes a refresh token and its expiry time from a user.
+ *
+ * @param {string} refreshTokenHash - The hashed refresh token to remove.
+ * @returns {Promise<any>} A promise resolving to the update result.
+ */
 const removeRefreshToken = async (refreshTokenHash: string) => {
     return UserModel.updateOne(
         {
@@ -93,6 +109,12 @@ const removeRefreshToken = async (refreshTokenHash: string) => {
     );
 };
 
+/** Gets a random list of users who are not the current user or their friends.
+ *
+ * @param {string} currentUserId - The ID of the current user.
+ * @param {Types.ObjectId[] | string[]} friendIds - IDs of the current user's friends.
+ * @returns {Promise<UserSuggestion[]>} A promise resolving to user suggestions.
+ */
 const findRandomUserSuggestions = async (
     currentUserId: string,
     friendIds: Types.ObjectId[] | string[],
@@ -122,6 +144,12 @@ const findRandomUserSuggestions = async (
     return UserModel.aggregate(pipeline);
 };
 
+/** Finds users by their IDs and returns selected fields.
+ *
+ * @param {Types.ObjectId[]} userIds - IDs of the users to find.
+ * @param {string} [fields="username name avatar"] - Fields to return.
+ * @returns {Promise<any[]>} A promise resolving to the matching users.
+ */
 const findUsersByIds = async (
     userIds: Types.ObjectId[],
     fields: string = "username name avatar",
@@ -135,6 +163,12 @@ const findUsersByIds = async (
         .lean();
 };
 
+/** Updates a user's password.
+ *
+ * @param {string | Types.ObjectId} userId - The ID of the user to update.
+ * @param {string} password - The new password value.
+ * @returns {Promise<any>} A promise resolving to the update result.
+ */
 const updatePasswordByUserId = async (userId: string | Types.ObjectId, password: string) => {
     return UserModel.updateOne(
         {

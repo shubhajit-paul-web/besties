@@ -15,14 +15,14 @@ import type {
 import config from "../config/environment.js";
 import type { CookieOptions } from "express";
 
-// Initiate registration
+// Sends an OTP to start a new account registration.
 const initiateRegistration = asyncHandler(async (req: InitiateRegistrationRequest, res) => {
     await authService.initiateRegistration(req.body);
 
     return res.status(StatusCodes.OK).json(ApiResponse.success("OTP sent successfully."));
 });
 
-// Verify registration OTP
+// Confirms the OTP, creates the account, and starts the user session.
 const verifyRegistrationOtp = asyncHandler(async (req: VerifyRegistrationOtpRequest, res) => {
     const { createdUser, tokens } = await authService.verifyRegistrationOtp(req.body);
 
@@ -34,7 +34,7 @@ const verifyRegistrationOtp = asyncHandler(async (req: VerifyRegistrationOtpRequ
         .json(ApiResponse.success("Account created successfully.", { user: createdUser }));
 });
 
-// Login user
+// Checks the login details and starts the user session.
 const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
     const { user, tokens } = await authService.loginUser(req.body, req.ip);
 
@@ -44,6 +44,7 @@ const loginUser = asyncHandler(async (req: LoginUserRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Login successfully.", { user }));
 });
 
+// Ends the session and removes the login cookies.
 const logout = asyncHandler((req: RefreshTokenRequest, res) => {
     authService.logout(req.cookies?.refreshToken);
 
@@ -59,6 +60,7 @@ const logout = asyncHandler((req: RefreshTokenRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Logout successful."));
 });
 
+// Creates new tokens before the current session expires.
 const refreshTokens = asyncHandler(async (req, res) => {
     const { accessToken, refreshToken } = await authService.refreshTokens(req.refreshAuth!);
 
@@ -68,6 +70,7 @@ const refreshTokens = asyncHandler(async (req, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("Tokens refreshed successfully."));
 });
 
+// Sends an OTP to confirm a password reset request.
 const forgotPassword = asyncHandler(async (req: ForgotPasswordRequest, res) => {
     const identifier = req.body.identifier;
 
@@ -76,6 +79,7 @@ const forgotPassword = asyncHandler(async (req: ForgotPasswordRequest, res) => {
     return res.status(StatusCodes.OK).json(ApiResponse.success("OTP sent successfully."));
 });
 
+// Checks the OTP and saves the new password.
 const resetPassword = asyncHandler(async (req: ResetPasswordRequest, res) => {
     const { identifier, newPassword, otp } = req.body;
 

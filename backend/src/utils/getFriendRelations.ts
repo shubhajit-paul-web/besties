@@ -5,6 +5,13 @@ type Friendship = FriendDocument & {
     _id: Types.ObjectId;
 };
 
+/**
+ * Gets each friend's ID along with the related friendship ID.
+ *
+ * @param currentUserId - The ID of the current user.
+ * @param friendships - The user's friendship records.
+ * @returns A list of friendship IDs and friend IDs.
+ */
 const getFriendRelations = (currentUserId: string, friendships: Friendship[]) => {
     const friends = friendships.map((friendship) => {
         const { sender, receiver } = friendship;

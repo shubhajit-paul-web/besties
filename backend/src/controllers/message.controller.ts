@@ -7,6 +7,7 @@ import {
     GenerateFileUploadUrlRequest,
 } from "../types/message/message.request.js";
 
+// Gets messages shared in a conversation.
 const getMessages = asyncHandler(async (req, res) => {
     const currentUserId = req.user?._id as string;
     const friendId = req.params.friendId as string;
@@ -18,6 +19,7 @@ const getMessages = asyncHandler(async (req, res) => {
         .json(ApiResponse.success("Messages fetched successfully", messages));
 });
 
+// Creates a temporary URL for uploading a message file.
 const generateFileUploadUrl = asyncHandler(async (req: GenerateFileUploadUrlRequest, res) => {
     const currentUserId = req.user?._id as string;
     const { friendId, contentType } = req.body;
@@ -27,6 +29,7 @@ const generateFileUploadUrl = asyncHandler(async (req: GenerateFileUploadUrlRequ
     return res.status(StatusCodes.OK).json(result);
 });
 
+// Creates a temporary URL for downloading a message file.
 const generateFileDownloadUrl = asyncHandler(async (req: GenerateFileDownloadUrlRequest, res) => {
     const userId = req.user?._id as string;
     const { path, messageId } = req.body;

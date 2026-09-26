@@ -1,34 +1,26 @@
-import Post from "../../../components/ui/Post";
+import fetcher from "@/utils/fetcher";
+import useSWR from "swr";
+import useCurrentUser from "@/hooks/useCurrentUser";
+import Post from "@/components/ui/Post";
+import type { Post as PostType } from "@/types/post.types";
 
 const MyPosts = () => {
+	const { isLoading: isCurrentUserLoading, user } = useCurrentUser();
+	const { isLoading: isPostsLoading, data: postsRes } = useSWR("/posts/me", fetcher);
+
+	if (isCurrentUserLoading || isPostsLoading) {
+		return null;
+	}
+
+	const posts: PostType[] = postsRes?.data ?? [];
+
+	console.log(posts);
+
 	return (
 		<div className="bg-slate-50 p-5 rounded-2xl flex flex-col items-center gap-5">
-			{Array(20)
-				.fill(0)
-				.map(() => (
-					<Post
-						post={{
-							id: "a4v45403450",
-							author: {
-								id: "user123456",
-								name: "Shubhajit Paul",
-								avatarUrl: "/profile-img.jpeg",
-							},
-							caption:
-								"Knowledge Debt may become the next Technical Debt. Technical debt builds up when we take shortcuts in code. Knowledge debt builds up when we take shortcuts in learning",
-							mediaUrl: "https://cdnb.artstation.com/p/assets/images/images/079/205/017/large/sourav-ghosh-back-to-school-x-media-post-template-design-07.jpg?1724262273",
-							metrics: {
-								likes: 15000,
-								comments: 2500,
-								shares: 655,
-							},
-							isLiked: true,
-							isSaved: false,
-							isOwner: true,
-							createdAt: "2026-07-09T18:30:00.000Z",
-						}}
-					/>
-				))}
+			{posts.map((post) => (
+				<Post key={post._id} post={post} currentUserId={user?._id as string} />
+			))}
 		</div>
 	);
 };

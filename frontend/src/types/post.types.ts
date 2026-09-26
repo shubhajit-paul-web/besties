@@ -6,13 +6,24 @@ export type PostMetrics = {
 	shares: number;
 };
 
+export type PostFile = {
+	path: string | null;
+	contentType: string;
+};
+
 export type Post = {
-	id: string;
+	_id: string;
 	author: Author;
 	createdAt: string;
-	caption?: string | undefined;
-	mediaUrl?: string | undefined;
+	content?: string | undefined;
+	files: PostFile[];
+	visibility: "public" | "friends" | "private";
 	metrics: PostMetrics;
+	user: {
+		_id: string;
+		name: { first: string; last?: string };
+		avatar?: string;
+	};
 
 	// User-specific state (contextual to the logged-in viewer)
 	isLiked: boolean;
@@ -22,4 +33,5 @@ export type Post = {
 
 export type PostComponentProps = {
 	post: Post;
+	currentUserId: string;
 };

@@ -13,6 +13,12 @@ import type {
 } from "../types/storage/storage.service.js";
 import { createPresignedPost } from "@aws-sdk/s3-presigned-post";
 
+/**
+ * Check if a file already exists in storage.
+ *
+ * @param path - File key to look for.
+ * @returns True if the file exists, otherwise false.
+ */
 const isFileExists = async (path: string) => {
     try {
         const command = new HeadObjectCommand({
@@ -28,6 +34,12 @@ const isFileExists = async (path: string) => {
     }
 };
 
+/**
+ * Create a short-lived link to download a file.
+ *
+ * @param path - File key to download.
+ * @returns A signed URL that can be used to fetch the file.
+ */
 const downloadFile = async (path: string) => {
     if (!path) {
         throw new ApiError(StatusCodes.BAD_REQUEST, "File path is required.");
@@ -60,6 +72,13 @@ const downloadFile = async (path: string) => {
     }
 };
 
+/**
+ * Create a short-lived link for uploading a file.
+ *
+ * @param path - Folder path where the file will be saved.
+ * @param type - File type such as image or video.
+ * @returns A signed URL that lets the client upload the file.
+ */
 const uploadFile = async (path: string, type: SupportedFileType) => {
     if (!path || !type) {
         throw new ApiError(StatusCodes.BAD_REQUEST, "Both file path and type are required.");
@@ -95,6 +114,12 @@ const uploadFile = async (path: string, type: SupportedFileType) => {
     }
 };
 
+/**
+ * Create a secure upload form for a file.
+ *
+ * @param options - Upload details like user, folder, type, and size limits.
+ * @returns A signed form payload that the client can send directly to storage.
+ */
 const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => {
     const { userId, path, type, expires, maxFileSize, acl } = options;
 
@@ -129,6 +154,13 @@ const createPresignedPostUpload = async (options: CreatePresignedPostUpload) => 
     }
 };
 
+/**
+ * Check whether the file belongs to the current user.
+ *
+ * @param userId - Logged-in user id.
+ * @param path - File key to check.
+ * @returns True when the owner matches.
+ */
 const validateObjectOwnership = async (userId: string, path: string) => {
     try {
         const command = new HeadObjectCommand({

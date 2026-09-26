@@ -12,6 +12,7 @@ import emailTemplates from "../templates/email/verification.js";
 import { RefreshAuthType } from "../types/auth/auth.request.js";
 import { sha256 } from "../utils/crypto.js";
 
+// Check if the username or contact details are already in use.
 const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     const { username, email, mobileNumber } = userData;
 
@@ -31,6 +32,7 @@ const isUserAlreadyExist = async (userData: InitiateRegistration) => {
     }
 };
 
+// Start sign-up by checking for duplicates and sending a one-time code to the email.
 const initiateRegistration = async (userData: InitiateRegistration) => {
     const { username, email, mobileNumber } = userData;
 
@@ -55,8 +57,9 @@ const initiateRegistration = async (userData: InitiateRegistration) => {
 
     const OTP = generateOtp();
 
-    await redis.set(otpKey, OTP, "EX", 5 * 60); // valid for 5 minutes
-    await redis.set(cooldownKey, OTP, "EX", 60); // valid for 1 minute
+    // Keep the OTP valid for five minutes while limiting resend attempts to once per minute.
+    await redis.set(otpKey, OTP, "EX", 5 * 60);
+    await redis.set(cooldownKey, OTP, "EX", 60);
 
     await emailService.sendEmail({
         subject: "Verify your email",
@@ -65,6 +68,7 @@ const initiateRegistration = async (userData: InitiateRegistration) => {
     });
 };
 
+// Check the sign-up code, create the user, and return the login tokens.
 const verifyRegistrationOtp = async (userData: VerifyRegistrationOtpInput) => {
     const { username, email, mobileNumber, otp: submittedOtp } = userData;
 
@@ -115,6 +119,7 @@ const verifyRegistrationOtp = async (userData: VerifyRegistrationOtpInput) => {
     return { createdUser, tokens };
 };
 
+// Log in with the given username or email and password.
 const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
     const { identifier, password } = credentials;
 
@@ -139,6 +144,7 @@ const loginUser = async (credentials: LoginUserInput, ip: unknown) => {
     return { user, tokens };
 };
 
+// Remove the saved refresh token so the user is signed out.
 const logout = (refreshToken: string | undefined) => {
     if (!refreshToken) return;
 
@@ -148,12 +154,14 @@ const logout = (refreshToken: string | undefined) => {
     userRepository.removeRefreshToken(refreshTokenHash);
 };
 
+// Create a new token pair for the logged-in user.
 const refreshTokens = async (user: RefreshAuthType) => {
     const tokens = await user.generateAccessAndRefreshTokens();
 
     return tokens;
 };
 
+// Send a reset code when the user forgets the password.
 const forgotPassword = async (identifier: string) => {
     const user = await userRepository.findUserByIdentifier(identifier, "email");
 
@@ -179,8 +187,9 @@ const forgotPassword = async (identifier: string) => {
 
     const OTP = generateOtp();
 
-    await redis.set(otpKey, OTP, "EX", 5 * 60); // valid for 5 minutes
-    await redis.set(cooldownKey, OTP, "EX", 60); // valid for 1 minute
+    // Keep the OTP valid for five minutes while limiting resend attempts to once per minute.
+    await redis.set(otpKey, OTP, "EX", 5 * 60);
+    await redis.set(cooldownKey, OTP, "EX", 60);
 
     await emailService.sendEmail({
         subject: "Reset Your Password – OTP Verification",
@@ -189,6 +198,7 @@ const forgotPassword = async (identifier: string) => {
     });
 };
 
+// Verify the reset code and save the new password.
 const resetPassword = async (identifier: string, newPassword: string, submittedOtp: string) => {
     const user = await userRepository.findUserByIdentifier(identifier, "email");
 

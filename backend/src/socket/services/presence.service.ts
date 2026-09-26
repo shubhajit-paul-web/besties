@@ -10,8 +10,10 @@ import filterFriendIds from "../../utils/getFriendIds.js";
   and only expose the data that is needed by the client for presence updates.
 */
 
+// Keep only the users who are currently online in memory.
 const onlineUsers = new Map<string, PresenceUser>();
 
+// Return only the friends who are actually online.
 const getOnlineFriendUsers = (friendIds: string[]) => {
     if (friendIds.length === 0) {
         return [] as PresenceUser[];
@@ -22,6 +24,7 @@ const getOnlineFriendUsers = (friendIds: string[]) => {
         .filter((user): user is PresenceUser => Boolean(user));
 };
 
+// Load the accepted friends of a user from the database.
 const getAcceptedFriendIdsForUser = async (currentUserId: string) => {
     const friendships = await friendRepository.findFriendshipsByStatus({
         currentUserId,
@@ -36,6 +39,7 @@ const getAcceptedFriendIdsForUser = async (currentUserId: string) => {
     return filterFriendIds(currentUserId, friendships);
 };
 
+// Save a user as online using a small profile object.
 const setOnline = (user: AccessTokenPayload) => {
     const normalizedUserId = String(user._id);
 
@@ -48,16 +52,18 @@ const setOnline = (user: AccessTokenPayload) => {
     });
 };
 
+// Remove the user from the online list when they disconnect.
 const setOffline = (userId: string) => {
     onlineUsers.delete(userId);
 };
 
+// Send the current online friends list to the user and to their online friends.
 const emitOnlineFriends = async (io: Server, userId: string) => {
     const normalizedUserId = String(userId);
     const acceptedFriendIds = await getAcceptedFriendIdsForUser(normalizedUserId);
     const onlineFriends = getOnlineFriendUsers(acceptedFriendIds);
 
-    // Notify the current user which friends are currently online
+    // Tell the current user which friends are online right now.
     io.to(`user:${normalizedUserId}`).emit("friends:online-updated", onlineFriends);
 
     if (onlineFriends.length === 0) return;
@@ -70,10 +76,7 @@ const emitOnlineFriends = async (io: Server, userId: string) => {
         }
     }
 
-    /* 
-      Build a map of each online friend's friends so we can notify them about the
-      broader presence graph without needing to recalculate it for every socket event.
-    */
+    // Build a list of each online friend's friends so they can also see who is online.
     const friendshipsOfFriends = await friendRepository.findAcceptedFriendshipsByUserIds(
         Array.from(onlineFriendIds),
     );
@@ -84,7 +87,7 @@ const emitOnlineFriends = async (io: Server, userId: string) => {
         onlineFriendsByUser.set(onlineFriendId, getOnlineFriendUsers(relatedFriendIds));
     }
 
-    // When a friend is online, also tell them which of their own friends are online
+    // Share the updated presence list with each friend.
     for (const onlineFriend of onlineFriends) {
         const friendId = String(onlineFriend._id);
 

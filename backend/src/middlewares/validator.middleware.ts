@@ -6,12 +6,14 @@ import { RequestValidationSchema } from "../types/utils.types.js";
 const validate =
     (schema: RequestValidationSchema) => (req: Request, res: Response, next: NextFunction) => {
         try {
+            // Validate request parts before the route runs.
             const data = schema.parse({
                 body: req.body as unknown,
                 params: req.params as unknown,
                 query: req.query as unknown,
             });
 
+            // Use the cleaned values from validation.
             if (data.body) {
                 req.body = data.body;
             }
@@ -21,15 +23,14 @@ const validate =
             }
 
             if (data.query) {
-                // for (const key of Object.keys(req.query)) {
-                //     delete (req.query as Record<string, unknown>)[key];
-                // }
+                // Keep only the safe query values returned by Zod.
                 Object.assign(req.query, data.query);
             }
 
             next();
         } catch (err) {
             if (err instanceof ZodError) {
+                // Turn Zod errors into a simple client-friendly format.
                 const errors = err.issues.map(({ path, message, code }) => {
                     const source = path[0] ?? "unknown";
                     const field = path.slice(1).join(".");

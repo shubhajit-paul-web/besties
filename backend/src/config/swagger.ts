@@ -4,6 +4,7 @@ import config from "./environment.js";
 import AuthApiDoc from "../swagger/auth.swagger.js";
 import FriendApiDoc from "../swagger/friend.swagger.js";
 
+// Main API description shown in the Swagger documentation.
 const swaggerDocument: OpenAPIV3.Document = {
     openapi: "3.0.0",
 
@@ -21,6 +22,7 @@ const swaggerDocument: OpenAPIV3.Document = {
 
     security: [{ bearerAuth: [] }],
 
+    // Shared security rules and response shapes used by many endpoints.
     components: {
         securitySchemes: {
             bearerAuth: {
@@ -44,6 +46,7 @@ const swaggerDocument: OpenAPIV3.Document = {
             },
         },
 
+        // Reusable data shapes keep endpoint documentation consistent.
         schemas: {
             ValidationErrorResponse: {
                 type: "object",
@@ -260,12 +263,14 @@ const swaggerDocument: OpenAPIV3.Document = {
         },
     },
 
+    // Add endpoint documentation from each feature area.
     paths: {
         ...AuthApiDoc,
         ...FriendApiDoc,
     },
 };
 
+// Controls the look and behavior of the Swagger UI page.
 const swaggerUiOptions: SwaggerUiOptions = {
     explorer: true,
     customSiteTitle: "Besties official API docs",
